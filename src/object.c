@@ -79,14 +79,17 @@ void renderStaticObject(GameInstance *this, ObjectInstance *instance) {
 	StaticObject *obj = instance->object;
 	glPushMatrix();
 	glLoadIdentity();
-	glTranslatef(obj->position[0], obj->position[1], obj->position[2]);
+
+	glTranslatef(obj->position[0] + instance->position[0],
+			obj->position[1] + instance->position[1],
+			obj->position[2] + instance->position[2]);
+	glScalef(obj->scale[0] * instance->scale[0],
+			obj->scale[1] * instance->scale[1],
+			obj->scale[2] * instance->scale[2]);
 	glRotatef(-(obj->rotation[0] + instance->rotation[0]), 1.0f, 0.0f, 0.0f);
 	glRotatef(-(obj->rotation[1] + instance->rotation[1]), 0.0f, 1.0f, 0.0f);
 	glRotatef(-(obj->rotation[2] + instance->rotation[2]), 0.0f, 0.0f, 1.0f);
-	glTranslatef(instance->position[0], instance->position[1], instance->position[2]);
-	glScalef(obj->scale[0] * instance->scale[0],
-			obj->scale[1] * instance->scale[0],
-			obj->scale[2] * instance->scale[0]);
+
 	glGetFloatv(GL_MODELVIEW_MATRIX, &instance->moveMat);
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
 	glPopMatrix();

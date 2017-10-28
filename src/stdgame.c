@@ -1,5 +1,3 @@
-#define DEBUG 1
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -14,37 +12,88 @@ extern void setPerspective(float fov, float aspect, float near, float far);
 
 extern GameInstance *this;
 
+static int mode = 0;
+static int modelId = 0;
+
 void handleKeyPress(unsigned char key, int x, int y) {
-	switch (key) {
-		case 27:
-			glutDestroyWindow(this->windowInstance);
-			exit(0);
+	if (mode == 0) {
+		switch (key) {
+			case 27:
+				glutDestroyWindow(this->windowInstance);
+				exit(0);
+				break;
+
+			// Debug view
+			case 'a': this->camera->rotation[1] += 2; break;
+			case 'd': this->camera->rotation[1] -= 2; break;
+			case 'w': this->camera->rotation[0] += 2; break;
+			case 's': this->camera->rotation[0] -= 2; break;
+			case 'q': this->camera->rotation[2] += 2; break;
+			case 'e': this->camera->rotation[2] -= 2; break;
+			case 'j': this->camera->position[0] -= 0.2; break;
+			case 'l': this->camera->position[0] += 0.2; break;
+			case 'k': this->camera->position[1] -= 0.2; break;
+			case 'i': this->camera->position[1] += 0.2; break;
+			case 'u': this->camera->position[2] -= 0.2; break;
+			case 'o': this->camera->position[2] += 0.2; break;
+
+			case 'n': mode = 1; break;
+			case 'm': mode = 1; break;
+
+			default:
+				printf("INVALID KEY: %d %c\n", key, key);
+				break;
+		}
+	} else if (mode == 1) {
+		ObjectInstance *obj;
+		ListElement *it;
+		for (it = this->objects->staticInstances->first; it != NULL; it = it->next) {
+			if (((ObjectInstance *)it->data)->id == modelId) {
+				obj = (ObjectInstance *)it->data;
+				break;
+			}
+		}
+		switch (key) {
+			case 27:
+				glutDestroyWindow(this->windowInstance);
+				exit(0);
+				break;
+
+			// Debug view
+			case 's': obj->position[1] += 1.0f / 16; break;
+			case 'w': obj->position[1] -= 1.0f / 16; break;
+			case 'a': obj->position[0] += 1.0f / 16; break;
+			case 'd': obj->position[0] -= 1.0f / 16; break;
+			case 'q': obj->position[2] += 1.0f / 16; break;
+			case 'e': obj->position[2] -= 1.0f / 16; break;
+
+			case 'f': obj->scale[0] -= 0.1; break;
+			case 'h': obj->scale[0] += 0.1; break;
+			case 'g': obj->scale[1] -= 0.1; break;
+			case 't': obj->scale[1] += 0.1; break;
+			case 'r': obj->scale[2] -= 0.1; break;
+			case 'z': obj->scale[2] += 0.1; break;
+
+			case 'j': obj->rotation[0] -= PI / 4; break;
+			case 'l': obj->rotation[0] += PI / 4; break;
+			case 'k': obj->rotation[1] -= PI / 4; break;
+			case 'i': obj->rotation[1] += PI / 4; break;
+			case 'u': obj->rotation[2] -= PI / 4; break;
+			case 'o': obj->rotation[2] += PI / 4; break;
+
+			case 'n': mode = 0; break;
+			case 'm': mode = 0; break;
+			case 'b': scanf("%d", &modelId); break;
+			case 'v': printf("POS: %f %f %f\nROT: %f %f %f\nSCL: %f %f %f\n",
+					obj->position[0], obj->position[1], obj->position[2],
+					obj->rotation[0], obj->rotation[1], obj->rotation[2],
+					obj->scale[0], obj->scale[1], obj->scale[2]);
 			break;
 
-		// Debug view
-		case 'a': this->camera->rotation[1] += 2; break;
-		case 'd': this->camera->rotation[1] -= 2; break;
-		case 'w': this->camera->rotation[0] += 2; break;
-		case 's': this->camera->rotation[0] -= 2; break;
-		case 'q': this->camera->rotation[2] += 2; break;
-		case 'e': this->camera->rotation[2] -= 2; break;
-		case 'j': this->camera->position[0] -= 0.2; break;
-		case 'l': this->camera->position[0] += 0.2; break;
-		case 'k': this->camera->position[1] -= 0.2; break;
-		case 'i': this->camera->position[1] += 0.2; break;
-		case 'u': this->camera->position[2] -= 0.2; break;
-		case 'o': this->camera->position[2] += 0.2; break;
-
-		case 'x': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[0] += 1; break;
-		case 'c': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[0] -= 1; break;
-		case 'v': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[1] += 1; break;
-		case 'b': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[1] -= 1; break;
-		case 'm': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[2] += 1; break;
-		case 'n': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[2] -= 1; break;
-
-		default:
-			printf("INVALID KEY: %d %c\n", key, key);
-			break;
+			default:
+				printf("INVALID KEY: %d %c\n", key, key);
+				break;
+		}
 	}
 }
 

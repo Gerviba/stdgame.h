@@ -117,9 +117,10 @@ void gameInit(void) {
 	StaticObject *so = loadStaticObject("assets/objects/tendril.sobj");
 	listPush(this->objects->staticObjects, so);
 	ObjectInstance oi;
+	oi.id = 0;
 	oi.position[0] = 0.0f;
 	oi.position[1] = 0.0f;
-	oi.position[2] = 1.0f;
+	oi.position[2] = 0.0f;
 	oi.rotation[0] = 0.0f;
 	oi.rotation[1] = 0.0f;
 	oi.rotation[2] = 0.0f;

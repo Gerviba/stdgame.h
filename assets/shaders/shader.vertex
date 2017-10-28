@@ -1,0 +1,31 @@
+#version 150 core
+
+in vec3 position;
+in vec2 texCoord;
+in vec3 normal;
+
+uniform vec3 cameraPosition;
+uniform vec3 lightPosition[28];
+uniform int numLights;
+uniform mat4 projMat;
+uniform mat4 viewMat;
+uniform mat4 moveMat;
+uniform mat4 modelMat;
+
+out vec3 fragmentNormal;
+out vec3 cameraVector;
+out vec3 lightVector[28];
+out vec2 passTexCoord;
+
+void main() {
+	vec4 worldPosition = moveMat * modelMat * vec4(position, 1.0);
+
+	fragmentNormal = (moveMat * modelMat * vec4(normal, 0.0)).xyz;
+	cameraVector = cameraPosition - worldPosition.xyz;
+
+	for(int i = 0; i < numLights; ++i)
+		lightVector[i] = lightPosition[i] - worldPosition.xyz;
+
+	gl_Position = projMat * viewMat * moveMat * modelMat * vec4(position, 1.0);
+	passTexCoord = texCoord;
+}

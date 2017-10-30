@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "includes.h"
 
-StaticObject *loadStaticObject(char path[]) {
+StaticObject *loadObject(char path[]) {
 	StaticObject *obj = malloc(sizeof(StaticObject));
 	obj->parts = newLinkedListPointer(sizeof(StaticObjectPart));
 	obj->colors = newLinkedListPointer(sizeof(PartColor));
@@ -17,9 +17,13 @@ StaticObject *loadStaticObject(char path[]) {
 
 	FILE *file;
 	char buff[255];
-	printf("[Object] Loading static object: %s\n", path);
+	printf("[Object] Loading object: %s\n", path);
 
 	file = fopen(path, "r");
+	if (!file) {
+		printf("[Object] Failed to load. File not accessable.\n");
+		return NULL;
+	}
 	while (fgets(buff, 255, file)) {
 		switch (buff[0]) {
 			case '$': { // Basic info
@@ -75,7 +79,7 @@ StaticObject *loadStaticObject(char path[]) {
 	return obj;
 }
 
-void renderStaticObject(GameInstance *this, ObjectInstance *instance) {
+void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 	StaticObject *obj = instance->object;
 	glPushMatrix();
 	glLoadIdentity();
@@ -154,5 +158,57 @@ void renderStaticObject(GameInstance *this, ObjectInstance *instance) {
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
+	}
+}
+
+void renderTile(GameInstance* this, Tile* tile) {
+	glBindTexture(GL_TEXTURE_2D, tile->texture->base->textureId);
+	glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			tile->x, tile->y, (tile->type & TTMASK_RENDER_FRONT) == TTMASK_RENDER_FRONT ? 1.0f : 0.0f, 1.0f});
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	if (tile->type != TT_BACKGROUND) {
+		if ((tile->type & TTMASK_RENDER_TOP) > 1) {
+			glBindTexture(GL_TEXTURE_2D, tile->texture->top->textureId);
+			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
+					1.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, cosf(PI / 2), -sinf(PI / 2), 0.0f,
+					0.0f, sinf(PI / 2), cosf(PI / 2), 0.0f,
+					tile->x, tile->y + 1, 1.0f, 1.0f});
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		}
+
+		if ((tile->type & TTMASK_RENDER_LEFT) > 1) {
+			glBindTexture(GL_TEXTURE_2D, tile->texture->left->textureId);
+			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
+					cosf(PI + PI / 2), 0.0f, sinf(PI + PI / 2), 0.0f,
+					0.0f, 1.0f, 0.0f, 0.0f,
+					-sinf(PI + PI / 2), 0.0f, cosf(PI + PI / 2), 0.0f,
+					tile->x + 1, tile->y, 1.0f, 1.0f});
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		}
+
+		if ((tile->type & TTMASK_RENDER_BOTTOM) > 1) {
+			glBindTexture(GL_TEXTURE_2D, tile->texture->bottom->textureId);
+			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
+					1.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, cosf(PI + PI / 2), -sinf(PI + PI / 2), 0.0f,
+					0.0f, sinf(PI + PI / 2), cosf(PI + PI / 2), 0.0f,
+					tile->x, tile->y, 0.0f, 1.0f});
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		}
+
+		if ((tile->type & TTMASK_RENDER_RIGHT) > 1) {
+			glBindTexture(GL_TEXTURE_2D, tile->texture->right->textureId);
+			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
+					cosf(PI / 2), 0.0f, sinf(PI / 2), 0.0f,
+					0.0f, 1.0f, 0.0f, 0.0f,
+					-sinf(PI / 2), 0.0f, cosf(PI / 2), 0.0f,
+					tile->x, tile->y, 0.0f, 1.0f});
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		}
 	}
 }

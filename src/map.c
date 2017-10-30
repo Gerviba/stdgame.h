@@ -21,12 +21,20 @@ void loadTexture(GLuint *textureId, char path[]) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
-Map* loadMap(char path[]) {
+Map* loadMap(const GameInstance *this, char path[]) {
 	Map *map = malloc(sizeof(Map));
 	map->tiles = newLinkedListPointer(sizeof(Tile));
 	map->lights = newLinkedListPointer(sizeof(Light));
 	map->textures = newLinkedListPointer(sizeof(Texture));
 	map->textureBlocks = newLinkedListPointer(sizeof(TextureBlock));
+
+	map->objects = malloc(sizeof(ObjectInfo));
+	map->objects->staticObjects = newLinkedListPointer(sizeof(StaticObject));
+	map->objects->staticInstances = newLinkedListPointer(sizeof(StaticObjectInstance));
+	map->objects->dynamicObjects = newLinkedListPointer(sizeof(DynamicObject));
+	map->objects->dynamicInstances = newLinkedListPointer(sizeof(DynamicObjectInstance));
+	map->objects->activeObjects = newLinkedListPointer(sizeof(ActiveObject));
+	map->objects->activeInstances = newLinkedListPointer(sizeof(ActiveObjectInstance));
 
 	FILE *file;
 	char buff[255];
@@ -126,6 +134,69 @@ Map* loadMap(char path[]) {
 				light.color[2] = (float)b / 255;
 
 				listPush(map->lights, &light);
+				break;
+			}
+			case 'O': {
+				break;
+			}
+			case 'I': {
+				char type[32];
+				sscanf(buff, "I %*d %s", type);
+				int visible;
+
+				if (strcmp(buff, "STATIC") == 0) {
+					StaticObjectInstance soi;
+					int objectId;
+					sscanf(buff, "I %d %d STATIC %f %f %f %f %f %f %f %f %f %d", &soi.id, objectId,
+							&soi.position[0], &soi.position[1], &soi.position[2],
+							&soi.rotation[0], &soi.rotation[1], &soi.rotation[2],
+							&soi.scale[0], &soi.scale[1], &soi.scale[2], &visible);
+					soi.visible = visible ? GL_TRUE : GL_FALSE;
+
+					ListElement *it;
+					for (it = map->objects->staticInstances; it != NULL; it = it->next) {
+						if (((StaticObjectInstance *)it->data)->id == objectId) {
+							soi.object = ((StaticObjectInstance *) it->data)->object;
+							break;
+						}
+					}
+
+					listPush(map->objects->staticInstances, &soi);
+
+				} else if (strcmp(buff, "DYNAMIC") == 0) {
+					DynamicObjectInstance doi;
+					int objectId, referencePoint;
+					sscanf(buff, "I %d %d STATIC %f %f %f %f %f %f %f %f %f %d %d", &doi.id,
+							&doi.position[0], &doi.position[1], &doi.position[2],
+							&doi.rotation[0], &doi.rotation[1], &doi.rotation[2],
+							&doi.scale[0], &doi.scale[1], &doi.scale[2], &visible, &referencePoint);
+					doi.visible = visible ? GL_TRUE : GL_FALSE;
+
+					ListElement *it;
+					for (it = map->objects->dynamicInstances; it != NULL; it = it->next) {
+						if (((DynamicObjectInstance *)it->data)->id == objectId) {
+							doi.object = ((DynamicObjectInstance *) it->data)->object;
+							break;
+						}
+					}
+
+					doi.reference = NULL; //TODO: Implement reference points
+
+					listPush(map->objects->dynamicInstances, &doi);
+				}
+
+
+
+				break;
+			}
+			case 'C': {
+				char type[32];
+				sscanf(buff, "I %*d %s", type);
+
+				if (strcmp(buff, "SPAWN") == 0) {
+					sscanf("I %*d SPAWN %f %f %f", &map->spawn[0], &map->spawn[1]);
+					map->spawn[2] = 4;
+				}
 				break;
 			}
 		}

@@ -14,34 +14,33 @@
 
 extern GLuint shaderAttachFromFile(GLuint, GLenum, const char *);
 
-GameInstance *this;
-
-static void loadProjectionMatrix() {
-	float fov = PI / 4.0f;
-	float arat = (float) WINDOW_WIDTH / (float) WINDOW_HEIGHT;
-	float near = 0.1f;
-	float far = 200.0f;
+void setPerspective(const GameInstance *this, float fov, float aspect, float near, float far) {
 	float f = 1.0f / tanf(fov / 2.0f);
 
-	this->camera->projMat[0] = f / arat;
+	this->camera->projMat[0] = f / aspect;
 	this->camera->projMat[1] = 0.0f;
 	this->camera->projMat[2] = 0.0f;
 	this->camera->projMat[3] = 0.0f;
+
 	this->camera->projMat[4] = 0.0f;
 	this->camera->projMat[5] = f;
 	this->camera->projMat[6] = 0.0f;
 	this->camera->projMat[7] = 0.0f;
+
 	this->camera->projMat[8] = 0.0f;
 	this->camera->projMat[9] = 0.0f;
 	this->camera->projMat[10] = (far + near) / (near - far);
 	this->camera->projMat[11] = -1.0f;
+
 	this->camera->projMat[12] = 0.0f;
 	this->camera->projMat[13] = 0.0f;
 	this->camera->projMat[14] = (2.0f * far * near) / (near - far);
 	this->camera->projMat[15] = 0.0f;
+
+	glMultMatrixf(this->camera->projMat);
 }
 
-void loadTileVAO() {
+void loadTileVAO(const GameInstance *this) {
 	glGenVertexArrays(1, &this->tileVAO);
 	glBindVertexArray(this->tileVAO);
 
@@ -67,9 +66,7 @@ void loadTileVAO() {
 	// TODO: cleanup
 }
 
-void gameInit(void) {
-	printf("Init\n");
-
+void gameInit(GameInstance *this) {
 	this->shader->shaderId = glCreateProgram();
 	shaderAttachFromFile(this->shader->shaderId, GL_VERTEX_SHADER, "assets/shaders/shader.vertex");
 	shaderAttachFromFile(this->shader->shaderId, GL_FRAGMENT_SHADER, "assets/shaders/shader.fragment");
@@ -89,7 +86,7 @@ void gameInit(void) {
 		log = malloc(length);
 		glGetProgramInfoLog(this->shader->shaderId, length, &result, log);
 
-		fprintf(stderr, "gameInit(): Program linking failed: %s\n", log);
+		fprintf(stderr, "[Error] Shader program linking failed: %s\n", log);
 		free(log);
 
 		glDeleteProgram(this->shader->shaderId);
@@ -107,47 +104,199 @@ void gameInit(void) {
 	this->shader->moveMat = glGetUniformLocation(this->shader->shaderId, "moveMat");
 	this->shader->modelMat = glGetUniformLocation(this->shader->shaderId, "modelMat");
 
-	loadProjectionMatrix();
-
-	loadTileVAO();
+	loadTileVAO(this);
 
 	loadTexture(&this->blankTextureId, "null.png");
 
-	this->map = loadMap("assets/maps/test.map");
-	StaticObject *so = loadStaticObject("assets/objects/tendril.sobj");
-	listPush(this->objects->staticObjects, so);
-	ObjectInstance oi;
-	oi.id = 0;
-	oi.position[0] = 0.0f;
-	oi.position[1] = 0.0f;
-	oi.position[2] = 0.0f;
-	oi.rotation[0] = 0.0f;
-	oi.rotation[1] = 0.0f;
-	oi.rotation[2] = 0.0f;
-	oi.scale[0] = 1;
-	oi.scale[1] = 1;
-	oi.scale[2] = 1;
-	oi.object = so;
-	listPush(this->objects->staticInstances, &oi);
+	this->map = loadMap(this, "assets/maps/test.map");
+	
+	{
+		StaticObject *so = loadObject("assets/objects/tendril.sobj");
+		listPush(this->map->objects->staticObjects, so);
 
-	onLogic();
+	}
 
-	this->camera->position[0] = this->map->spawn[0];
-	this->camera->position[1] = this->map->spawn[1];
-	this->camera->position[2] = this->map->spawn[2];
+	{
+		StaticObject *so = loadObject("assets/objects/xxx.sobj");
+		listPush(this->map->objects->staticObjects, so);
+		StaticObjectInstance oi;
+		oi.id = 0;
+		oi.position[0] = 0.0f;
+		oi.position[1] = 0.0f;
+		oi.position[2] = 0.0f;
+		oi.rotation[0] = 0.0f;
+		oi.rotation[1] = 0.0f;
+		oi.rotation[2] = 0.0f;
+		oi.scale[0] = 1;
+		oi.scale[1] = 1;
+		oi.scale[2] = 1;
+		oi.object = so;
+		listPush(this->map->objects->staticInstances, &oi);
+	}
+
+	{
+		StaticObject *so = loadObject("assets/objects/lock_little.sobj");
+		listPush(this->map->objects->staticObjects, so);
+		StaticObjectInstance oi;
+		oi.id = 1;
+		oi.position[0] = 0.0f;
+		oi.position[1] = 0.0f;
+		oi.position[2] = 0.0f;
+		oi.rotation[0] = 0.0f;
+		oi.rotation[1] = 0.0f;
+		oi.rotation[2] = 0.0f;
+		oi.scale[0] = 1;
+		oi.scale[1] = 1;
+		oi.scale[2] = 1;
+		oi.object = so;
+		listPush(this->map->objects->staticInstances, &oi);
+	}
+
+	{
+		StaticObject *so = loadObject("assets/objects/key_little.sobj");
+		listPush(this->map->objects->staticObjects, so);
+		StaticObjectInstance oi;
+		oi.id = 2;
+		oi.position[0] = 0.0f;
+		oi.position[1] = 0.0f;
+		oi.position[2] = 0.0f;
+		oi.rotation[0] = 0.0f;
+		oi.rotation[1] = 0.0f;
+		oi.rotation[2] = 0.0f;
+		oi.scale[0] = 1;
+		oi.scale[1] = 1;
+		oi.scale[2] = 1;
+		oi.object = so;
+		listPush(this->map->objects->staticInstances, &oi);
+	}
+
+	initPlayer(this);
+	onLogic(this);
+
+	updateCamera(this);
+	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
+
+
+}
+
+void updateCamera(GameInstance* this) {
 	glLoadIdentity();
 	glRotatef(-this->camera->rotation[0], 1.0f, 0.0f, 0.0f);
 	glRotatef(-this->camera->rotation[1], 0.0f, 1.0f, 0.0f);
 	glRotatef(-this->camera->rotation[2], 0.0f, 0.0f, 1.0f);
-	glTranslatef(-this->camera->position[0], -this->camera->position[1], -this->camera->position[2]);
-	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
-
+	glTranslatef(-this->camera->position[0],
+			-this->camera->position[1],
+			-this->camera->position[2]);
 }
 
-void onRender(void) {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void onRender(GameInstance *this) {
+	static const GLfloat TILE_MOVE_MAT[16] = {
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f};
+	static const GLfloat BASE_COLOR[] = {1.0f, 1.0f, 1.0f, 1.0f};
 
-	int i = 0;
+	glUseProgram(this->shader->shaderId);
+	glUniform3fv(this->shader->cameraPosition, 1, this->camera->position);
+	glUniform3fv(this->shader->lightPosition, this->lighting->numLights, this->lighting->lightPosition);
+	glUniform3fv(this->shader->lightColor, this->lighting->numLights, this->lighting->lightColor);
+	glUniform1i(this->shader->numLights, this->lighting->numLights);
+	glUniform4fv(this->shader->baseColor, 1, (GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f});
+	glUniformMatrix4fv(this->shader->projMat, 1, GL_FALSE, this->camera->projMat);
+	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
+	glUniformMatrix4fv(this->shader->viewMat, 1, GL_FALSE, this->camera->viewMat);
+	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, TILE_MOVE_MAT);
+
+	glBindVertexArray(this->tileVAO);
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(this->shader->texturePosition, 0);
+
+	ListElement *it;
+	for (it = this->map->tiles->first; it != NULL; it = it->next)
+		renderTile(this, (Tile *)it->data);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	for (it = this->map->objects->staticInstances->first; it != NULL; it = it->next)
+		renderStaticObject(this, (StaticObjectInstance *)it->data);
+
+
+    // Cleanup
+    glUseProgram(0);
+
+	updateCamera(this);
+}
+
+static unsigned int getTicks(void) {
+	#ifdef _WIN32
+		return GetTickCount();
+	#else
+		struct timeval t;
+		gettimeofday(&t, NULL);
+		return (t.tv_sec * 1000) + (t.tv_usec / 1000);
+	#endif /* _WIN32 */
+}
+
+void onLogic(GameInstance *this) {
+	static unsigned int prevTicks = 0;
+	unsigned int ticks;
+	float secondsElapsed;
+	int i;
+
+	if (prevTicks == 0)
+		prevTicks = getTicks();
+	ticks = getTicks();
+	secondsElapsed = (float) (ticks - prevTicks) / 1000.0f;
+	prevTicks = ticks;
+
+	StaticObjectInstance *obj = ((StaticObjectInstance *) this->map->objects->staticInstances->first->data);
+	if (glfwGetKey(this->window, GLFW_KEY_A) == GLFW_PRESS
+			|| glfwGetKey(this->window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+		this->player->position[0] -= secondsElapsed * 1.5;
+		obj->rotation[1] = 0;
+	}
+
+	if (glfwGetKey(this->window, GLFW_KEY_D) == GLFW_PRESS
+			|| glfwGetKey(this->window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		this->player->position[0] += secondsElapsed * 1.5;
+		obj->rotation[1] = 180;
+	}
+
+	if (this->player->position[1] <= 0) {
+		this->player->velocity[1] = 0;
+		this->player->position[1] = 0;
+		this->player->jumping = GL_FALSE;
+	}
+
+	if (!this->player->jumping && (glfwGetKey(this->window, GLFW_KEY_SPACE) == GLFW_PRESS
+			|| glfwGetKey(this->window, GLFW_KEY_W) == GLFW_PRESS)) {
+		printf("Jump\n");
+		this->player->jumping = GL_TRUE;
+		this->player->velocity[1] = 10;
+	}
+
+	if (this->player->jumping) {
+		this->player->position[1] += (this->player->velocity[1] * (9.81 / 1000));
+		this->player->velocity[1] -= 0.5;
+	}
+
+	this->camera->position[0] = this->player->position[0] + 2;
+	this->camera->position[1] = 1;// this->player->position[1] + 1;
+	this->camera->position[2] = 4.8;
+
+	// DEBUG
+	obj->position[0] = this->player->position[0];
+	obj->position[1] = this->player->position[1];
+	// END DEBUG
+
+
+	int width, height;
+	glfwGetFramebufferSize(this->window, &width, &height);
+	double cursorX, cursorY;
+	glfwGetCursorPos(this->window, &cursorX, &cursorY);
+	this->camera->rotation[1] = (cursorX - (width / 2)) * -0.01;
+
+	i = 0;
 	ListElement *it;
 	for (it = this->map->lights->first; it != NULL; it = it->next, ++i) {
 		Light light = *(Light *)it->data;
@@ -169,129 +318,12 @@ void onRender(void) {
 #endif
 	}
 	this->lighting->numLights = i;
-
-	glUseProgram(this->shader->shaderId);
-	glUniform3fv(this->shader->cameraPosition, 1, this->camera->position);
-	glUniform3fv(this->shader->lightPosition, this->lighting->numLights, this->lighting->lightPosition);
-	glUniform3fv(this->shader->lightColor, this->lighting->numLights, this->lighting->lightColor);
-	glUniform1i(this->shader->numLights, this->lighting->numLights);
-	glUniform4fv(this->shader->baseColor, 1, (GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f});
-	glUniformMatrix4fv(this->shader->projMat, 1, GL_FALSE, this->camera->projMat);
-	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
-	glUniformMatrix4fv(this->shader->viewMat, 1, GL_FALSE, this->camera->viewMat);
-	//Experimental
-	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, (GLfloat[]) {
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f});
-
-	glBindVertexArray(this->tileVAO);
-	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(this->shader->texturePosition, 0);
-
-	for (it = this->map->tiles->first; it != NULL; it = it->next) {
-		Tile tile = *(Tile *)it->data;
-		glBindTexture(GL_TEXTURE_2D, tile.texture->base->textureId);
-		glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
-				1.0f, 0.0f, 0.0f, 0.0f,
-				0.0f, 1.0f, 0.0f, 0.0f,
-				0.0f, 0.0f, 1.0f, 0.0f,
-				tile.x, tile.y, (tile.type & TTMASK_RENDER_FRONT) == TTMASK_RENDER_FRONT ? 1.0f : 0.0f, 1.0f});
-		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-		if (tile.type != TT_BACKGROUND) {
-			if ((tile.type & TTMASK_RENDER_TOP) > 1) {
-				glBindTexture(GL_TEXTURE_2D, tile.texture->top->textureId);
-				glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
-						1.0f, 0.0f, 0.0f, 0.0f,
-						0.0f, cosf(PI / 2), -sinf(PI / 2), 0.0f,
-						0.0f, sinf(PI / 2), cosf(PI / 2), 0.0f,
-						tile.x, tile.y + 1, 1.0f, 1.0f});
-				glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-			}
-
-			if ((tile.type & TTMASK_RENDER_LEFT) > 1) {
-				glBindTexture(GL_TEXTURE_2D, tile.texture->left->textureId);
-				glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
-						cosf(PI + PI / 2), 0.0f, sinf(PI + PI / 2), 0.0f,
-						0.0f, 1.0f, 0.0f, 0.0f,
-						-sinf(PI + PI / 2), 0.0f, cosf(PI + PI / 2), 0.0f,
-						tile.x + 1, tile.y, 1.0f, 1.0f});
-				glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-			}
-
-			if ((tile.type & TTMASK_RENDER_BOTTOM) > 1) {
-				glBindTexture(GL_TEXTURE_2D, tile.texture->bottom->textureId);
-				glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
-						1.0f, 0.0f, 0.0f, 0.0f,
-						0.0f, cosf(PI + PI / 2), -sinf(PI + PI / 2), 0.0f,
-						0.0f, sinf(PI + PI / 2), cosf(PI + PI / 2), 0.0f,
-						tile.x, tile.y, 0.0f, 1.0f});
-				glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-			}
-
-			if ((tile.type & TTMASK_RENDER_RIGHT) > 1) {
-				glBindTexture(GL_TEXTURE_2D, tile.texture->right->textureId);
-				glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
-						cosf(PI / 2), 0.0f, sinf(PI / 2), 0.0f,
-						0.0f, 1.0f, 0.0f, 0.0f,
-						-sinf(PI / 2), 0.0f, cosf(PI / 2), 0.0f,
-						tile.x, tile.y, 0.0f, 1.0f});
-				glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-			}
-		}
-	}
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-	for (it = this->objects->staticInstances->first; it != NULL; it = it->next) {
-		ObjectInstance *sobj = (ObjectInstance *)it->data;
-		renderStaticObject(this, sobj);
-	}
-
-    // Cleanup
-
-    glUseProgram(0);
-
-//	for (i = 0; i < MAX_NUM_LIGHTS; ++i) {
-//		glPushMatrix();
-//		glTranslatef(this->lighting->lightPosition[i * 3 + 0], this->lighting->lightPosition[i * 3 + 1], this->lighting->lightPosition[i * 3 + 2]);
-//		glColor3fv(this->lighting->lightColor + (i * 3));
-//		glutSolidSphere(0.04, 36, 36);
-//		glPopMatrix();
-//	}
-
-	glLoadIdentity();
-	glRotatef(-this->camera->rotation[0], 1.0f, 0.0f, 0.0f);
-	glRotatef(-this->camera->rotation[1], 0.0f, 1.0f, 0.0f);
-	glRotatef(-this->camera->rotation[2], 0.0f, 0.0f, 1.0f);
-	glTranslatef(-this->camera->position[0], -this->camera->position[1], -this->camera->position[2]);
-
-	glutSwapBuffers();
-}
-
-static unsigned int getTicks(void) {
-	#ifdef _WIN32
-		return GetTickCount();
-	#else
-		struct timeval t;
-		gettimeofday(&t, NULL);
-		return (t.tv_sec * 1000) + (t.tv_usec / 1000);
-	#endif /* _WIN32 */
-}
-
-void onLogic(void) {
-//	printf("logic\n");
-	static unsigned int prevTicks = 0;
-	unsigned int ticks;
-	float secondsElapsed;
-	int i;
-
-	if (prevTicks == 0)
-		prevTicks = getTicks();
-	ticks = getTicks();
-	secondsElapsed = (float) (ticks - prevTicks) / 1000.0f;
-	prevTicks = ticks;
+//	this->lighting->lightColor[i * 3 + 0] = 1;
+//	this->lighting->lightColor[i * 3 + 1] = 1;
+//	this->lighting->lightColor[i * 3 + 2] = 1;
+//	this->lighting->lightPosition[i * 3 + 0] = obj->position[0];
+//	this->lighting->lightPosition[i * 3 + 1] = obj->position[1] + 1;
+//	this->lighting->lightPosition[i * 3 + 2] = obj->position[2];
 
 //	lightRotation += (PI / 4.0f) * secondsElapsed;
 //	for (i = 0; i < MAX_NUM_LIGHTS; ++i) {
@@ -303,5 +335,5 @@ void onLogic(void) {
 //		lightPosition[i * 3 + 2] = sinf(r) * radius;
 //	}
 
-	glutPostRedisplay();
+//	glutPostRedisplay();
 }

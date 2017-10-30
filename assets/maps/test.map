@@ -2,7 +2,7 @@
 # =====================================
 # - Use # for comments
 # - Max line length: 255 char
-# - Strict order: X->Y->T
+# - Strict order: X->Y->T, O->I
 # - Whitespace start chars not allowed
 
 # Meta
@@ -14,7 +14,7 @@ $ AMBIENT 0.4
 $ SPAWN 0 0 4
 
 # Textures
-# X id face filename
+# X id filename
 X 0 noimg.png
 #X 0 brickside.png
 X 1 brick.png
@@ -91,7 +91,7 @@ T 6 -1 3 1
 
 # Static Lighting, Lighting
 # S x y strength color[RRGGBB]
-# L x y strength color1[RRGGBB] color2[RRGGBB] time //TODO
+# L x y strength1 color1[RRGGBB] strength2 color2[RRGGBB] time //TODO
 S 1 1.5 1 F4DB33
 S 4 1.5 1 F4DB33
 
@@ -104,8 +104,18 @@ S 4 1.5 1 F4DB33
 #S 4 1.5 1 F4DB33
 L 3 1 1 FF00FF 00FF00 4000
 
+# Object Bank
+# O id STATIC lock_little.sobj
+# O id DYNAMIC lock_little.sobj
+# O id ACTIVE lock_little.aobj
+
+# Object Instances
+# I id O.id STATIC x y z alpha beta gamma SizeX SizeY SizeZ visible
+# I id O.id DYNAMIC x y z alpha beta gamma SizeX SizeY SizeZ visible reference
+# I id O.id ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference
+
 # Coords
-# C id type x y
+# C id type x y ...
 C 0 SPAWN 1 1
 C 1 END 1 10
 

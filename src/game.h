@@ -1,8 +1,17 @@
 #ifndef GAME_H_
 #define GAME_H_
 
+#ifdef __linux__
+	#include <GLFW/glfw3.h>
+#elif defined APPLE
+	#include <GLFW/glfw3.h>
+#else
+	#include <glfw3.h>
+#endif
+
 #include "object.h"
 #include "map.h"
+#include "character.h"
 
 #define MAX_NUM_LIGHTS 28
 
@@ -38,11 +47,11 @@ typedef struct {
 	CameraInfo *camera;
 	Map *map;
 	LigingInfo *lighting;
-	ObjectInfo *objects;
+	Player *player;
 
 	GLuint tileVAO;
 	GLuint blankTextureId;
-	int windowInstance;
+	GLFWwindow *window;
 } GameInstance;
 
 #endif /* GAME_H_ */

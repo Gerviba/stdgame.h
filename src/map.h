@@ -109,8 +109,8 @@ typedef struct {
 	LinkedList /*Light*/ *lights;
 	LinkedList /*Texture*/ *textures;
 	LinkedList /*TextureBlock*/ *textureBlocks;
-} Map;
 
-Map* loadMap(char*);
+	ObjectInfo *objects;
+} Map;
 
 #endif /* MAP_H_ */

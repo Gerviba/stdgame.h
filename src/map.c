@@ -68,6 +68,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					map->ambient[2] = map->ambient[0];
 				} else if (strcmp(type, "SPAWN") == 0) {
 					sscanf(buff, "$ %*s %f %f %f", &map->spawn[0], &map->spawn[1], &map->spawn[2]);
+					printf("%f %f %f\n", map->spawn[0], map->spawn[1], map->spawn[2]);
 				}
 				break;
 			}
@@ -189,16 +190,17 @@ Map* loadMap(const GameInstance *this, char path[]) {
 
 				break;
 			}
-			case 'C': {
-				char type[32];
-				sscanf(buff, "I %*d %s", type);
-
-				if (strcmp(buff, "SPAWN") == 0) {
-					sscanf("I %*d SPAWN %f %f %f", &map->spawn[0], &map->spawn[1]);
-					map->spawn[2] = 4;
-				}
-				break;
-			}
+//			case 'C': {
+//				char type[32];
+//				sscanf(buff, "C %*d %s", type);
+//
+//				if (strcmp(type, "SPAWN") == 0) {
+//					sscanf("C %*d SPAWN %f %f", &map->spawn[0], &map->spawn[1]);
+//					map->spawn[2] = 4;
+//					printf("Map loaded %f %f\n", map->spawn[0], map->spawn[1]);
+//				}
+//				break;
+//			}
 		}
 	}
 

@@ -108,7 +108,7 @@ void gameInit(GameInstance *this) {
 
 	loadTexture(&this->blankTextureId, "null.png");
 
-	this->map = loadMap(this, "assets/maps/test.map");
+	this->map = loadMap(this, "assets/maps/test2.map");
 	
 	{
 		StaticObject *so = loadObject("assets/objects/tendril.sobj");
@@ -117,7 +117,7 @@ void gameInit(GameInstance *this) {
 	}
 
 	{
-		StaticObject *so = loadObject("assets/objects/xxx.sobj");
+		StaticObject *so = loadObject("assets/objects/secret_pay_low.sobj");
 		listPush(this->map->objects->staticObjects, so);
 		StaticObjectInstance oi;
 		oi.id = 0;
@@ -139,15 +139,15 @@ void gameInit(GameInstance *this) {
 		listPush(this->map->objects->staticObjects, so);
 		StaticObjectInstance oi;
 		oi.id = 1;
-		oi.position[0] = 0.0f;
-		oi.position[1] = 0.0f;
-		oi.position[2] = 0.0f;
+		oi.position[0] = 10.75f;
+		oi.position[1] = 7.5f;
+		oi.position[2] = 0.8f;
 		oi.rotation[0] = 0.0f;
-		oi.rotation[1] = 0.0f;
+		oi.rotation[1] = 90.0f;
 		oi.rotation[2] = 0.0f;
-		oi.scale[0] = 1;
-		oi.scale[1] = 1;
-		oi.scale[2] = 1;
+		oi.scale[0] = 0.5;
+		oi.scale[1] = 0.5;
+		oi.scale[2] = 0.5;
 		oi.object = so;
 		listPush(this->map->objects->staticInstances, &oi);
 	}
@@ -170,13 +170,29 @@ void gameInit(GameInstance *this) {
 		listPush(this->map->objects->staticInstances, &oi);
 	}
 
+	{
+		StaticObject *so = loadObject("assets/objects/door.dobj");
+		listPush(this->map->objects->staticObjects, so);
+		StaticObjectInstance oi;
+		oi.id = 3;
+		oi.position[0] = 11.0f;
+		oi.position[1] = 7.0f;
+		oi.position[2] = 0.0f;
+		oi.rotation[0] = 0.0f;
+		oi.rotation[1] = 180.0f;
+		oi.rotation[2] = 0.0f;
+		oi.scale[0] = 1;
+		oi.scale[1] = 1;
+		oi.scale[2] = 1;
+		oi.object = so;
+		listPush(this->map->objects->staticInstances, &oi);
+	}
+
 	initPlayer(this);
 	onLogic(this);
 
 	updateCamera(this);
 	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
-
-
 }
 
 void updateCamera(GameInstance* this) {
@@ -195,14 +211,14 @@ void onRender(GameInstance *this) {
 			0.0f, 1.0f, 0.0f, 0.0f,
 			0.0f, 0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f};
-	static const GLfloat BASE_COLOR[] = {1.0f, 1.0f, 1.0f, 1.0f};
+	static const GLfloat BASE_COLOR[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
 	glUseProgram(this->shader->shaderId);
 	glUniform3fv(this->shader->cameraPosition, 1, this->camera->position);
 	glUniform3fv(this->shader->lightPosition, this->lighting->numLights, this->lighting->lightPosition);
 	glUniform3fv(this->shader->lightColor, this->lighting->numLights, this->lighting->lightColor);
 	glUniform1i(this->shader->numLights, this->lighting->numLights);
-	glUniform4fv(this->shader->baseColor, 1, (GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f});
+	glUniform4fv(this->shader->baseColor, 1, BASE_COLOR);
 	glUniformMatrix4fv(this->shader->projMat, 1, GL_FALSE, this->camera->projMat);
 	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
 	glUniformMatrix4fv(this->shader->viewMat, 1, GL_FALSE, this->camera->viewMat);
@@ -252,25 +268,24 @@ void onLogic(GameInstance *this) {
 	StaticObjectInstance *obj = ((StaticObjectInstance *) this->map->objects->staticInstances->first->data);
 	if (glfwGetKey(this->window, GLFW_KEY_A) == GLFW_PRESS
 			|| glfwGetKey(this->window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		this->player->position[0] -= secondsElapsed * 1.5;
+		this->player->position[0] -= secondsElapsed * 2;
 		obj->rotation[1] = 0;
 	}
 
 	if (glfwGetKey(this->window, GLFW_KEY_D) == GLFW_PRESS
 			|| glfwGetKey(this->window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		this->player->position[0] += secondsElapsed * 1.5;
+		this->player->position[0] += secondsElapsed * 2;
 		obj->rotation[1] = 180;
 	}
 
-	if (this->player->position[1] <= 0) {
+	if (this->player->position[1] <= 7) {
 		this->player->velocity[1] = 0;
-		this->player->position[1] = 0;
+		this->player->position[1] = 7;
 		this->player->jumping = GL_FALSE;
 	}
 
 	if (!this->player->jumping && (glfwGetKey(this->window, GLFW_KEY_SPACE) == GLFW_PRESS
 			|| glfwGetKey(this->window, GLFW_KEY_W) == GLFW_PRESS)) {
-		printf("Jump\n");
 		this->player->jumping = GL_TRUE;
 		this->player->velocity[1] = 10;
 	}
@@ -281,14 +296,13 @@ void onLogic(GameInstance *this) {
 	}
 
 	this->camera->position[0] = this->player->position[0] + 2;
-	this->camera->position[1] = 1;// this->player->position[1] + 1;
+	this->camera->position[1] = this->player->position[1] + 1;
 	this->camera->position[2] = 4.8;
 
 	// DEBUG
 	obj->position[0] = this->player->position[0];
 	obj->position[1] = this->player->position[1];
 	// END DEBUG
-
 
 	int width, height;
 	glfwGetFramebufferSize(this->window, &width, &height);
@@ -313,27 +327,10 @@ void onLogic(GameInstance *this) {
 				this->lighting->lightPosition[i * 3 + 1],
 				this->lighting->lightPosition[i * 3 + 2]);
 		glColor3fv(this->lighting->lightColor + (i * 3));
-		glutSolidSphere(0.04, 36, 36);
+//		glutSolidSphere(0.04, 36, 36);
 		glPopMatrix();
 #endif
 	}
 	this->lighting->numLights = i;
-//	this->lighting->lightColor[i * 3 + 0] = 1;
-//	this->lighting->lightColor[i * 3 + 1] = 1;
-//	this->lighting->lightColor[i * 3 + 2] = 1;
-//	this->lighting->lightPosition[i * 3 + 0] = obj->position[0];
-//	this->lighting->lightPosition[i * 3 + 1] = obj->position[1] + 1;
-//	this->lighting->lightPosition[i * 3 + 2] = obj->position[2];
 
-//	lightRotation += (PI / 4.0f) * secondsElapsed;
-//	for (i = 0; i < MAX_NUM_LIGHTS; ++i) {
-//		const float radius = 1.75f;
-//		float r = (((PI * 2.0f) / (float) MAX_NUM_LIGHTS) * (float) i) + lightRotation;
-//
-//		lightPosition[i * 3 + 0] = cosf(r) * radius;
-//		lightPosition[i * 3 + 1] = cosf(r) * sinf(r);
-//		lightPosition[i * 3 + 2] = sinf(r) * radius;
-//	}
-
-//	glutPostRedisplay();
 }

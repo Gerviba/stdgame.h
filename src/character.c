@@ -6,9 +6,7 @@ void initPlayer(GameInstance *this) {
 	this->player->id = 0;
 	this->player->position[0] = this->map->spawn[0];
 	this->player->position[1] = this->map->spawn[1];
-	this->player->position[2] = this->map->spawn[2];
-	this->player->position[0] = 0;
-	this->player->position[1] = 0;
+	printf("%f %f\n", this->player->position[0], this->player->position[1]);
 	this->player->position[2] = 0;
 	this->player->height = 1.8;
 	this->player->width = 0.8;

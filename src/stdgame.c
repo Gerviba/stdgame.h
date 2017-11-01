@@ -95,9 +95,13 @@ extern void setPerspective(GameInstance *this, float fov, float aspect, float ne
 //	}
 //}
 
+GameInstance *gi;
+
 void onKeyAction(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	if (key == GLFW_KEY_H && action == GLFW_PRESS)
+		printf("%g %g\n", gi->player->position[0], gi->player->position[1]);
 //	if (action == GLFW_PRESS)
 //		debugKeyPress(key, 0, 0);
 }
@@ -115,6 +119,7 @@ void printVersionInfo() {
 
 int main(int argc, char *argv[]) {
 	GameInstance *this = malloc(sizeof(GameInstance));
+	gi = this;
 	this->shader = malloc(sizeof(ShaderInfo));
 	this->lighting = malloc(sizeof(LigingInfo));
 	this->lighting->numLights = 0;
@@ -157,9 +162,6 @@ int main(int argc, char *argv[]) {
 
 	glfwMakeContextCurrent(this->window);
 	glfwSwapInterval(1);
-
-
-//	glutKeyboardFunc(handleKeyPress); //TODO: KeyUp and KeyDown eventek
 
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClearDepth(1.0f);

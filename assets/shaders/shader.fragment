@@ -1,7 +1,7 @@
 #version 150 core
 
-const vec3 AMBIENT = vec3(0.4, 0.4, 0.4); //vec3(0.4, 0.4, 0.4);//vec3(0.1, 0.1, 0.1);
-const float MAX_DIST = 2.5;
+const vec3 AMBIENT = vec3(0.3, 0.3, 0.3); //vec3(0.4, 0.4, 0.4);//vec3(0.1, 0.1, 0.1);
+const float MAX_DIST = 3; //2.5;
 const float MAX_DIST_SQUARED = MAX_DIST * MAX_DIST;
 
 uniform vec3 lightColor[28]; // TODO: Optimize array size (with buffers?)
@@ -29,7 +29,7 @@ void main() {
 
 		vec3 lightDir = normalize(lightVector[i]);
 		float diffuseDot = dot(normal, lightDir);
-		diffuse += lightColor[i] * clamp(diffuseDot, 0.0, 1.0) * (distFactor * 1); //TODO: div 100
+		diffuse += lightColor[i] * clamp(diffuseDot, 0.0, 1.0) * (distFactor * 1); //TODO: div 100 , *3 lava
 
 		vec3 halfAngle = normalize(cameraDir + lightDir);
 		vec3 specularColor = min(lightColor[i] + 0.5, 1.0);

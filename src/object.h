@@ -88,7 +88,7 @@ typedef enum {
 
 typedef struct {
 	PartType type;
-	GLfloat *color;
+	GLfloat *color; // -> colors[4]
 	GLfloat position[3];
 } StaticObjectPart;
 

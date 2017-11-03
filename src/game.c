@@ -113,11 +113,10 @@ void gameInit(GameInstance *this) {
 	{
 		StaticObject *so = loadObject("assets/objects/tendril.sobj");
 		listPush(this->map->objects->staticObjects, so);
-
 	}
 
 	{
-		StaticObject *so = loadObject("assets/objects/secret_pay_low.sobj");
+		StaticObject *so = loadObject("assets/objects/gnome.sobj");
 		listPush(this->map->objects->staticObjects, so);
 		StaticObjectInstance oi;
 		oi.id = 0;
@@ -188,8 +187,28 @@ void gameInit(GameInstance *this) {
 		listPush(this->map->objects->staticInstances, &oi);
 	}
 
+	{
+		StaticObject *so = loadObject("assets/objects/ghost.aobj");
+		listPush(this->map->objects->staticObjects, so);
+		StaticObjectInstance oi;
+		oi.id = 3;
+		oi.position[0] = 14.0f;
+		oi.position[1] = 7.3f;
+		oi.position[2] = 0.0f;
+		oi.rotation[0] = 0.0f;
+		oi.rotation[1] = 180.0f;
+		oi.rotation[2] = 0.0f;
+		oi.scale[0] = 1;
+		oi.scale[1] = 1;
+		oi.scale[2] = 1;
+		oi.object = so;
+		listPush(this->map->objects->staticInstances, &oi);
+	}
+
 	initPlayer(this);
+	initFont(this);
 	onLogic(this);
+
 
 	updateCamera(this);
 	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
@@ -236,6 +255,17 @@ void onRender(GameInstance *this) {
 	for (it = this->map->objects->staticInstances->first; it != NULL; it = it->next)
 		renderStaticObject(this, (StaticObjectInstance *)it->data);
 
+	GLfloat color[] = {1.0f, 1.0f, 1.0f, 1.0f};
+	renderFontTo(this, "You have no $", (GLfloat[]) {6.0f, 7.0625f, 1.0f, 1.0f}, color);
+
+	char str[16];
+	if (glfwGetKey(this->window, GLFW_KEY_UP) == GLFW_PRESS)
+		++this->score;
+	sprintf(str, "%d *", this->score);
+
+	renderFontTo(this, str, (GLfloat[]) {this->camera->position[0] + 2.0f - (strlen(str) * 0.0625f * 4),
+			9.0625f, 1.0f, 1.0f}, color);
+	renderFontTo(this, "$$$$$", (GLfloat[]) {this->camera->position[0] - 2.0f, 9.0625f, 1.0f, 1.0f}, color);
 
     // Cleanup
     glUseProgram(0);
@@ -295,20 +325,25 @@ void onLogic(GameInstance *this) {
 		this->player->velocity[1] -= 0.5;
 	}
 
+#ifndef DEBUG_MOVEMENT
 	this->camera->position[0] = this->player->position[0] + 2;
 	this->camera->position[1] = this->player->position[1] + 1;
 	this->camera->position[2] = 4.8;
+#endif
 
 	// DEBUG
 	obj->position[0] = this->player->position[0];
 	obj->position[1] = this->player->position[1];
+//	obj->rotation[2]d = 270;
 	// END DEBUG
 
 	int width, height;
 	glfwGetFramebufferSize(this->window, &width, &height);
 	double cursorX, cursorY;
 	glfwGetCursorPos(this->window, &cursorX, &cursorY);
-	this->camera->rotation[1] = (cursorX - (width / 2)) * -0.01;
+#ifndef DEBUG_MOVEMENTd
+//	this->camdera->rotation[1] = (cursorX - (width / 2)) * -0.01;
+#endif
 
 	i = 0;
 	ListElement *it;

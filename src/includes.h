@@ -2,6 +2,7 @@
 #define __INCLUDES_H__
 
 //#define DEBUG 1
+//#define DEBUG_MOVEMENT 1
 #define G 9.81
 static const float PI = 3.14159265358979323846;
 
@@ -26,6 +27,7 @@ static const float PI = 3.14159265358979323846;
 #endif
 
 #include "linkedlist.h"
+#include "font.h"
 #include "object.h"
 #include "map.h"
 #include "game.h"

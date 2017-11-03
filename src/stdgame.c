@@ -9,101 +9,100 @@ extern void onRender(GameInstance *this);
 extern void onLogic(GameInstance *this);
 extern void setPerspective(GameInstance *this, float fov, float aspect, float near, float far);
 
-//extern GameInstance *this;
-//
-//static int mode = 0;
-//static int modelId = 0;
-//
-//void debugKeyPress(unsigned char key, int x, int y) {
-//	if (mode == 0) {
-//		switch (key) {
-//			case 27:
-//				exit(0);
-//				break;
-//
-//			// Debug view
-//			case 'a': this->camera->rotation[1] += 2; break;
-//			case 'd': this->camera->rotation[1] -= 2; break;
-//			case 'w': this->camera->rotation[0] += 2; break;
-//			case 's': this->camera->rotation[0] -= 2; break;
-//			case 'q': this->camera->rotation[2] += 2; break;
-//			case 'e': this->camera->rotation[2] -= 2; break;
-//			case 'j': this->camera->position[0] -= 0.2; break;
-//			case 'l': this->camera->position[0] += 0.2; break;
-//			case 'k': this->camera->position[1] -= 0.2; break;
-//			case 'i': this->camera->position[1] += 0.2; break;
-//			case 'u': this->camera->position[2] -= 0.2; break;
-//			case 'o': this->camera->position[2] += 0.2; break;
-//
-//			case 'n': mode = 1; break;
-//			case 'm': mode = 1; break;
-//
-//			default:
-//				printf("INVALID KEY: %d %c\n", key, key);
-//				break;
-//		}
-//	} else if (mode == 1) {
-//		ObjectInstance *obj;
-//		ListElement *it;
-//		for (it = this->map->objects->staticInstances->first; it != NULL; it = it->next) {
-//			if (((ObjectInstance *)it->data)->id == modelId) {
-//				obj = (ObjectInstance *)it->data;
-//				break;
-//			}
-//		}
-//		switch (key) {
-//			case 27:
-////				glutDestroyWindow(this->windowInstance);
-//				exit(0);
-//				break;
-//
-//			// Debug view
-//			case 's': obj->position[1] += 1.0f / 16; break;
-//			case 'w': obj->position[1] -= 1.0f / 16; break;
-//			case 'a': obj->position[0] += 1.0f / 16; break;
-//			case 'd': obj->position[0] -= 1.0f / 16; break;
-//			case 'q': obj->position[2] += 1.0f / 16; break;
-//			case 'e': obj->position[2] -= 1.0f / 16; break;
-//
-//			case 'f': obj->scale[0] -= 0.1; break;
-//			case 'h': obj->scale[0] += 0.1; break;
-//			case 'g': obj->scale[1] -= 0.1; break;
-//			case 't': obj->scale[1] += 0.1; break;
-//			case 'r': obj->scale[2] -= 0.1; break;
-//			case 'z': obj->scale[2] += 0.1; break;
-//
-//			case 'j': obj->rotation[0] -= PI / 4; break;
-//			case 'l': obj->rotation[0] += PI / 4; break;
-//			case 'k': obj->rotation[1] -= PI / 4; break;
-//			case 'i': obj->rotation[1] += PI / 4; break;
-//			case 'u': obj->rotation[2] -= PI / 4; break;
-//			case 'o': obj->rotation[2] += PI / 4; break;
-//
-//			case 'n': mode = 0; break;
-//			case 'm': mode = 0; break;
-//			case 'b': scanf("%d", &modelId); break;
-//			case 'v': printf("POS: %f %f %f\nROT: %f %f %f\nSCL: %f %f %f\n",
-//					obj->position[0], obj->position[1], obj->position[2],
-//					obj->rotation[0], obj->rotation[1], obj->rotation[2],
-//					obj->scale[0], obj->scale[1], obj->scale[2]);
-//			break;
-//
-//			default:
-//				printf("INVALID KEY: %d %c\n", key, key);
-//				break;
-//		}
-//	}
-//}
+static int mode = 0;
+static int modelId = 0;
 
-GameInstance *gi;
+GameInstance *gi; //TODO: Debug
+
+void debugKeyPress(const char key, int x, int y) {
+	if (mode == 0) {
+		switch (key) {
+			case 27:
+				exit(0);
+				break;
+
+			// Debug view
+			case 'A': gi->camera->rotation[1] += 2; break;
+			case 'D': gi->camera->rotation[1] -= 2; break;
+			case 'W': gi->camera->rotation[0] += 2; break;
+			case 'S': gi->camera->rotation[0] -= 2; break;
+			case 'Q': gi->camera->rotation[2] += 2; break;
+			case 'E': gi->camera->rotation[2] -= 2; break;
+			case 'J': gi->camera->position[0] -= 0.2; break;
+			case 'L': gi->camera->position[0] += 0.2; break;
+			case 'K': gi->camera->position[1] -= 0.2; break;
+			case 'I': gi->camera->position[1] += 0.2; break;
+			case 'U': gi->camera->position[2] -= 0.2; break;
+			case 'O': gi->camera->position[2] += 0.2; break;
+
+			case 'N': mode = 2; break;
+			case 'M': mode = 1; break;
+
+			default:
+				printf("INVALID KEY: %d %c\n", key, key);
+				break;
+		}
+	} else if (mode == 1) {
+		StaticObjectInstance *obj;
+		ListElement *it;
+		for (it = gi->map->objects->staticInstances->first; it != NULL; it = it->next) {
+			if (((StaticObjectInstance *)it->data)->id == modelId) {
+				obj = (StaticObjectInstance *)it->data;
+				break;
+			}
+		}
+		switch (key) {
+			case 27:
+//				glutDestroyWindow(this->windowInstance);
+				exit(0);
+				break;
+
+			// Debug view
+			case 'S': obj->position[1] += 1.0f / 16; break;
+			case 'W': obj->position[1] -= 1.0f / 16; break;
+			case 'A': obj->position[0] += 1.0f / 16; break;
+			case 'D': obj->position[0] -= 1.0f / 16; break;
+			case 'Q': obj->position[2] += 1.0f / 16; break;
+			case 'E': obj->position[2] -= 1.0f / 16; break;
+
+			case 'F': obj->scale[0] -= 0.1; break;
+			case 'H': obj->scale[0] += 0.1; break;
+			case 'G': obj->scale[1] -= 0.1; break;
+			case 'T': obj->scale[1] += 0.1; break;
+			case 'R': obj->scale[2] -= 0.1; break;
+			case 'Z': obj->scale[2] += 0.1; break;
+
+			case 'J': obj->rotation[0] -= PI / 4; break;
+			case 'L': obj->rotation[0] += PI / 4; break;
+			case 'K': obj->rotation[1] -= PI / 4; break;
+			case 'I': obj->rotation[1] += PI / 4; break;
+			case 'U': obj->rotation[2] -= PI / 4; break;
+			case 'O': obj->rotation[2] += PI / 4; break;
+
+			case 'N': mode = 0; break;
+			case 'M': mode = 2; break;
+			case 'B': scanf("%d", &modelId); break;
+			case 'V': printf("POS: %f %f %f\nROT: %f %f %f\nSCL: %f %f %f\n",
+					obj->position[0], obj->position[1], obj->position[2],
+					obj->rotation[0], obj->rotation[1], obj->rotation[2],
+					obj->scale[0], obj->scale[1], obj->scale[2]);
+			break;
+
+			default:
+				printf("INVALID KEY: %d %c\n", key, key);
+				break;
+		}
+	}
+}
 
 void onKeyAction(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	if (key == GLFW_KEY_H && action == GLFW_PRESS)
 		printf("%g %g\n", gi->player->position[0], gi->player->position[1]);
-//	if (action == GLFW_PRESS)
-//		debugKeyPress(key, 0, 0);
+#ifdef DEBUG_MOVEMENT
+	debugKeyPress(key, 0, 0);
+#endif
 }
 
 static void onError(int error, const char* description) {

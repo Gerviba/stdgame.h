@@ -24,7 +24,7 @@ void listPush(LinkedList *list, void *data) {
 
 	int i;
 	for (i = 0; i < list->dataSize; ++i)
-		*(char *)(new->data + i) = *(char *)(data + i);
+		*(char *)(new->data + i) = *(char *)(data + i); //TODO: []
 
 	if (list->first == NULL)
 		list->first = new;

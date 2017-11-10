@@ -17,9 +17,9 @@
 |T|Tile|T x y Y.id TileType|
 |S|Static Light|S x y strength color|
 |L|Ligthing|L x y strength1 color1 strength2 color2 time|
-|O|Object Satic / Dynamic|O id PASSIVE filename|
-|O|Object Active|O id ACTIVE filename|
-|I|Object Instance|I O.id STATIC/SYNAMIC/ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ|
+|O|Object Active|O id STATIC/DYNAMIC/ACTIVE filename|
+|I|Object Instance|I O.id STATIC/DYNAMIC/ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible (reference) |
 |C|Coords|C id type x y|
 |M|Message|M x1 y1 x2 y2 LANG_KEY|
 |R|Region|R x1 y1 x2 y2 delatHP gravity velocity|
+|A|TextComponent|A x y message |

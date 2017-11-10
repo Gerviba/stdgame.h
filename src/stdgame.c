@@ -6,7 +6,7 @@
 
 extern void gameInit(GameInstance *this);
 extern void onRender(GameInstance *this);
-extern void onLogic(GameInstance *this);
+extern void onLogicIngame(GameInstance *this);
 extern void setPerspective(GameInstance *this, float fov, float aspect, float near, float far);
 
 static int mode = 0;
@@ -17,11 +17,6 @@ GameInstance *gi; //TODO: Debug
 void debugKeyPress(const char key, int x, int y) {
 	if (mode == 0) {
 		switch (key) {
-			case 27:
-				exit(0);
-				break;
-
-			// Debug view
 			case 'A': gi->camera->rotation[1] += 2; break;
 			case 'D': gi->camera->rotation[1] -= 2; break;
 			case 'W': gi->camera->rotation[0] += 2; break;
@@ -52,12 +47,6 @@ void debugKeyPress(const char key, int x, int y) {
 			}
 		}
 		switch (key) {
-			case 27:
-//				glutDestroyWindow(this->windowInstance);
-				exit(0);
-				break;
-
-			// Debug view
 			case 'S': obj->position[1] += 1.0f / 16; break;
 			case 'W': obj->position[1] -= 1.0f / 16; break;
 			case 'A': obj->position[0] += 1.0f / 16; break;
@@ -130,7 +119,7 @@ int main(int argc, char *argv[]) {
 	glfwSetErrorCallback(onError);
 
 	if (!glfwInit()) {
-		printf("[ERROR] Init failed");
+		printf("[ERROR] Init failed\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -165,12 +154,13 @@ int main(int argc, char *argv[]) {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClearDepth(1.0f);
 	glEnable(GL_MULTISAMPLE);
-	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -181,7 +171,7 @@ int main(int argc, char *argv[]) {
 	gameInit(this);
 
 	while (!glfwWindowShouldClose(this->window)) {
-		onLogic(this);
+		onLogicIngame(this);
 
 //		int width, height;
 //		glfwGetFramebufferSize(window, &width, &height);

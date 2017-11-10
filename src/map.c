@@ -36,13 +36,15 @@ Map* loadMap(const GameInstance *this, char path[]) {
 	map->objects->activeObjects = newLinkedListPointer(sizeof(ActiveObject));
 	map->objects->activeInstances = newLinkedListPointer(sizeof(ActiveObjectInstance));
 
+	map->menu = NULL;
+
 	FILE *file;
 	char buff[255];
 	printf("[Map] Loading map: %s\n", path);
 
 	file = fopen(path, "r");
 	while (fgets(buff, 255, file)) {
-		switch (buff[0]) {
+		switch (buff[X]) {
 			case '$': { // Meta
 				char type[32];
 				sscanf(buff, "$ %s", type);
@@ -59,16 +61,15 @@ Map* loadMap(const GameInstance *this, char path[]) {
 //				} else if (strcmp(type, "BACKGROUND") == 0) {
 //					unsigned int r, g, b;
 //					sscanf(buff, "$ %*s %02x%02x%02x", &r, &g, &b);
-//					map->background[0] = (float)r / 255;
-//					map->background[1] = (float)g / 255;
-//					map->background[2] = (float)b / 255;
+//					map->background[X] = (float)r / 255;
+//					map->background[Y] = (float)g / 255;
+//					map->background[Z] = (float)b / 255;
 				} else if (strcmp(type, "AMBIENT") == 0) {
-					sscanf(buff, "$ %*s %f", &map->ambient[0]);
-					map->ambient[1] = map->ambient[0];
-					map->ambient[2] = map->ambient[0];
+					sscanf(buff, "$ %*s %f", &map->ambient[R]);
+					map->ambient[G] = map->ambient[R];
+					map->ambient[B] = map->ambient[R];
 				} else if (strcmp(type, "SPAWN") == 0) {
-					sscanf(buff, "$ %*s %f %f %f", &map->spawn[0], &map->spawn[1], &map->spawn[2]);
-					printf("%f %f %f\n", map->spawn[0], map->spawn[1], map->spawn[2]);
+					sscanf(buff, "$ %*s %f %f %f", &map->spawn[X], &map->spawn[Y], &map->spawn[Z]);
 				}
 				break;
 			}
@@ -85,7 +86,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 				TextureBlock block;
 				int side[5];
 
-				sscanf(buff, "Y %d %d %d %d %d %d", &block.id, &side[0], &side[1], &side[2], &side[3], &side[4]);
+				sscanf(buff, "Y %d %d %d %d %d %d", &block.id, &side[X], &side[Y], &side[Z], &side[3], &side[4]);
 
 				Texture **pointers[5] = {&block.base, &block.top, &block.right, &block.bottom, &block.left};
 				int i;
@@ -130,52 +131,68 @@ Map* loadMap(const GameInstance *this, char path[]) {
 				Light light;
 				unsigned int r, g, b;
 				sscanf(buff, "S %f %f %f %02x%02x%02x", &light.x, &light.y, &light.strength, &r, &g, &b);
-				light.color[0] = (float)r / 255;
-				light.color[1] = (float)g / 255;
-				light.color[2] = (float)b / 255;
+				light.color[R] = (float)r / 255;
+				light.color[G] = (float)g / 255;
+				light.color[B] = (float)b / 255;
 
 				listPush(map->lights, &light);
 				break;
 			}
-			case 'O': {
+			case 'O': { // Object
+				char type[32];
+				sscanf(buff, "O %*d %s", type);
+				int id;
+
+				if (strcmp(type, "STATIC") == 0) {
+					char path[255];
+					sscanf(buff, "O %d STATIC %s", &id, path);
+					char finalPath[255] = "assets/objects/";
+					strcat(finalPath, path);
+
+					StaticObject *so = loadObject(finalPath);
+					so->id = id;
+					listPush(map->objects->staticObjects, so);
+				} else {
+					//TODO: Implement DYNAMIC and ACTIVE objects
+				}
 				break;
 			}
-			case 'I': {
+			case 'I': { // Object Instance
 				char type[32];
-				sscanf(buff, "I %*d %s", type);
+				sscanf(buff, "I %*d %*d %s", type);
 				int visible;
 
-				if (strcmp(buff, "STATIC") == 0) {
+				if (strcmp(type, "STATIC") == 0) {
 					StaticObjectInstance soi;
 					int objectId;
-					sscanf(buff, "I %d %d STATIC %f %f %f %f %f %f %f %f %f %d", &soi.id, objectId,
-							&soi.position[0], &soi.position[1], &soi.position[2],
-							&soi.rotation[0], &soi.rotation[1], &soi.rotation[2],
-							&soi.scale[0], &soi.scale[1], &soi.scale[2], &visible);
+					sscanf(buff, "I %d %d STATIC %f %f %f %f %f %f %f %f %f %d", &soi.id, &objectId,
+							&soi.position[X], &soi.position[Y], &soi.position[Z],
+							&soi.rotation[X], &soi.rotation[Y], &soi.rotation[Z],
+							&soi.scale[X], &soi.scale[Y], &soi.scale[Z], &visible);
 					soi.visible = visible ? GL_TRUE : GL_FALSE;
 
 					ListElement *it;
-					for (it = map->objects->staticInstances; it != NULL; it = it->next) {
-						if (((StaticObjectInstance *)it->data)->id == objectId) {
-							soi.object = ((StaticObjectInstance *) it->data)->object;
+					for (it = map->objects->staticObjects->first; it != NULL; it = it->next) {
+						if (((StaticObject *) it->data)->id == objectId) {
+							soi.object = (StaticObject *) it->data;
 							break;
 						}
 					}
 
 					listPush(map->objects->staticInstances, &soi);
 
-				} else if (strcmp(buff, "DYNAMIC") == 0) {
+				} else if (strcmp(type, "DYNAMIC") == 0) {
 					DynamicObjectInstance doi;
 					int objectId, referencePoint;
-					sscanf(buff, "I %d %d STATIC %f %f %f %f %f %f %f %f %f %d %d", &doi.id,
-							&doi.position[0], &doi.position[1], &doi.position[2],
-							&doi.rotation[0], &doi.rotation[1], &doi.rotation[2],
-							&doi.scale[0], &doi.scale[1], &doi.scale[2], &visible, &referencePoint);
+					sscanf(buff, "I %d %d STATIC %f %f %f %f %f %f %f %f %f %d %d", &doi.id, &objectId,
+							&doi.position[X], &doi.position[Y], &doi.position[Z],
+							&doi.rotation[X], &doi.rotation[Y], &doi.rotation[Z],
+							&doi.scale[X], &doi.scale[Y], &doi.scale[Z], &visible, &referencePoint);
 					doi.visible = visible ? GL_TRUE : GL_FALSE;
 
 					ListElement *it;
-					for (it = map->objects->dynamicInstances; it != NULL; it = it->next) {
-						if (((DynamicObjectInstance *)it->data)->id == objectId) {
+					for (it = map->objects->dynamicInstances->first; it != NULL; it = it->next) {
+						if (((DynamicObjectInstance *) it->data)->id == objectId) {
 							doi.object = ((DynamicObjectInstance *) it->data)->object;
 							break;
 						}
@@ -184,9 +201,23 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					doi.reference = NULL; //TODO: Implement reference points
 
 					listPush(map->objects->dynamicInstances, &doi);
+				} else if (strcmp(buff, "ACTIVE") == 0) {
+					//TODO: Implement ACTIVE object
 				}
 
 
+
+				break;
+			}
+			case 'A': { // TextComponent
+				if (map->menu == NULL) {
+					map->menu = malloc(sizeof(Menu));
+					map->menu->components = newLinkedListPointer(sizeof(Component));
+				}
+
+				Component *comp = malloc(sizeof(Component));
+				comp->text = malloc(sizeof(TextComponent));
+				TextComponent text;
 
 				break;
 			}
@@ -195,9 +226,9 @@ Map* loadMap(const GameInstance *this, char path[]) {
 //				sscanf(buff, "C %*d %s", type);
 //
 //				if (strcmp(type, "SPAWN") == 0) {
-//					sscanf("C %*d SPAWN %f %f", &map->spawn[0], &map->spawn[1]);
-//					map->spawn[2] = 4;
-//					printf("Map loaded %f %f\n", map->spawn[0], map->spawn[1]);
+//					sscanf("C %*d SPAWN %f %f", &map->spawn[X], &map->spawn[Y]);
+//					map->spawn[Z] = 4;
+//					printf("Map loaded %f %f\n", map->spawn[X], map->spawn[Y]);
 //				}
 //				break;
 //			}
@@ -205,12 +236,6 @@ Map* loadMap(const GameInstance *this, char path[]) {
 	}
 
 	fclose(file);
-
-//	ListElement *it;
-//	for (it = map->textures->first; it != NULL; it = it->next) {
-//		int f = ((Texture *)it->data)->textureId;
-//		printf("%d => %d\n", ((Texture *)it->data)->id, f);
-//	}
 
 	return map;
 }

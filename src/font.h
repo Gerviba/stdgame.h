@@ -3,6 +3,12 @@
 
 #include "object.h"
 
+typedef enum {
+	FS_LOW_DPI = 32,
+	FS_NORMAL_DPI = 16,
+	FS_HIGH_DPI = 8
+} FontSize;
+
 typedef struct {
 	int colorId;
 	PartType type;

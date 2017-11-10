@@ -2,9 +2,10 @@
 #define MAP_H_
 
 #include "linkedlist.h"
+#include "menu.h"
 
 /**
- * 0bTRBLF
+ * 0bRLTBF
  * T = TOP
  * R = RIGHT
  * B = BOTTOM
@@ -53,8 +54,8 @@ typedef enum {
 #define TTMASK_RENDER_RIGHT 	TT_BORDER_LEFT
 #define TTMASK_RENDER_FRONT 	TT_FOREGROUND
 
-#define MOVE_BLOCK_X			(TT_BORDER_LEFT | TT_BORDER_RIGHT) & b11110
-#define MOVE_BLOCK_Y			(TT_BORDER_TOP | TT_BORDER_BOTTOM) & b11110
+#define MOVE_BLOCK_Y			(TT_BORDER_TOP | TT_BORDER_BOTTOM) & 0b11110
+#define MOVE_BLOCK_X			(TT_BORDER_RIGHT | TT_BORDER_LEFT) & 0b11110
 
 typedef struct {
 	GLfloat x, y;
@@ -111,6 +112,7 @@ typedef struct {
 	LinkedList /*TextureBlock*/ *textureBlocks;
 
 	ObjectInfo *objects;
+	Menu *menu;
 } Map;
 
 #endif /* MAP_H_ */

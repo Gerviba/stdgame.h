@@ -35,6 +35,11 @@ typedef struct {
 	float lightColor[MAX_NUM_LIGHTS * 3];
 } LigingInfo;
 
+typedef enum {
+	MENU,
+	INGAME
+} GameState;
+
 typedef struct {
 	ShaderInfo *shader;
 	CameraInfo *camera;
@@ -47,6 +52,7 @@ typedef struct {
 	GLuint blankTextureId;
 	GLFWwindow *window;
 	int score;
+	GameState state;
 } GameInstance;
 
 #endif /* GAME_H_ */

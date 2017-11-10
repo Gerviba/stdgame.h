@@ -98,6 +98,7 @@ typedef struct {
 } PartColor;
 
 typedef struct {
+	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
 	GLfloat scale[3];

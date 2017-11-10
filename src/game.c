@@ -105,110 +105,15 @@ void gameInit(GameInstance *this) {
 	this->shader->modelMat = glGetUniformLocation(this->shader->shaderId, "modelMat");
 
 	loadTileVAO(this);
-
 	loadTexture(&this->blankTextureId, "null.png");
 
+	this->state = INGAME;
 	this->map = loadMap(this, "assets/maps/test2.map");
-	
-	{
-		StaticObject *so = loadObject("assets/objects/tendril.sobj");
-		listPush(this->map->objects->staticObjects, so);
-	}
-
-	{
-		StaticObject *so = loadObject("assets/objects/gnome.sobj");
-		listPush(this->map->objects->staticObjects, so);
-		StaticObjectInstance oi;
-		oi.id = 0;
-		oi.position[0] = 0.0f;
-		oi.position[1] = 0.0f;
-		oi.position[2] = 0.0f;
-		oi.rotation[0] = 0.0f;
-		oi.rotation[1] = 0.0f;
-		oi.rotation[2] = 0.0f;
-		oi.scale[0] = 1;
-		oi.scale[1] = 1;
-		oi.scale[2] = 1;
-		oi.object = so;
-		listPush(this->map->objects->staticInstances, &oi);
-	}
-
-	{
-		StaticObject *so = loadObject("assets/objects/lock_little.sobj");
-		listPush(this->map->objects->staticObjects, so);
-		StaticObjectInstance oi;
-		oi.id = 1;
-		oi.position[0] = 10.75f;
-		oi.position[1] = 7.5f;
-		oi.position[2] = 0.8f;
-		oi.rotation[0] = 0.0f;
-		oi.rotation[1] = 90.0f;
-		oi.rotation[2] = 0.0f;
-		oi.scale[0] = 0.5;
-		oi.scale[1] = 0.5;
-		oi.scale[2] = 0.5;
-		oi.object = so;
-		listPush(this->map->objects->staticInstances, &oi);
-	}
-
-	{
-		StaticObject *so = loadObject("assets/objects/key_little.sobj");
-		listPush(this->map->objects->staticObjects, so);
-		StaticObjectInstance oi;
-		oi.id = 2;
-		oi.position[0] = 0.0f;
-		oi.position[1] = 0.0f;
-		oi.position[2] = 0.0f;
-		oi.rotation[0] = 0.0f;
-		oi.rotation[1] = 0.0f;
-		oi.rotation[2] = 0.0f;
-		oi.scale[0] = 1;
-		oi.scale[1] = 1;
-		oi.scale[2] = 1;
-		oi.object = so;
-		listPush(this->map->objects->staticInstances, &oi);
-	}
-
-	{
-		StaticObject *so = loadObject("assets/objects/door.dobj");
-		listPush(this->map->objects->staticObjects, so);
-		StaticObjectInstance oi;
-		oi.id = 3;
-		oi.position[0] = 11.0f;
-		oi.position[1] = 7.0f;
-		oi.position[2] = 0.0f;
-		oi.rotation[0] = 0.0f;
-		oi.rotation[1] = 180.0f;
-		oi.rotation[2] = 0.0f;
-		oi.scale[0] = 1;
-		oi.scale[1] = 1;
-		oi.scale[2] = 1;
-		oi.object = so;
-		listPush(this->map->objects->staticInstances, &oi);
-	}
-
-	{
-		StaticObject *so = loadObject("assets/objects/ghost.aobj");
-		listPush(this->map->objects->staticObjects, so);
-		StaticObjectInstance oi;
-		oi.id = 3;
-		oi.position[0] = 14.0f;
-		oi.position[1] = 7.3f;
-		oi.position[2] = 0.0f;
-		oi.rotation[0] = 0.0f;
-		oi.rotation[1] = 180.0f;
-		oi.rotation[2] = 0.0f;
-		oi.scale[0] = 1;
-		oi.scale[1] = 1;
-		oi.scale[2] = 1;
-		oi.object = so;
-		listPush(this->map->objects->staticInstances, &oi);
-	}
 
 	initPlayer(this);
 	initFont(this);
-	onLogic(this);
-
+	onLogicIngame(this);
+	printf("[Render] First logic done\n");
 
 	updateCamera(this);
 	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
@@ -222,6 +127,21 @@ void updateCamera(GameInstance* this) {
 	glTranslatef(-this->camera->position[0],
 			-this->camera->position[1],
 			-this->camera->position[2]);
+}
+
+static void renderGUI(GameInstance* this) {
+	GLfloat color[] = {1.0f, 1.0f, 1.0f, 1.0f};
+	renderFontTo(this, "You have no $", (GLfloat[]) {6.0f, 7.0625f, 1.0f, 1.0f}, color);
+
+	char str[16];
+	if (glfwGetKey(this->window, GLFW_KEY_UP) == GLFW_PRESS)
+		++this->score;
+	sprintf(str, "%d *", this->score);
+
+	renderFontTo(this, str, (GLfloat[]) {this->camera->position[X] + 3.0f - (strlen(str) * 0.0625f * 4),
+			this->camera->position[Y] + 1.0625f, 1.0f, 1.0f}, color);
+	renderFontTo(this, "$$$", (GLfloat[]) {this->camera->position[X] - 3.0f, this->camera->position[Y] + 1.0625f,
+			1.0f, 1.0f}, color);
 }
 
 void onRender(GameInstance *this) {
@@ -249,23 +169,18 @@ void onRender(GameInstance *this) {
 
 	ListElement *it;
 	for (it = this->map->tiles->first; it != NULL; it = it->next)
-		renderTile(this, (Tile *)it->data);
+		renderTile(this, (Tile *) it->data);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	for (it = this->map->objects->staticInstances->first; it != NULL; it = it->next)
-		renderStaticObject(this, (StaticObjectInstance *)it->data);
+		renderStaticObject(this, (StaticObjectInstance *) it->data);
 
-	GLfloat color[] = {1.0f, 1.0f, 1.0f, 1.0f};
-	renderFontTo(this, "You have no $", (GLfloat[]) {6.0f, 7.0625f, 1.0f, 1.0f}, color);
+	if (this->state == INGAME) {
+		renderGUI(this);
+	} else if (this->state == MENU) {
 
-	char str[16];
-	if (glfwGetKey(this->window, GLFW_KEY_UP) == GLFW_PRESS)
-		++this->score;
-	sprintf(str, "%d *", this->score);
+	}
 
-	renderFontTo(this, str, (GLfloat[]) {this->camera->position[0] + 2.0f - (strlen(str) * 0.0625f * 4),
-			9.0625f, 1.0f, 1.0f}, color);
-	renderFontTo(this, "$$$$$", (GLfloat[]) {this->camera->position[0] - 2.0f, 9.0625f, 1.0f, 1.0f}, color);
 
     // Cleanup
     glUseProgram(0);
@@ -283,7 +198,7 @@ static unsigned int getTicks(void) {
 	#endif /* _WIN32 */
 }
 
-void onLogic(GameInstance *this) {
+void onLogicIngame(GameInstance *this) {
 	static unsigned int prevTicks = 0;
 	unsigned int ticks;
 	float secondsElapsed;
@@ -296,57 +211,124 @@ void onLogic(GameInstance *this) {
 	prevTicks = ticks;
 
 	StaticObjectInstance *obj = ((StaticObjectInstance *) this->map->objects->staticInstances->first->data);
+
+	static float plannedCameraRotation = 0, cameraRotation = 0;
+
+	float deltaMoveX = 0;
 	if (glfwGetKey(this->window, GLFW_KEY_A) == GLFW_PRESS
 			|| glfwGetKey(this->window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		this->player->position[0] -= secondsElapsed * 2;
-		obj->rotation[1] = 0;
+		deltaMoveX += -secondsElapsed * 2;
+		obj->rotation[Y] = 0;
+		plannedCameraRotation = 1;
 	}
 
 	if (glfwGetKey(this->window, GLFW_KEY_D) == GLFW_PRESS
 			|| glfwGetKey(this->window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		this->player->position[0] += secondsElapsed * 2;
-		obj->rotation[1] = 180;
+		deltaMoveX += secondsElapsed * 2;
+		obj->rotation[Y] = 180;
+		plannedCameraRotation = -1;
 	}
 
-	if (this->player->position[1] <= 7) {
-		this->player->velocity[1] = 0;
-		this->player->position[1] = 7;
-		this->player->jumping = GL_FALSE;
+	if (!(glfwGetKey(this->window, GLFW_KEY_A) == GLFW_PRESS
+			|| glfwGetKey(this->window, GLFW_KEY_LEFT) == GLFW_PRESS) &&
+			!(glfwGetKey(this->window, GLFW_KEY_D) == GLFW_PRESS
+			|| glfwGetKey(this->window, GLFW_KEY_RIGHT) == GLFW_PRESS)) {
+		plannedCameraRotation = 0;
 	}
 
-	if (!this->player->jumping && (glfwGetKey(this->window, GLFW_KEY_SPACE) == GLFW_PRESS
+	ListElement *it;
+	for (it = this->map->tiles->first; it != NULL; it = it->next) {
+		Tile *tile = (Tile *) it->data;
+		if ((int) tile->y == (int) this->player->position[Y]
+			  && (int) tile->x == (int) (deltaMoveX + this->player->position[X])) {
+			if (tile->type != 0)
+				deltaMoveX = 0;
+			break;
+		}
+	}
+	this->player->position[X] += deltaMoveX;
+
+	if (this->player->velocity[Y] == 0 && (glfwGetKey(this->window, GLFW_KEY_SPACE) == GLFW_PRESS
 			|| glfwGetKey(this->window, GLFW_KEY_W) == GLFW_PRESS)) {
-		this->player->jumping = GL_TRUE;
-		this->player->velocity[1] = 10;
+		this->player->velocity[Y] = 10;
+		printf("jump");
 	}
 
-	if (this->player->jumping) {
-		this->player->position[1] += (this->player->velocity[1] * (9.81 / 1000));
-		this->player->velocity[1] -= 0.5;
+	float deltaMoveY = this->player->velocity[Y] * (9.81 / 1000);
+	this->player->velocity[Y] -= 0.5;
+	if (this->player->velocity[Y] < -8)
+		this->player->velocity[Y] = -8;
+
+
+	for (it = this->map->tiles->first; it != NULL; it = it->next) {
+		Tile *tile = (Tile *) it->data;
+		if ((int) tile->y == (int) (deltaMoveY + this->player->position[Y])
+			  && (int) tile->x == (int) (this->player->position[X])) {
+			if (tile->type != 0)
+				deltaMoveY = 0;
+			break;
+		}
 	}
+	this->player->position[Y] += deltaMoveY;
+
+//	ListElement *it;
+//	for (it = this->map->tiles->first; it != NULL; it = it->next) {
+//		Tile *tile = (Tile *)it->data;
+//		if (tile->y >= this->player->position[Y] - 1 && tile->y <= this->player->position[Y] - 1
+//			  && (int) tile->x == (int) (this->player->position[X] + 0.5)) {
+//
+//			if ((tile->type & MOVE_BLOCK_Y) != 0) {
+//				this->player->velocity[Y] = 0;
+////				this->player->position[Y] = (int) tile->y + 1;
+//				deltaMoveY = 0;
+//				printf("break\n");
+//				break;
+//			}
+//		}
+//	}
+//	this->player->position[Y] += deltaMoveY;
+
+
+//	if (this->player->position[Y] <= 7) {
+//		this->player->velocity[Y] = 0;
+//		this->player->position[Y] = 7;
+//		this->player->jumping = GL_FALSE;
+//	}
 
 #ifndef DEBUG_MOVEMENT
-	this->camera->position[0] = this->player->position[0] + 2;
-	this->camera->position[1] = this->player->position[1] + 1;
-	this->camera->position[2] = 4.8;
+	this->camera->position[X] = this->player->position[X] + 2;
+	this->camera->position[Y] = this->player->position[Y] + 1;
+	this->camera->position[Z] = 4.8;
 #endif
 
 	// DEBUG
-	obj->position[0] = this->player->position[0];
-	obj->position[1] = this->player->position[1];
-//	obj->rotation[2]d = 270;
+	obj->position[X] = this->player->position[X];
+	obj->position[Y] = this->player->position[Y];
+//	obj->rotation[Z] = 270;
 	// END DEBUG
 
 	int width, height;
 	glfwGetFramebufferSize(this->window, &width, &height);
 	double cursorX, cursorY;
 	glfwGetCursorPos(this->window, &cursorX, &cursorY);
-#ifndef DEBUG_MOVEMENTd
-//	this->camdera->rotation[1] = (cursorX - (width / 2)) * -0.01;
+#ifndef DEBUG_MOVEMENT
+	if (plannedCameraRotation == 1) {
+		cameraRotation = min(cameraRotation + 0.2, 2);
+	} else if (plannedCameraRotation == -1) {
+		cameraRotation = max(cameraRotation - 0.2, -2);
+	} else if (cameraRotation > 0) {
+		cameraRotation -= 0.3;
+		if (cameraRotation < 0)
+			cameraRotation = 0;
+	} else if (cameraRotation < 0) {
+		cameraRotation += 0.3;
+		if (cameraRotation > 0)
+			cameraRotation = 0;
+	}
+	this->camera->rotation[Y] = cameraRotation;
 #endif
 
 	i = 0;
-	ListElement *it;
 	for (it = this->map->lights->first; it != NULL; it = it->next, ++i) {
 		Light light = *(Light *)it->data;
 		this->lighting->lightColor[i * 3 + 0] = light.color[0];

@@ -88,7 +88,7 @@ typedef enum {
 
 typedef struct {
 	PartType type;
-	GLfloat *color;
+	GLfloat *color; // -> colors[4]
 	GLfloat position[3];
 } StaticObjectPart;
 
@@ -98,6 +98,7 @@ typedef struct {
 } PartColor;
 
 typedef struct {
+	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
 	GLfloat scale[3];
@@ -107,19 +108,69 @@ typedef struct {
 } StaticObject;
 
 typedef struct {
+	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
 	GLfloat scale[3];
 	GLfloat moveMat[16];
+	GLboolean visible;
 	StaticObject *object;
-} ObjectInstance;
+} StaticObjectInstance;
+
+typedef struct {
+	GLfloat position[3];
+	GLfloat rotation[3];
+	GLfloat scale[3];
+} ReferencePoint;
+
+typedef struct {
+	int id;
+	GLfloat position[3];
+	GLfloat rotation[3];
+	GLfloat scale[3];
+	GLfloat moveMat[16];
+	LinkedList /*StaticObjectPart*/ *parts;
+	LinkedList /*PartColor*/ *colors;
+} DynamicObject;
+
+typedef struct {
+	int id;
+	GLfloat position[3];
+	GLfloat rotation[3];
+	GLfloat scale[3];
+	GLfloat moveMat[16];
+	GLboolean visible;
+	ReferencePoint *reference;
+	DynamicObject *object;
+} DynamicObjectInstance;
+
+typedef struct {
+	int id;
+	int size;
+	DynamicObject parts[];
+} ActiveObject;
+
+typedef struct {
+	int id;
+	int activePart;
+	GLfloat position[3];
+	GLfloat rotation[3];
+	GLfloat scale[3];
+	GLboolean visible;
+	ActiveObject *object;
+} ActiveObjectInstance;
 
 typedef struct {
 	LinkedList /*StaticObject*/ *staticObjects;
-	LinkedList /*ObjectInstance*/ *staticInstances;
+	LinkedList /*StaticObjectInstance*/ *staticInstances;
+
+	LinkedList /*DynamicObject*/ *dynamicObjects;
+	LinkedList /*DynamicObjectInstance*/ *dynamicInstances;
+
+	LinkedList /*ActiveObject*/ *activeObjects;
+	LinkedList /*ActiveObjectInstance*/ *activeInstances;
 } ObjectInfo;
 
-StaticObject *loadStaticObject(char*);
-//void renderStaticObject(GameInstance*, ObjectInstance*); FIXME_ Kereszthivatkozás headerek között
+StaticObject *loadObject(char*);
 
 #endif /* OBJECT_H_ */

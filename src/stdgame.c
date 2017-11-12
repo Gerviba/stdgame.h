@@ -1,118 +1,193 @@
-#define DEBUG 1
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
 #include "includes.h"
 
-extern void gameInit(void);
-extern void onRender(void);
-extern void onLogic(void);
+static int mode = 0;
+static int modelId = 0;
 
-extern void setPerspective(float fov, float aspect, float near, float far);
+GameInstance *gi; //TODO: Debug
 
-extern GameInstance *this;
+/**
+ * TODO: Remove this chaos:
+ */
+void debugKeyPress(const char key, int x, int y) {
+	if (mode == 0) {
+		switch (key) {
+			case 'A': gi->camera->rotation[1] += 2; break;
+			case 'D': gi->camera->rotation[1] -= 2; break;
+			case 'W': gi->camera->rotation[0] += 2; break;
+			case 'S': gi->camera->rotation[0] -= 2; break;
+			case 'Q': gi->camera->rotation[2] += 2; break;
+			case 'E': gi->camera->rotation[2] -= 2; break;
+			case 'J': gi->camera->position[0] -= 0.2; break;
+			case 'L': gi->camera->position[0] += 0.2; break;
+			case 'K': gi->camera->position[1] -= 0.2; break;
+			case 'I': gi->camera->position[1] += 0.2; break;
+			case 'U': gi->camera->position[2] -= 0.2; break;
+			case 'O': gi->camera->position[2] += 0.2; break;
 
-void handleKeyPress(unsigned char key, int x, int y) {
-	switch (key) {
-		case 27:
-			glutDestroyWindow(this->windowInstance);
-			exit(0);
+			case 'N': mode = 2; break;
+			case 'M': mode = 1; break;
+
+			default:
+				printf("INVALID KEY: %d %c\n", key, key);
+				break;
+		}
+	} else if (mode == 1) {
+		StaticObjectInstance *obj;
+		ListElement *it;
+		for (it = gi->map->objects->staticInstances->first; it != NULL; it = it->next) {
+			if (((StaticObjectInstance *)it->data)->id == modelId) {
+				obj = (StaticObjectInstance *)it->data;
+				break;
+			}
+		}
+		switch (key) {
+			case 'S': obj->position[1] += 1.0f / 16; break;
+			case 'W': obj->position[1] -= 1.0f / 16; break;
+			case 'A': obj->position[0] += 1.0f / 16; break;
+			case 'D': obj->position[0] -= 1.0f / 16; break;
+			case 'Q': obj->position[2] += 1.0f / 16; break;
+			case 'E': obj->position[2] -= 1.0f / 16; break;
+
+			case 'F': obj->scale[0] -= 0.1; break;
+			case 'H': obj->scale[0] += 0.1; break;
+			case 'G': obj->scale[1] -= 0.1; break;
+			case 'T': obj->scale[1] += 0.1; break;
+			case 'R': obj->scale[2] -= 0.1; break;
+			case 'Z': obj->scale[2] += 0.1; break;
+
+			case 'J': obj->rotation[0] -= PI / 4; break;
+			case 'L': obj->rotation[0] += PI / 4; break;
+			case 'K': obj->rotation[1] -= PI / 4; break;
+			case 'I': obj->rotation[1] += PI / 4; break;
+			case 'U': obj->rotation[2] -= PI / 4; break;
+			case 'O': obj->rotation[2] += PI / 4; break;
+
+			case 'N': mode = 0; break;
+			case 'M': mode = 2; break;
+			case 'B': scanf("%d", &modelId); break;
+			case 'V': printf("POS: %f %f %f\nROT: %f %f %f\nSCL: %f %f %f\n",
+					obj->position[0], obj->position[1], obj->position[2],
+					obj->rotation[0], obj->rotation[1], obj->rotation[2],
+					obj->scale[0], obj->scale[1], obj->scale[2]);
 			break;
 
-		// Debug view
-		case 'a': this->camera->rotation[1] += 2; break;
-		case 'd': this->camera->rotation[1] -= 2; break;
-		case 'w': this->camera->rotation[0] += 2; break;
-		case 's': this->camera->rotation[0] -= 2; break;
-		case 'q': this->camera->rotation[2] += 2; break;
-		case 'e': this->camera->rotation[2] -= 2; break;
-		case 'j': this->camera->position[0] -= 0.2; break;
-		case 'l': this->camera->position[0] += 0.2; break;
-		case 'k': this->camera->position[1] -= 0.2; break;
-		case 'i': this->camera->position[1] += 0.2; break;
-		case 'u': this->camera->position[2] -= 0.2; break;
-		case 'o': this->camera->position[2] += 0.2; break;
-
-		case 'x': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[0] += 1; break;
-		case 'c': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[0] -= 1; break;
-		case 'v': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[1] += 1; break;
-		case 'b': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[1] -= 1; break;
-		case 'm': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[2] += 1; break;
-		case 'n': ((ObjectInstance *)this->objects->staticInstances->first->data)->rotation[2] -= 1; break;
-
-		default:
-			printf("INVALID KEY: %d %c\n", key, key);
-			break;
+			default:
+				printf("INVALID KEY: %d %c\n", key, key);
+				break;
+		}
 	}
 }
 
-void setPerspective(float fov, float aspect, float near, float far) {
-	float f = 1.0f / tanf(fov / 2.0f);
+void onKeyAction(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+	if (key == GLFW_KEY_H && action == GLFW_PRESS)
+		printf("%g %g\n", gi->player->position[X], gi->player->position[Y]);
+#ifdef DEBUG_MOVEMENT
+	debugKeyPress(key, 0, 0);
+#endif
+}
 
-	this->camera->projMat[0] = f / aspect;
-	this->camera->projMat[1] = 0.0f;
-	this->camera->projMat[2] = 0.0f;
-	this->camera->projMat[3] = 0.0f;
+static void onError(int error, const char* description) {
+	fprintf(stderr, "[Error] %s\n", description);
+}
 
-	this->camera->projMat[4] = 0.0f;
-	this->camera->projMat[5] = f;
-	this->camera->projMat[6] = 0.0f;
-	this->camera->projMat[7] = 0.0f;
-
-	this->camera->projMat[8] = 0.0f;
-	this->camera->projMat[9] = 0.0f;
-	this->camera->projMat[10] = (far + near) / (near - far);
-	this->camera->projMat[11] = -1.0f;
-
-	this->camera->projMat[12] = 0.0f;
-	this->camera->projMat[13] = 0.0f;
-	this->camera->projMat[14] = (2.0f * far * near) / (near - far);
-	this->camera->projMat[15] = 0.0f;
-
-	glMultMatrixf(this->camera->projMat);
+void printVersionInfo() {
+	printf("[Info] OpenGL version supported: (%s): \n", glGetString(GL_VERSION));
+	int major, minor, revision;
+	glfwGetVersion(&major, &minor, &revision);
+	printf("[Info] Running against GLFW %i.%i.%i\n", major, minor, revision);
 }
 
 int main(int argc, char *argv[]) {
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-
-	this = malloc(sizeof(GameInstance));
-	this->shader = malloc(sizeof(ShaderInfo));
-	this->lighting = malloc(sizeof(LigingInfo));
+	GameInstance *this = new(GameInstance);
+	gi = this; //TODO: Remove this
+	this->shader = new(ShaderInfo);
+	this->lighting = new(LigingInfo);
 	this->lighting->numLights = 0;
-	this->objects = malloc(sizeof(ObjectInfo));
-	this->objects->staticInstances = newLinkedListPointer(sizeof(ObjectInstance));
-	this->objects->staticObjects = newLinkedListPointer(sizeof(StaticObject));
-	this->camera = malloc(sizeof(CameraInfo));
-	this->camera->rotation[0] = 0.0f;
-	this->camera->rotation[1] = 0.0f;
-	this->camera->rotation[2] = 0.0f;
-	this->windowInstance = glutCreateWindow("Gerviba's Platformer Game");
+	this->camera = new(CameraInfo);
+	this->camera->rotation[X] = 0.0f;
+	this->camera->rotation[Y] = 0.0f;
+	this->camera->rotation[Z] = 0.0f;
 
-	glutDisplayFunc(onRender);
-	glutIdleFunc(onLogic);
-	glutKeyboardFunc(handleKeyPress); //TODO: KeyUp and KeyDown eventek
+	glfwSetErrorCallback(onError);
+
+	if (!glfwInit()) {
+		printf("[ERROR] Init failed\n");
+		exit(EXIT_FAILURE);
+	}
+
+	glfwWindowHint(GLFW_SAMPLES, 16);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+
+	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	this->window = glfwCreateWindow(mode->width, mode->height,
+			"stdgame | The Epic Platformer Game",
+			glfwGetPrimaryMonitor(), NULL);
+	this->options.height = mode->height;
+	this->options.width = mode->width;
+	printf("[Info] Window size: %dx%d\n", mode->width, mode->height); //TODO: Load from config
+
+	if (!this->window) {
+		glfwTerminate();
+		exit(EXIT_FAILURE);
+	}
+
+// TODO: Cursor
+//	glfwSetWindowCloseCallback(window, window_close_callback);
+//	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	glfwSetInputMode(this->window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	glfwSetKeyCallback(this->window, onKeyAction);
+
+// TODO: Icon
+//	GLFWimage images[2];
+//	images[0] = load_icon("my_icon.png");
+//	images[1] = load_icon("my_icon_small.png");
+//	glfwSetWindowIcon(window, 2, images);
+
+	glfwMakeContextCurrent(this->window);
+	glfwSwapInterval(1);
 
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClearDepth(1.0f);
-	glDisable(GL_BLEND);
+	glEnable(GL_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	setPerspective(PI / 4.0f, (float) WINDOW_WIDTH / (float) WINDOW_HEIGHT, 0.1f, 200.0f);
+	setPerspective(this, PI / 4.0f, (double) mode->width / (double) mode->height, 0.1f, 200.0f);
 	glMatrixMode(GL_MODELVIEW);
 
-	printf("OpenGL version supported by this platform (%s): \n", glGetString(GL_VERSION));
+	printVersionInfo();
+	gameInit(this);
 
-	gameInit();
-	glutMainLoop();
-	return 0;
+	while (!glfwWindowShouldClose(this->window)) {
+		onLogic(this);
+
+// FIXME: Remove this code
+//		int width, height;
+//		glfwGetFramebufferSize(window, &width, &height);
+//		glViewport(0, 0, width, height);
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		onRender(this);
+
+		glfwSwapBuffers(this->window);
+		glfwPollEvents();
+	}
+
+	glfwDestroyWindow(this->window);
+	glfwTerminate();
+	exit(EXIT_SUCCESS);
 }

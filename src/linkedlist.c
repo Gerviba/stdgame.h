@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "linkedlist.h"
+#include "includes.h"
 
 LinkedList newLinkedList(size_t size) {
 	LinkedList list = {0, size, NULL, NULL};
@@ -9,7 +9,7 @@ LinkedList newLinkedList(size_t size) {
 }
 
 LinkedList* newLinkedListPointer(size_t size) {
-	LinkedList *list = malloc(sizeof(LinkedList));
+	LinkedList *list = new(LinkedList);
 	list->size = 0;
 	list->dataSize = size;
 	list->first = NULL;
@@ -18,7 +18,7 @@ LinkedList* newLinkedListPointer(size_t size) {
 }
 
 void listPush(LinkedList *list, void *data) {
-	ListElement *new = malloc(sizeof(ListElement));
+	ListElement *new = new(ListElement);
 	new->data = malloc(list->dataSize);
 	new->next = NULL;
 
@@ -36,11 +36,11 @@ void listPush(LinkedList *list, void *data) {
 	++list->size;
 }
 
-void* getListValue(ListElement *it) {
+void* listGetValue(ListElement *it) {
 	return it->data;
 }
 
-void listClear(LinkedList *list) {
+void listFree(LinkedList *list) {
 	ListElement* head = list->first;
 	ListElement* tmp;
 

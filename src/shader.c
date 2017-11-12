@@ -4,8 +4,7 @@
 #include <unistd.h>
 #include "includes.h"
 
-static char * shaderLoadSource(const char *filePath) {
-
+static char* shaderLoadSource(const char *filePath) {
 	const size_t blockSize = 512;
 	FILE *fp;
 	char buf[blockSize];
@@ -14,14 +13,14 @@ static char * shaderLoadSource(const char *filePath) {
 
 	fp = fopen(filePath, "r");
 	if (!fp) {
-		fprintf(stderr, "shaderLoadSource(): Unable to open %s for reading\n", filePath);
+		fprintf(stderr, "[Shader] Unable to open %s for reading\n", filePath);
 		return NULL;
 	}
 
 	while ((tmp = fread(buf, 1, blockSize, fp)) > 0) {
 		char *newSource = malloc(sourceLength + tmp + 1);
 		if (!newSource) {
-			fprintf(stderr, "shaderLoadSource(): malloc failed\n");
+			fprintf(stderr, "[Shader] Malloc failed\n");
 			if (source)
 				free(source);
 			return NULL;

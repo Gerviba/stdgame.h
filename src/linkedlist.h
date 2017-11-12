@@ -1,9 +1,11 @@
 #ifndef LINKEDLIST_H_
 #define LINKEDLIST_H_
 
-typedef struct ListElement {
+#define newList(x) (newLinkedListPointer(sizeof(x)))
+
+typedef struct StreamElement {
 	void *data;
-	struct ListElement *next;
+	struct StreamElement *next;
 } ListElement;
 
 typedef struct {
@@ -17,7 +19,7 @@ LinkedList newLinkedList(size_t size);
 LinkedList* newLinkedListPointer(size_t size);
 
 void listPush(LinkedList *list, void *data);
-void* getListValue(ListElement *it);
-void listClear(LinkedList *list);
+void* listGetValue(ListElement *it);
+void listFree(LinkedList *list);
 
 #endif /* LINKEDLIST_H_ */

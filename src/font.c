@@ -11,16 +11,16 @@ static Char* loadChar(char path[], char charId, GLfloat *colors) {
 	if (!file)
 		return NULL;
 
-	Char *c = malloc(sizeof(Char));
-	c->parts = newLinkedListPointer(sizeof(CharPart));
+	Char *c = new(Char);
+	c->parts = newList(CharPart);
 	while (fgets(buff, 255, file)) {
 		switch (buff[0]) {
 			case '$': { // Basic info
 				char type[32];
 				sscanf(buff, "$ %s", type);
-				if (strcmp(type, "WIDTH") == 0) {
+				if (equals(type, "WIDTH")) {
 					sscanf(buff, "$ %*s %d", &c->width);
-				} else if (strcmp(type, "Y") == 0) {
+				} else if (equals(type, "Y")) {
 					sscanf(buff, "$ %*s %d", &c->y);
 				}
 				break;
@@ -54,8 +54,8 @@ static Char* loadChar(char path[], char charId, GLfloat *colors) {
 }
 
 void initFont(GameInstance *this) {
-	this->font = malloc(sizeof(Font));
-	this->font->chars = newLinkedListPointer(sizeof(Char));
+	this->font = new(Font);
+	this->font->chars = newList(Char);
 
 	FILE *file;
 	char buff[255];
@@ -64,6 +64,7 @@ void initFont(GameInstance *this) {
 	file = fopen("assets/fonts/default.font", "r");
 	if (!file) {
 		fprintf(stderr, "[Font] Failed to load font.\n");
+		return;
 	}
 
 	while (fgets(buff, 255, file)) {
@@ -109,8 +110,8 @@ void freeFont(GameInstance *this) {
 	free(this->font->colors);
 	ListElement *it;
 	for (it = this->font->chars->first; it != NULL; it = it->next)
-		listClear(((Char *)it->data)->parts);
-	listClear(this->font->chars);
+		listFree(((Char *)it->data)->parts);
+	listFree(this->font->chars);
 	free(this->font);
 }
 
@@ -186,9 +187,8 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 	}
 }
 
-//TODO: Smaller font
-void renderFontTo(GameInstance *this, char str[], GLfloat position[3], GLfloat defaultColor[4]) {
-	static const GLfloat dist = 1.0 / 16;
+void renderFontTo(GameInstance *this, char str[], GLfloat position[3], GLfloat defaultColor[4], FontSize size) {
+	const GLfloat dist = 1.0 / size;
 
 	glPushMatrix();
 	glLoadIdentity();

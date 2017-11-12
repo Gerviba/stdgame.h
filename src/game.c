@@ -5,16 +5,19 @@
 #ifdef _WIN32
 	#include <windows.h>
 	#include <wingdi.h>
-	#define GLUT_DISABLE_ATEXIT_HACK
 #else
 	#include <sys/time.h>
 #endif /* _WIN32 */
 
 #include "includes.h"
 
-extern GLuint shaderAttachFromFile(GLuint, GLenum, const char *);
+extern GLuint shaderAttachFromFile(GLuint, GLenum, const char *); //TODO: add to shader.h
+extern void onLogicIngame(GameInstance*, float);
+extern void onLogicMenu(GameInstance*, float);
 
-void setPerspective(const GameInstance *this, float fov, float aspect, float near, float far) {
+void setPerspective(GameInstance *this, float fov, float aspect, float near, float far) {
+	this->options.tanFov = tanf(fov);
+	this->options.aspectRatio = 1.0 / aspect;
 	float f = 1.0f / tanf(fov / 2.0f);
 
 	this->camera->projMat[0] = f / aspect;
@@ -38,6 +41,18 @@ void setPerspective(const GameInstance *this, float fov, float aspect, float nea
 	this->camera->projMat[15] = 0.0f;
 
 	glMultMatrixf(this->camera->projMat);
+}
+
+static void loadDefaultOptions(GameInstance *this) {
+	this->options.moveLeft[0] = GLFW_KEY_A;
+	this->options.moveLeft[1] = GLFW_KEY_LEFT;
+	this->options.moveRight[0] = GLFW_KEY_D;
+	this->options.moveRight[1] = GLFW_KEY_RIGHT;
+	this->options.jump[0] = GLFW_KEY_W;
+	this->options.jump[1] = GLFW_KEY_SPACE;
+	this->options.sneek[0] = GLFW_KEY_S;
+	this->options.sneek[1] = GLFW_KEY_DOWN;
+	this->options.attack[0] = GLFW_KEY_RIGHT_CONTROL;
 }
 
 void loadTileVAO(const GameInstance *this) {
@@ -67,6 +82,8 @@ void loadTileVAO(const GameInstance *this) {
 }
 
 void gameInit(GameInstance *this) {
+	loadDefaultOptions(this);
+
 	this->shader->shaderId = glCreateProgram();
 	shaderAttachFromFile(this->shader->shaderId, GL_VERTEX_SHADER, "assets/shaders/shader.vertex");
 	shaderAttachFromFile(this->shader->shaderId, GL_FRAGMENT_SHADER, "assets/shaders/shader.fragment");
@@ -107,12 +124,12 @@ void gameInit(GameInstance *this) {
 	loadTileVAO(this);
 	loadTexture(&this->blankTextureId, "null.png");
 
-	this->state = INGAME;
-	this->map = loadMap(this, "assets/maps/test2.map");
+	this->state = MENU;
+	this->map = loadMap(this, "assets/maps/menu.map");
 
 	initPlayer(this);
 	initFont(this);
-	onLogicIngame(this);
+	onLogic(this);
 	printf("[Render] First logic done\n");
 
 	updateCamera(this);
@@ -121,27 +138,35 @@ void gameInit(GameInstance *this) {
 
 void updateCamera(GameInstance* this) {
 	glLoadIdentity();
-	glRotatef(-this->camera->rotation[0], 1.0f, 0.0f, 0.0f);
-	glRotatef(-this->camera->rotation[1], 0.0f, 1.0f, 0.0f);
-	glRotatef(-this->camera->rotation[2], 0.0f, 0.0f, 1.0f);
-	glTranslatef(-this->camera->position[0],
-			-this->camera->position[1],
-			-this->camera->position[2]);
+	glRotatef(-this->camera->rotation[X], 1.0f, 0.0f, 0.0f);
+	glRotatef(-this->camera->rotation[Y], 0.0f, 1.0f, 0.0f);
+	glRotatef(-this->camera->rotation[Z], 0.0f, 0.0f, 1.0f);
+	glTranslatef(-this->camera->position[X],
+			-this->camera->position[Y],
+			-this->camera->position[Z]);
 }
 
 static void renderGUI(GameInstance* this) {
 	GLfloat color[] = {1.0f, 1.0f, 1.0f, 1.0f};
-	renderFontTo(this, "You have no $", (GLfloat[]) {6.0f, 7.0625f, 1.0f, 1.0f}, color);
+	renderFontTo(this, "You have no $", (GLfloat[]) {6.0f, 7.0625f, 1.0f}, color, FS_NORMAL_DPI);
 
 	char str[16];
 	if (glfwGetKey(this->window, GLFW_KEY_UP) == GLFW_PRESS)
 		++this->score;
 	sprintf(str, "%d *", this->score);
 
-	renderFontTo(this, str, (GLfloat[]) {this->camera->position[X] + 3.0f - (strlen(str) * 0.0625f * 4),
-			this->camera->position[Y] + 1.0625f, 1.0f, 1.0f}, color);
-	renderFontTo(this, "$$$", (GLfloat[]) {this->camera->position[X] - 3.0f, this->camera->position[Y] + 1.0625f,
-			1.0f, 1.0f}, color);
+	renderFontTo(this, str, (GLfloat[]) {
+			this->camera->position[X] + 3.0f - (strlen(str) * 0.0625f * 4),
+			this->camera->position[Y] + 1.0625f, 1.0f}, color, FS_LOW_DPI);
+	renderFontTo(this, "$$$", (GLfloat[]) {
+			this->camera->position[X] - 3.0f,
+			this->camera->position[Y] + 1.0625f,
+			1.0f}, color, FS_LOW_DPI);
+
+
+//	renderFontTo(this, "#", (GLfloat[]) {
+//			getCursorProjectedX(this, cursorX),
+//			getCursorProjectedY(this, cursorY), 1.0f}, color, FS_NORMAL_DPI);
 }
 
 void onRender(GameInstance *this) {
@@ -175,12 +200,16 @@ void onRender(GameInstance *this) {
 	for (it = this->map->objects->staticInstances->first; it != NULL; it = it->next)
 		renderStaticObject(this, (StaticObjectInstance *) it->data);
 
-	if (this->state == INGAME) {
-		renderGUI(this);
-	} else if (this->state == MENU) {
+//	if (this->state == INGAME) {
+//		renderGUI(this);
+//	} else if (this->state == MENU) {
+//
+//	}
 
+	if (this->map->menu != NULL) {
+		for (it = this->map->menu->components->first; it != NULL; it = it->next)
+			((Component *) it->data)->onRender(it->data, this);
 	}
-
 
     // Cleanup
     glUseProgram(0);
@@ -198,7 +227,7 @@ static unsigned int getTicks(void) {
 	#endif /* _WIN32 */
 }
 
-void onLogicIngame(GameInstance *this) {
+void onLogic(GameInstance *this) {
 	static unsigned int prevTicks = 0;
 	unsigned int ticks;
 	float secondsElapsed;
@@ -210,124 +239,34 @@ void onLogicIngame(GameInstance *this) {
 	secondsElapsed = (float) (ticks - prevTicks) / 1000.0f;
 	prevTicks = ticks;
 
-	StaticObjectInstance *obj = ((StaticObjectInstance *) this->map->objects->staticInstances->first->data);
-
-	static float plannedCameraRotation = 0, cameraRotation = 0;
-
-	float deltaMoveX = 0;
-	if (glfwGetKey(this->window, GLFW_KEY_A) == GLFW_PRESS
-			|| glfwGetKey(this->window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		deltaMoveX += -secondsElapsed * 2;
-		obj->rotation[Y] = 0;
-		plannedCameraRotation = 1;
-	}
-
-	if (glfwGetKey(this->window, GLFW_KEY_D) == GLFW_PRESS
-			|| glfwGetKey(this->window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		deltaMoveX += secondsElapsed * 2;
-		obj->rotation[Y] = 180;
-		plannedCameraRotation = -1;
-	}
-
-	if (!(glfwGetKey(this->window, GLFW_KEY_A) == GLFW_PRESS
-			|| glfwGetKey(this->window, GLFW_KEY_LEFT) == GLFW_PRESS) &&
-			!(glfwGetKey(this->window, GLFW_KEY_D) == GLFW_PRESS
-			|| glfwGetKey(this->window, GLFW_KEY_RIGHT) == GLFW_PRESS)) {
-		plannedCameraRotation = 0;
-	}
-
-	ListElement *it;
-	for (it = this->map->tiles->first; it != NULL; it = it->next) {
-		Tile *tile = (Tile *) it->data;
-		if ((int) tile->y == (int) this->player->position[Y]
-			  && (int) tile->x == (int) (deltaMoveX + this->player->position[X])) {
-			if (tile->type != 0)
-				deltaMoveX = 0;
-			break;
-		}
-	}
-	this->player->position[X] += deltaMoveX;
-
-	if (this->player->velocity[Y] == 0 && (glfwGetKey(this->window, GLFW_KEY_SPACE) == GLFW_PRESS
-			|| glfwGetKey(this->window, GLFW_KEY_W) == GLFW_PRESS)) {
-		this->player->velocity[Y] = 10;
-		printf("jump");
-	}
-
-	float deltaMoveY = this->player->velocity[Y] * (9.81 / 1000);
-	this->player->velocity[Y] -= 0.5;
-	if (this->player->velocity[Y] < -8)
-		this->player->velocity[Y] = -8;
-
-
-	for (it = this->map->tiles->first; it != NULL; it = it->next) {
-		Tile *tile = (Tile *) it->data;
-		if ((int) tile->y == (int) (deltaMoveY + this->player->position[Y])
-			  && (int) tile->x == (int) (this->player->position[X])) {
-			if (tile->type != 0)
-				deltaMoveY = 0;
-			break;
-		}
-	}
-	this->player->position[Y] += deltaMoveY;
-
-//	ListElement *it;
-//	for (it = this->map->tiles->first; it != NULL; it = it->next) {
-//		Tile *tile = (Tile *)it->data;
-//		if (tile->y >= this->player->position[Y] - 1 && tile->y <= this->player->position[Y] - 1
-//			  && (int) tile->x == (int) (this->player->position[X] + 0.5)) {
-//
-//			if ((tile->type & MOVE_BLOCK_Y) != 0) {
-//				this->player->velocity[Y] = 0;
-////				this->player->position[Y] = (int) tile->y + 1;
-//				deltaMoveY = 0;
-//				printf("break\n");
-//				break;
-//			}
-//		}
-//	}
-//	this->player->position[Y] += deltaMoveY;
-
-
-//	if (this->player->position[Y] <= 7) {
-//		this->player->velocity[Y] = 0;
-//		this->player->position[Y] = 7;
-//		this->player->jumping = GL_FALSE;
-//	}
-
-#ifndef DEBUG_MOVEMENT
-	this->camera->position[X] = this->player->position[X] + 2;
-	this->camera->position[Y] = this->player->position[Y] + 1;
-	this->camera->position[Z] = 4.8;
-#endif
-
-	// DEBUG
-	obj->position[X] = this->player->position[X];
-	obj->position[Y] = this->player->position[Y];
-//	obj->rotation[Z] = 270;
-	// END DEBUG
+	if (this->state == INGAME)
+		onLogicIngame(this, secondsElapsed);
+	else
+		onLogicMenu(this, secondsElapsed);
 
 	int width, height;
 	glfwGetFramebufferSize(this->window, &width, &height);
 	double cursorX, cursorY;
 	glfwGetCursorPos(this->window, &cursorX, &cursorY);
 #ifndef DEBUG_MOVEMENT
-	if (plannedCameraRotation == 1) {
-		cameraRotation = min(cameraRotation + 0.2, 2);
-	} else if (plannedCameraRotation == -1) {
-		cameraRotation = max(cameraRotation - 0.2, -2);
-	} else if (cameraRotation > 0) {
-		cameraRotation -= 0.3;
-		if (cameraRotation < 0)
-			cameraRotation = 0;
-	} else if (cameraRotation < 0) {
-		cameraRotation += 0.3;
-		if (cameraRotation > 0)
-			cameraRotation = 0;
+	if (this->camera->destinationRotation[Y] > 0) {
+		this->camera->rotation[Y] = min(this->camera->rotation[Y] + 0.2,
+				this->camera->destinationRotation[Y]);
+	} else if (this->camera->destinationRotation[Y] < 0) {
+		this->camera->rotation[Y] = max(this->camera->rotation[Y] - 0.2,
+				this->camera->destinationRotation[Y]);
+	} else if (this->camera->rotation[Y] > 0) {
+		this->camera->rotation[Y] -= 0.3;
+		if (this->camera->rotation[Y] < 0)
+			this->camera->rotation[Y] = 0;
+	} else if (this->camera->rotation[Y] < 0) {
+		this->camera->rotation[Y] += 0.3;
+		if (this->camera->rotation[Y] > 0)
+			this->camera->rotation[Y] = 0;
 	}
-	this->camera->rotation[Y] = cameraRotation;
 #endif
 
+	ListElement *it;
 	i = 0;
 	for (it = this->map->lights->first; it != NULL; it = it->next, ++i) {
 		Light light = *(Light *)it->data;

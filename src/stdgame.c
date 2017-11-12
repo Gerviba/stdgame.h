@@ -4,11 +4,6 @@
 
 #include "includes.h"
 
-extern void gameInit(GameInstance *this);
-extern void onRender(GameInstance *this);
-extern void onLogicIngame(GameInstance *this);
-extern void setPerspective(GameInstance *this, float fov, float aspect, float near, float far);
-
 static int mode = 0;
 static int modelId = 0;
 
@@ -88,7 +83,7 @@ void onKeyAction(GLFWwindow* window, int key, int scancode, int action, int mods
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	if (key == GLFW_KEY_H && action == GLFW_PRESS)
-		printf("%g %g\n", gi->player->position[0], gi->player->position[1]);
+		printf("%g %g\n", gi->player->position[X], gi->player->position[Y]);
 #ifdef DEBUG_MOVEMENT
 	debugKeyPress(key, 0, 0);
 #endif
@@ -106,12 +101,12 @@ void printVersionInfo() {
 }
 
 int main(int argc, char *argv[]) {
-	GameInstance *this = malloc(sizeof(GameInstance));
+	GameInstance *this = new(GameInstance);
 	gi = this;
-	this->shader = malloc(sizeof(ShaderInfo));
-	this->lighting = malloc(sizeof(LigingInfo));
+	this->shader = new(ShaderInfo);
+	this->lighting = new(LigingInfo);
 	this->lighting->numLights = 0;
-	this->camera = malloc(sizeof(CameraInfo));
+	this->camera = new(CameraInfo);
 	this->camera->rotation[0] = 0.0f;
 	this->camera->rotation[1] = 0.0f;
 	this->camera->rotation[2] = 0.0f;
@@ -131,6 +126,8 @@ int main(int argc, char *argv[]) {
 	this->window = glfwCreateWindow(mode->width, mode->height,
 			"stdgame | The Epic Platformer Game",
 			glfwGetPrimaryMonitor(), NULL);
+	this->options.height = mode->height;
+	this->options.width = mode->width;
 	printf("[Info] Window size: %dx%d\n", mode->width, mode->height); //TODO: Load from config
 
 	if (!this->window) {
@@ -171,7 +168,7 @@ int main(int argc, char *argv[]) {
 	gameInit(this);
 
 	while (!glfwWindowShouldClose(this->window)) {
-		onLogicIngame(this);
+		onLogic(this);
 
 //		int width, height;
 //		glfwGetFramebufferSize(window, &width, &height);

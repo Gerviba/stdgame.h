@@ -1,7 +1,8 @@
+#include <stdlib.h>
 #include "includes.h"
 
 void initPlayer(GameInstance *this) {
-	this->player = malloc(sizeof(Player));
+	this->player = new(Player);
 
 	this->player->id = 0;
 	this->player->position[X] = this->map->spawn[X];

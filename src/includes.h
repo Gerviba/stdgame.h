@@ -1,6 +1,8 @@
 #ifndef __INCLUDES_H__
 #define __INCLUDES_H__
 
+#include <string.h>
+
 //#define DEBUG 1
 //#define DEBUG_MOVEMENT 1
 static const float PI = 3.14159265358979323846;
@@ -38,11 +40,13 @@ static const float PI = 3.14159265358979323846;
 #include "font.h"
 #include "object.h"
 #include "map.h"
-#include "game.h"
 #include "components.h"
+#include "game.h"
 
 #define min(a, b) (a < b ? a : b)
 #define max(a, b) (a > b ? a : b)
 #define sig(a) (a == 0 ? 0 : a > 0 ? 1 : -1)
+#define equals(a, b) (strcmp(a, b) == 0)
+#define new(x) (malloc(sizeof(x)))
 
 #endif /* __INCLUDES_H__ */

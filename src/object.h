@@ -124,6 +124,7 @@ typedef struct {
 } ReferencePoint;
 
 typedef struct {
+	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
 	GLfloat scale[3];
@@ -140,16 +141,21 @@ typedef struct {
 	GLfloat moveMat[16];
 	GLboolean visible;
 	ReferencePoint *reference;
-	StaticObject *object;
+	DynamicObject *object;
 } DynamicObjectInstance;
 
 typedef struct {
+	int id;
 	int size;
 	DynamicObject parts[];
 } ActiveObject;
 
 typedef struct {
+	int id;
 	int activePart;
+	GLfloat position[3];
+	GLfloat rotation[3];
+	GLfloat scale[3];
 	GLboolean visible;
 	ActiveObject *object;
 } ActiveObjectInstance;

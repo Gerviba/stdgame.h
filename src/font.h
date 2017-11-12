@@ -29,4 +29,10 @@ typedef struct {
 	GLfloat *colors; // 4 * size
 } Font;
 
+#include "game.h"
+
+void initFont(GameInstance*);
+void renderFontTo(GameInstance*, char[], GLfloat[3], GLfloat[4], FontSize);
+void freeFont(GameInstance*);
+
 #endif /* FONT_H_ */

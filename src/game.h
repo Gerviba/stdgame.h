@@ -27,6 +27,9 @@ typedef struct {
 	GLfloat position[3];
 	GLfloat projMat[16];
 	GLfloat viewMat[16];
+
+	GLfloat destinationRotation[3];
+	GLfloat destinationPosition[3];
 } CameraInfo;
 
 typedef struct {
@@ -53,6 +56,34 @@ typedef struct {
 	GLFWwindow *window;
 	int score;
 	GameState state;
+
+	struct {
+		GLuint msaa;
+		GLboolean fullscreen;
+		GLuint height;
+		GLuint width;
+		GLboolean shadow;
+		GLboolean cameraMovement;
+		GLfloat tanFov;
+		GLfloat aspectRatio;
+
+		int moveLeft[2];
+		int moveRight[2];
+		int jump[2];
+		int sneek[3];
+		int attack[2];
+		int speell1[2];
+		int speell2[2];
+		int speell3[2];
+		int speell4[2];
+		int menu;
+
+	} options;
 } GameInstance;
+
+void gameInit(GameInstance*);
+void onRender(GameInstance*);
+void onLogic(GameInstance*);
+void setPerspective(GameInstance*, float, float, float, float);
 
 #endif /* GAME_H_ */

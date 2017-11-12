@@ -6,6 +6,11 @@
   - StaticObject: Pre-calculated move matrix (.sobj)
   - DynamicObject: Dynamic move matrix (.dobj)
   - ActiveObject: Multiple DynamicObjects (.aobj)
+- fonts
+  - Char: Character file (.char)
+  - Font file (.font)
+- shaders
+  - GLSL vertex and fragment shader (v1.5)
   
 ### Map
 
@@ -27,3 +32,44 @@
 |D|ImageComponent|D id path x y z height width|
 
 - (1) reference required and available only for dynamic objects
+
+### Sobj and Dobj
+
+|Sign|Type|Format|
+|---|---|---|
+|$|Meta|$ KEY VALUE...|
+|C|ColorPart|C id rrggbb alpha|
+|B|ObjectPart|B x y z PartType C.id|
+
+- Meta:
+  - `POSITION` x y z
+  - `ROTATION` alpha beta gamma
+  - `SCALE` x y z
+
+### Aobj
+
+|Sign|Type|Format|
+|---|---|---|
+|$|Meta|$ KEY VALUE...|
+|C|ColorPart|C id rrggbb alpha|
+|B|ObjectPart|B stateId x y z PartType C.id|
+
+- Meta:
+  - `POSITION` x y z
+  - `ROTATION` alpha beta gamma
+  - `SCALE` x y z
+  - `SIZE` stateCount
+
+### Char
+
+|Sign|Type|Format|
+|---|---|---|
+|$|Meta|$ KEY VALUE...|
+|B|ObjectPart|B x y z PartType C.id|
+
+- Meta:
+  - `WIDTH` width
+  - `Y` deltaY
+  
+> Color = 0 means default color
+

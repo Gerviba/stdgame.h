@@ -147,9 +147,9 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					char finalPath[255] = "assets/objects/";
 					strcat(finalPath, path);
 
-					StaticObject *so = loadObject(finalPath);
-					so->id = id;
-					listPush(map->objects->staticObjects, so);
+					StaticObject *sobj = loadStaticObject(finalPath);
+					sobj->id = id;
+					listPush(map->objects->staticObjects, sobj);
 
 				} else if (equals(type, "DYNAMIC")) {
 					char path[255];
@@ -157,10 +157,19 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					char finalPath[255] = "assets/objects/";
 					strcat(finalPath, path);
 
-					StaticObject *so = loadObject(finalPath);
-					so->id = id;
-					listPush(map->objects->dynamicObjects, so);
+					DynamicObject *dobj = loadDynamicObject(finalPath);
+					dobj->id = id;
+					listPush(map->objects->dynamicObjects, dobj);
+
 				} else if (equals(type, "ACTIVE")) {
+					char path[255];
+					sscanf(buff, "O %d ACTIVE %s", &id, path);
+					char finalPath[255] = "assets/objects/";
+					strcat(finalPath, path);
+
+					ActiveObject *aobj = loadActiveObject(finalPath);
+					aobj->id = id;
+					listPush(map->objects->activeObjects, aobj);
 
 				} else {
 					printf("[Warn] Invalid object type: '%s'\n", type);
@@ -188,8 +197,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 							break;
 						}
 					}
-
-					initStraticInstance(this, soi);
+					initStraticInstance(this, &soi);
 					listPush(map->objects->staticInstances, &soi);
 
 				} else if (equals(type, "DYNAMIC")) {
@@ -240,24 +248,26 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					map->menu->components = newList(Component);
 				}
 
-				Component *comp = new(Component);
+				Component comp;
+				comp.text = new(TextComponent);
 				char text[255];
 				unsigned int r, g, b;
-				sscanf(buff, "A %u %f %f %d %d %s %02x%02x%02x %f", &comp->id, &comp->x, &comp->y, &comp->relativeX,
-						&comp->relativeY, text, &r, &g, &b, &comp->text.color[A]);
-				comp->text.color[R] = (float) r / 255;
-				comp->text.color[G] = (float) g / 255;
-				comp->text.color[B] = (float) b / 255;
-				comp->text.text = text;
+				sscanf(buff, "A %u %f %f %d %d %s %02x%02x%02x %f %d", &comp.id, &comp.x, &comp.y, &comp.relativeX,
+						&comp.relativeY, text, &r, &g, &b, &comp.text->color[A], &comp.text->fontSize);
+				comp.text->color[R] = (float) r / 255;
+				comp.text->color[G] = (float) g / 255;
+				comp.text->color[B] = (float) b / 255;
+				comp.text->text = malloc(sizeof(char) * (strlen(text) + 1));
+				strcpy(comp.text->text, text);
 
 				int i, length;
-				for (i = 0, length = strlen(comp->text.text); i < length; ++i)
-					if (comp->text.text[i] == '_')
-						comp->text.text[i] = ' ';
+				for (i = 0, length = strlen(comp.text->text); i < length; ++i)
+					if (comp.text->text[i] == '_')
+						comp.text->text[i] = ' ';
 
-				comp->onRender = renderTextComponent;
+				comp.onRender = renderTextComponent;
 
-				listPush(map->menu->components, comp);
+				listPush(map->menu->components, &comp);
 				break;
 			}
 			case 'B': { // ObjectComponent
@@ -274,7 +284,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 				ListElement *it;
 				for (it = map->objects->activeInstances->first; it != NULL; it = it->next) {
 					if (((ActiveObjectInstance *) it->data)->id == objectId) {
-						comp->object.object = (ActiveObjectInstance *) it->data;
+						comp->object->object = (ActiveObjectInstance *) it->data;
 						break;
 					}
 				}

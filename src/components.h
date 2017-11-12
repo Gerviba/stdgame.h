@@ -26,6 +26,20 @@ typedef struct {
 	size_t valueLength;
 } GenericType;
 
+typedef struct {
+	FontSize fontSize;
+	char *text; //TODO: free
+	GLfloat color[4];
+} TextComponent;
+
+typedef struct {
+	ActiveObjectInstance *object;
+} ObjectComponent;
+
+typedef struct {
+	GLuint textureId;
+} ImageComponent;
+
 typedef struct Component {
 	GLuint id;
 	GenericType *value;
@@ -36,17 +50,9 @@ typedef struct Component {
 	ComponentType type;
 
 	union {
-		struct TextComponent {
-			FontSize fontSize;
-			char *text; //TODO: free
-			GLfloat color[4];
-		} text;
-		struct ObjectComponent {
-			ActiveObjectInstance *object;
-		} object;
-		struct ImageComponent {
-			GLuint textureId;
-		} image;
+		TextComponent *text;
+		ObjectComponent *object;
+		ImageComponent *image;
 	};
 
 	void (*onLoad)(struct Component*, GameInstance*);
@@ -73,5 +79,6 @@ GLfloat getCursorProjectedX(GameInstance*, double);
 GLfloat getCursorProjectedY(GameInstance*, double);
 
 void updateCursor(GameInstance*, int);
+void renderTextComponent(Component*, GameInstance*);
 
 #endif /* COMPONENTS_H_ */

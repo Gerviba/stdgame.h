@@ -3,7 +3,7 @@
 #include <math.h>
 #include "includes.h"
 
-StaticObject *loadObject(char path[]) {
+StaticObject *loadStaticObject(char path[]) {
 	StaticObject *obj = new(StaticObject);
 	obj->parts = newList(StaticObjectPart);
 	obj->colors = newList(PartColor);
@@ -80,6 +80,162 @@ StaticObject *loadObject(char path[]) {
 	return obj;
 }
 
+DynamicObject *loadDynamicObject(char path[]) {
+	DynamicObject *obj = new(DynamicObject);
+	obj->parts = newList(StaticObjectPart);
+	obj->colors = newList(PartColor);
+	obj->position[X] = 0;
+	obj->position[Y] = 0;
+	obj->position[Z] = 0;
+	obj->rotation[X] = 0;
+	obj->rotation[Y] = 0;
+	obj->rotation[Z] = 0;
+	obj->scale[X] = 1.0f / 16;
+	obj->scale[Y] = 1.0f / 16;
+	obj->scale[Z] = 1.0f / 16;
+
+	FILE *file;
+	char buff[255];
+	printf("[Object] Loading object: %s\n", path);
+
+	file = fopen(path, "r");
+	if (!file) {
+		printf("[Object] Failed to load. File not accessable.\n");
+		return NULL;
+	}
+
+	while (fgets(buff, 255, file)) {
+		switch (buff[0]) {
+			case '$': { // Basic info
+				char type[32];
+				sscanf(buff, "$ %s", type);
+				if (equals(type, "POSITION")) {
+					sscanf(buff, "$ %*s %f %f %f", &obj->position[X], &obj->position[Y], &obj->position[Z]);
+				} else if (equals(type, "ROTATION")) {
+					sscanf(buff, "$ %*s %f %f %f", &obj->rotation[X], &obj->rotation[Y], &obj->rotation[Z]);
+				} else if (equals(type, "SCALE")) {
+					sscanf(buff, "$ %*s %f %f %f", &obj->scale[X], &obj->scale[Y], &obj->scale[Z]);
+					obj->scale[X] *= (1.0f / 16);
+					obj->scale[Y] *= (1.0f / 16);
+					obj->scale[Z] *= (1.0f / 16);
+				}
+				break;
+			}
+			case 'C': { // Color
+				PartColor color;
+				unsigned int r, g, b;
+				sscanf(buff, "C %d %02x%02x%02x %f", &color.id, &r, &g, &b, &color.color[A]);
+				color.color[R] = (float) r / 255;
+				color.color[G] = (float) g / 255;
+				color.color[B] = (float) b / 255;
+
+				listPush(obj->colors, &color);
+				break;
+			}
+			case 'B': { // Block
+				StaticObjectPart part;
+				int colorId;
+
+				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
+						&part.position[Z], &part.type, &colorId);
+
+				ListElement *it;
+				for (it = obj->colors->first; it != NULL; it = it->next) {
+					if (((TextureBlock *) it->data)->id == colorId) {
+						part.color = ((PartColor *) it->data)->color;
+						break;
+					}
+				}
+
+				listPush(obj->parts, &part);
+				break;
+			}
+		}
+	}
+
+	fclose(file);
+	return obj;
+}
+
+ActiveObject *loadActiveObject(char path[]) {
+	ActiveObject *aobj = new(ActiveObject);
+	DynamicObject *obj = NULL;
+
+	obj->parts = newList(StaticObjectPart);
+	obj->colors = newList(PartColor);
+	obj->position[X] = 0;
+	obj->position[Y] = 0;
+	obj->position[Z] = 0;
+	obj->rotation[X] = 0;
+	obj->rotation[Y] = 0;
+	obj->rotation[Z] = 0;
+	obj->scale[X] = 1.0f / 16;
+	obj->scale[Y] = 1.0f / 16;
+	obj->scale[Z] = 1.0f / 16;
+
+	FILE *file;
+	char buff[255];
+	printf("[Object] Loading object: %s\n", path);
+
+	file = fopen(path, "r");
+	if (!file) {
+		printf("[Object] Failed to load. File not accessable.\n");
+		return NULL;
+	}
+
+	while (fgets(buff, 255, file)) {
+		switch (buff[0]) {
+			case '$': { // Basic info
+				char type[32];
+				sscanf(buff, "$ %s", type);
+				if (equals(type, "POSITION")) {
+					sscanf(buff, "$ %*s %f %f %f", &obj->position[X], &obj->position[Y], &obj->position[Z]);
+				} else if (equals(type, "ROTATION")) {
+					sscanf(buff, "$ %*s %f %f %f", &obj->rotation[X], &obj->rotation[Y], &obj->rotation[Z]);
+				} else if (equals(type, "SCALE")) {
+					sscanf(buff, "$ %*s %f %f %f", &obj->scale[X], &obj->scale[Y], &obj->scale[Z]);
+					obj->scale[X] *= (1.0f / 16);
+					obj->scale[Y] *= (1.0f / 16);
+					obj->scale[Z] *= (1.0f / 16);
+				}
+				break;
+			}
+			case 'C': { // Color
+				PartColor color;
+				unsigned int r, g, b;
+				sscanf(buff, "C %d %02x%02x%02x %f", &color.id, &r, &g, &b, &color.color[A]);
+				color.color[R] = (float) r / 255;
+				color.color[G] = (float) g / 255;
+				color.color[B] = (float) b / 255;
+
+				listPush(obj->colors, &color);
+				break;
+			}
+			case 'B': { // Block
+				StaticObjectPart part;
+				int colorId;
+
+				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
+						&part.position[Z], &part.type, &colorId);
+
+				ListElement *it;
+				for (it = obj->colors->first; it != NULL; it = it->next) {
+					if (((TextureBlock *) it->data)->id == colorId) {
+						part.color = ((PartColor *) it->data)->color;
+						break;
+					}
+				}
+
+				listPush(obj->parts, &part);
+				break;
+			}
+		}
+	}
+
+	fclose(file);
+	return aobj;
+}
+
 void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 	StaticObject *obj = instance->object;
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
@@ -147,8 +303,8 @@ void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 	}
 }
 
-void renderDynamicObject(GameInstance *this, StaticObjectInstance *instance) {
-	StaticObject *obj = instance->object;
+void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
+	DynamicObject *obj = instance->object;
 	glPushMatrix();
 	glLoadIdentity();
 

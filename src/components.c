@@ -129,8 +129,8 @@ void updateCursor(GameInstance *this, int cursorId) {
 // Render Components
 
 void renderTextComponent(Component *comp, GameInstance *this) {
-	renderFontTo(this, comp->text.text, (GLfloat[]) {
+	renderFontTo(this, comp->text->text, (GLfloat[]) {
 			comp->x + getAbsoluteX(this, comp->relativeX),
 			comp->y + getAbsoluteY(this, comp->relativeY), 1.0f},
-			comp->text.color, comp->text.fontSize);
+			comp->text->color, comp->text->fontSize);
 }

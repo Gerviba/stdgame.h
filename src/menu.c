@@ -10,7 +10,7 @@ void loadIngameGUI() {
 }
 
 void onLogicIngame(GameInstance *this, float delta) {
-	StaticObjectInstance *obj = ((StaticObjectInstance *) this->map->objects->staticInstances->first->data);
+	DynamicObjectInstance *obj = ((DynamicObjectInstance *) this->map->objects->dynamicInstances->first->data);
 
 	float deltaMoveX = 0;
 	if (glfwGetKey(this->window, this->options.moveLeft[0]) == GLFW_PRESS

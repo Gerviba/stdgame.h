@@ -997,10 +997,10 @@ T 58 21 3 1
 #S 4.6 8.8 1 00FF00
 #S 4.3 8.5 1 0000FF
 
-#S 4 8.5 1 FFFFFF
-#S 8 8.5 1 FFFFFF
+#S 4 8.5 1 F4DB33
+#S 8 8.5 1 F4DB33
 S 4 8.5 1 F4DB33
-S 8 8.5 1 F4DB33
+S 8 8.5 1 DBF433
 S 13 8.5 1 F4DB33
 S 17 8.5 1 F4DB33
 S 21 8.5 1 F4DB33
@@ -1031,25 +1031,25 @@ S 27 5 1 FF0000
 # O id STATIC lock_little.sobj
 # O id DYNAMIC lock_little.dobj
 # O id ACTIVE lock_little.aobj
-O 0 STATIC gnome.sobj
+O 0 DYNAMIC gnome.sobj
 O 1 STATIC lock_little.sobj
 O 2 STATIC key_little.sobj
 O 3 STATIC door.dobj
 O 4 STATIC ghost.aobj
-O 5 STATIC stdgame.sobj
+#O 5 STATIC stdgame.sobj
 O 6 STATIC cursor.aobj
 
 # Object Instances
 # I id O.id STATIC x y z alpha beta gamma SizeX SizeY SizeZ visible
 # I id O.id DYNAMIC x y z alpha beta gamma SizeX SizeY SizeZ visible reference
 # I id O.id ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference
-I 0 0 STATIC 0 0 0 0 0 0 1 1 1 1
+I 0 0 DYNAMIC 0 0 0 0 0 0 1 1 1 1
 I 1 1 STATIC 10.75 7.5 0.8 0 90 0 0.5 0.5 0.5 1
-I 2 2 STATIC 0 0 0 0 0 0 1 1 1 1
+I 2 2 STATIC 10 7.5 0 90 0 90 0.5 0.5 0.5 1
 I 3 3 STATIC 11 7 0 0 180 0 1 1 1 1
 I 4 4 STATIC 14 7.3 0 0 180 0 1 1 1 1
-I 5 5 STATIC 7 7.3 -1.5 0 270 0 0.5 0.5 0.5 1
-I 6 6 STATIC 0 0 0 0 0 0 1 1 1 1
+#I 5 5 STATIC 7 7.3 -1.5 0 270 0 0.5 0.5 0.5 1
+#I 6 6 STATIC 0 0 0 0 0 0 1 1 1 1
 
 C 0 SPAWN 4 4
 C 1 END 1 10

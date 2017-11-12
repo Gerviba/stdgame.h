@@ -124,8 +124,8 @@ void gameInit(GameInstance *this) {
 	loadTileVAO(this);
 	loadTexture(&this->blankTextureId, "null.png");
 
-	this->state = MENU;
-	this->map = loadMap(this, "assets/maps/menu.map");
+	this->state = INGAME;
+	this->map = loadMap(this, "assets/maps/test2.map");
 
 	initPlayer(this);
 	initFont(this);
@@ -148,7 +148,7 @@ void updateCamera(GameInstance* this) {
 
 static void renderGUI(GameInstance* this) {
 	GLfloat color[] = {1.0f, 1.0f, 1.0f, 1.0f};
-	renderFontTo(this, "You have no $", (GLfloat[]) {6.0f, 7.0625f, 1.0f}, color, FS_NORMAL_DPI);
+	renderFontTo(this, "Test message, $ *", (GLfloat[]) {6.0f, 7.0625f, 1.0f}, color, FS_NORMAL_DPI);
 
 	char str[16];
 	if (glfwGetKey(this->window, GLFW_KEY_UP) == GLFW_PRESS)
@@ -156,12 +156,12 @@ static void renderGUI(GameInstance* this) {
 	sprintf(str, "%d *", this->score);
 
 	renderFontTo(this, str, (GLfloat[]) {
-			this->camera->position[X] + 3.0f - (strlen(str) * 0.0625f * 4),
-			this->camera->position[Y] + 1.0625f, 1.0f}, color, FS_LOW_DPI);
+			this->camera->position[X] + 2.0f - (strlen(str) * 0.0625f * 4),
+			this->camera->position[Y] + 1.0625f, 1.0f}, color, FS_NORMAL_DPI);
 	renderFontTo(this, "$$$", (GLfloat[]) {
-			this->camera->position[X] - 3.0f,
+			this->camera->position[X] - 2.0f,
 			this->camera->position[Y] + 1.0625f,
-			1.0f}, color, FS_LOW_DPI);
+			1.0f}, color, FS_NORMAL_DPI);
 
 
 //	renderFontTo(this, "#", (GLfloat[]) {
@@ -199,19 +199,22 @@ void onRender(GameInstance *this) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	for (it = this->map->objects->staticInstances->first; it != NULL; it = it->next)
 		renderStaticObject(this, (StaticObjectInstance *) it->data);
+	for (it = this->map->objects->dynamicInstances->first; it != NULL; it = it->next)
+		renderDynamicObject(this, (DynamicObjectInstance *) it->data);
 
-//	if (this->state == INGAME) {
-//		renderGUI(this);
-//	} else if (this->state == MENU) {
-//
-//	}
+	if (this->state == INGAME) {
+		renderGUI(this);
+	} else if (this->state == MENU) {
 
-	if (this->map->menu != NULL) {
-		for (it = this->map->menu->components->first; it != NULL; it = it->next)
-			((Component *) it->data)->onRender(it->data, this);
 	}
 
-    // Cleanup
+//	if (this->map->menu != NULL) {
+//		for (it = this->map->menu->components->first; it != NULL; it = it->next) {
+//			((Component *) it->data)->onRender((Component *) it->data, this);
+//		}
+//	}
+
+    // TODO: Cleanup
     glUseProgram(0);
 
 	updateCamera(this);
@@ -248,6 +251,7 @@ void onLogic(GameInstance *this) {
 	glfwGetFramebufferSize(this->window, &width, &height);
 	double cursorX, cursorY;
 	glfwGetCursorPos(this->window, &cursorX, &cursorY);
+
 #ifndef DEBUG_MOVEMENT
 	if (this->camera->destinationRotation[Y] > 0) {
 		this->camera->rotation[Y] = min(this->camera->rotation[Y] + 0.2,

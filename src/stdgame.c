@@ -9,6 +9,9 @@ static int modelId = 0;
 
 GameInstance *gi; //TODO: Debug
 
+/**
+ * TODO: Remove this chaos:
+ */
 void debugKeyPress(const char key, int x, int y) {
 	if (mode == 0) {
 		switch (key) {
@@ -102,14 +105,14 @@ void printVersionInfo() {
 
 int main(int argc, char *argv[]) {
 	GameInstance *this = new(GameInstance);
-	gi = this;
+	gi = this; //TODO: Remove this
 	this->shader = new(ShaderInfo);
 	this->lighting = new(LigingInfo);
 	this->lighting->numLights = 0;
 	this->camera = new(CameraInfo);
-	this->camera->rotation[0] = 0.0f;
-	this->camera->rotation[1] = 0.0f;
-	this->camera->rotation[2] = 0.0f;
+	this->camera->rotation[X] = 0.0f;
+	this->camera->rotation[Y] = 0.0f;
+	this->camera->rotation[Z] = 0.0f;
 
 	glfwSetErrorCallback(onError);
 
@@ -135,11 +138,13 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+// TODO: Cursor
 //	glfwSetWindowCloseCallback(window, window_close_callback);
 //	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	glfwSetInputMode(this->window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	glfwSetKeyCallback(this->window, onKeyAction);
 
+// TODO: Icon
 //	GLFWimage images[2];
 //	images[0] = load_icon("my_icon.png");
 //	images[1] = load_icon("my_icon_small.png");
@@ -170,6 +175,7 @@ int main(int argc, char *argv[]) {
 	while (!glfwWindowShouldClose(this->window)) {
 		onLogic(this);
 
+// FIXME: Remove this code
 //		int width, height;
 //		glfwGetFramebufferSize(window, &width, &height);
 //		glViewport(0, 0, width, height);

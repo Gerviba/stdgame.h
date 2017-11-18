@@ -173,13 +173,13 @@ int main(int argc, char *argv[]) {
 	gameInit(this);
 
 	while (!glfwWindowShouldClose(this->window)) {
-		onLogic(this);
 
 // FIXME: Remove this code
 //		int width, height;
 //		glfwGetFramebufferSize(window, &width, &height);
 //		glViewport(0, 0, width, height);
 
+		onLogic(this);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		onRender(this);
 

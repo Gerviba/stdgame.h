@@ -101,6 +101,16 @@ void onLogicIngame(GameInstance *this, float delta) {
 }
 
 void onLogicMenu(GameInstance *this, float delta) {
-	this->camera->position[Z] = 5;
-	updateCursor(this, 1);
+	this->camera->position[Z] = this->map->spawn[Z];
+
+	ActiveObjectInstance *cursor = updateCursor(this, 1);
+	if (cursor != NULL) {
+		ListElement *it;
+		for (it = this->map->menu->components->first; it != NULL; it = it->next) {
+			Component *comp = (Component *) it->data;
+			if (comp->onCalc != NULL)
+				comp->onCalc(comp, this, cursor);
+		}
+	}
+
 }

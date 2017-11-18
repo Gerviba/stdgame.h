@@ -4,9 +4,9 @@
 #include "game.h"
 
 typedef enum {
-	OBJECT,
-	TEXT,
-	IMAGE,
+	CT_OBJECT,
+	CT_TEXT,
+	CT_IMAGE,
 } ComponentType;
 
 typedef enum {
@@ -21,6 +21,12 @@ typedef enum {
 	Y_TOP 		= 1
 } RelativeY;
 
+typedef enum {
+	ALIGN_LEFT		= -1,
+	ALIGN_CENTER	= 0,
+	ALIGN_RIGHT		= 1
+} Align;
+
 typedef struct {
 	void *value;
 	size_t valueLength;
@@ -30,6 +36,9 @@ typedef struct {
 	FontSize fontSize;
 	char *text; //TODO: free
 	GLfloat color[4];
+	Align align;
+	GLfloat rawMax[3];
+	GLfloat rawMin[3];
 } TextComponent;
 
 typedef struct {
@@ -43,8 +52,7 @@ typedef struct {
 typedef struct Component {
 	GLuint id;
 	GenericType *value;
-	GLfloat x;
-	GLfloat y;
+	GLfloat position[3];
 	RelativeX relativeX;
 	RelativeY relativeY;
 	ComponentType type;
@@ -58,8 +66,7 @@ typedef struct Component {
 	void (*onLoad)(struct Component*, GameInstance*);
 	void (*onDestroy)(struct Component*, GameInstance*);
 	void (*onRender)(struct Component*, GameInstance*);
-	void (*onCalc)(struct Component*, GameInstance*);
-	void (*onHover)(struct Component*, GameInstance*);
+	void (*onCalc)(struct Component*, GameInstance*, ActiveObjectInstance*);
 	void (*onClick)(struct Component*, GameInstance*);
 } Component;
 
@@ -78,7 +85,10 @@ GLfloat getAbsoluteY(GameInstance*, RelativeY);
 GLfloat getCursorProjectedX(GameInstance*, double);
 GLfloat getCursorProjectedY(GameInstance*, double);
 
-void updateCursor(GameInstance*, int);
+ActiveObjectInstance* updateCursor(GameInstance*, int);
 void renderTextComponent(Component*, GameInstance*);
+void calcTextButton(Component*, GameInstance*, ActiveObjectInstance*);
+void calcObjectComponentPosition(Component*, GameInstance*, ActiveObjectInstance*);
+void clickStartButton(Component*, GameInstance*);
 
 #endif /* COMPONENTS_H_ */

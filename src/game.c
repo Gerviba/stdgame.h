@@ -124,10 +124,9 @@ void gameInit(GameInstance *this) {
 	loadTileVAO(this);
 	loadTexture(&this->blankTextureId, "null.png");
 
-	this->state = INGAME;
-	this->map = loadMap(this, "assets/maps/test2.map");
+	this->state = MENU;
+	this->map = loadMap(this, "assets/maps/menu.map");
 
-	initPlayer(this);
 	initFont(this);
 	onLogic(this);
 	printf("[Render] First logic done\n");
@@ -197,22 +196,27 @@ void onRender(GameInstance *this) {
 		renderTile(this, (Tile *) it->data);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
 	for (it = this->map->objects->staticInstances->first; it != NULL; it = it->next)
 		renderStaticObject(this, (StaticObjectInstance *) it->data);
 	for (it = this->map->objects->dynamicInstances->first; it != NULL; it = it->next)
 		renderDynamicObject(this, (DynamicObjectInstance *) it->data);
+	for (it = this->map->objects->activeInstances->first; it != NULL; it = it->next)
+		renderActiveObject(this, (ActiveObjectInstance *) it->data);
 
-	if (this->state == INGAME) {
-		renderGUI(this);
-	} else if (this->state == MENU) {
-
-	}
-
-//	if (this->map->menu != NULL) {
-//		for (it = this->map->menu->components->first; it != NULL; it = it->next) {
-//			((Component *) it->data)->onRender((Component *) it->data, this);
-//		}
+//	if (this->state == INGAME) {
+//		renderGUI(this);
+//	} else if (this->state == MENU) {
+//
 //	}
+
+	if (this->map->menu != NULL) {
+		for (it = this->map->menu->components->first; it != NULL; it = it->next) {
+			Component* comp = (Component *) it->data;
+			if (comp->onRender != NULL)
+				comp->onRender(comp, this);
+		}
+	}
 
     // TODO: Cleanup
     glUseProgram(0);
@@ -242,11 +246,6 @@ void onLogic(GameInstance *this) {
 	secondsElapsed = (float) (ticks - prevTicks) / 1000.0f;
 	prevTicks = ticks;
 
-	if (this->state == INGAME)
-		onLogicIngame(this, secondsElapsed);
-	else
-		onLogicMenu(this, secondsElapsed);
-
 	int width, height;
 	glfwGetFramebufferSize(this->window, &width, &height);
 	double cursorX, cursorY;
@@ -274,12 +273,12 @@ void onLogic(GameInstance *this) {
 	i = 0;
 	for (it = this->map->lights->first; it != NULL; it = it->next, ++i) {
 		Light light = *(Light *)it->data;
-		this->lighting->lightColor[i * 3 + 0] = light.color[0];
-		this->lighting->lightColor[i * 3 + 1] = light.color[1];
-		this->lighting->lightColor[i * 3 + 2] = light.color[2];
-		this->lighting->lightPosition[i * 3 + 0] = light.x;
-		this->lighting->lightPosition[i * 3 + 1] = light.y;
-		this->lighting->lightPosition[i * 3 + 2] = 1.4f;
+		this->lighting->lightColor[i * 3 + 0] = light.color[R];
+		this->lighting->lightColor[i * 3 + 1] = light.color[G];
+		this->lighting->lightColor[i * 3 + 2] = light.color[B];
+		this->lighting->lightPosition[i * 3 + 0] = light.position[X];
+		this->lighting->lightPosition[i * 3 + 1] = light.position[Y];
+		this->lighting->lightPosition[i * 3 + 2] = light.position[Z];
 
 #ifdef DEBUG
 		glPushMatrix();
@@ -292,5 +291,11 @@ void onLogic(GameInstance *this) {
 #endif
 	}
 	this->lighting->numLights = i;
+
+
+	if (this->state == INGAME)
+		onLogicIngame(this, secondsElapsed);
+	else
+		onLogicMenu(this, secondsElapsed);
 
 }

@@ -147,7 +147,7 @@ typedef struct {
 typedef struct {
 	int id;
 	int size;
-	DynamicObject parts[];
+	DynamicObject *parts;
 } ActiveObject;
 
 typedef struct {
@@ -158,6 +158,7 @@ typedef struct {
 	GLfloat scale[3];
 	GLboolean visible;
 	ActiveObject *object;
+	GLfloat moveMat[16];
 } ActiveObjectInstance;
 
 typedef struct {
@@ -171,6 +172,8 @@ typedef struct {
 	LinkedList /*ActiveObjectInstance*/ *activeInstances;
 } ObjectInfo;
 
-StaticObject *loadObject(char*);
+StaticObject *loadStaticObject(char[]);
+DynamicObject *loadDynamicObject(char[]);
+ActiveObject *loadActiveObject(char[]);
 
 #endif /* OBJECT_H_ */

@@ -1,4 +1,4 @@
-# Assets
+# Assets - File formats
 
 - maps
   - Map (.map)
@@ -25,15 +25,15 @@
 |O|Object Active|O id STATIC/DYNAMIC/ACTIVE filename|
 |I|Object Instance|I O.id STATIC/DYNAMIC/ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference(1) |
 |C|Coords|C id type x y|
-|M|Message|M x1 y1 x2 y2 LANG_KEY|
-|R|Region|R x1 y1 x2 y2 delatHP gravity velocity|
+|M|Message|M x1 y1 x2 y2 line1 (line2)|
+|R|Region|R x1 y1 x2 y2 delatHP gravity velocity soundActivation activateAction|
 |A|TextComponent|A id x y relativeX relativeY message rrggbb alpha|
-|B|ObjectComponent|A id x y relativeX relativeY I(ACTIVE).id |
+|B|ObjectComponent|A id x y relativeX relativeY alignX I(ACTIVE).id |
 |D|ImageComponent|D id path x y z height width|
 
 - (1) reference required and available only for dynamic objects
 
-### Sobj and Dobj
+### Static obj and Dynamic obj
 
 |Sign|Type|Format|
 |---|---|---|
@@ -46,7 +46,7 @@
   - `ROTATION` alpha beta gamma
   - `SCALE` x y z
 
-### Aobj
+### Active obj
 
 |Sign|Type|Format|
 |---|---|---|
@@ -58,7 +58,7 @@
   - `POSITION` x y z
   - `ROTATION` alpha beta gamma
   - `SCALE` x y z
-  - `SIZE` stateCount
+  - `SIZE` stateCount (It must be under the POSITION, ROTATION and the SCALE meta line.)
 
 ### Char
 
@@ -73,3 +73,20 @@
   
 > Color = 0 means default color
 
+### Font v1 (.font)
+
+```
+	character filename
+	%c %s
+```
+
+> NOTE: No comments enabled
+
+### Font v2 (.font32)
+
+*Unimplemented*
+
+```
+	characterId filename
+	%u %s
+```

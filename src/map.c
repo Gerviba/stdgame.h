@@ -5,6 +5,9 @@
 #include "components.h"
 
 extern void renderTextComponent(Component*, GameInstance*);
+extern void calcTextButton(Component*, GameInstance*, ActiveObjectInstance*);
+extern void calcObjectComponentPosition(Component*, GameInstance*, ActiveObjectInstance*);
+extern void clickStartButton(Component*, GameInstance*);
 
 void loadTexture(GLuint *textureId, char path[]) {
 	glGenTextures(1, textureId);
@@ -128,7 +131,8 @@ Map* loadMap(const GameInstance *this, char path[]) {
 			case 'S': { // Static Light
 				Light light;
 				unsigned int r, g, b;
-				sscanf(buff, "S %f %f %f %02x%02x%02x", &light.x, &light.y, &light.strength, &r, &g, &b);
+				sscanf(buff, "S %f %f %f %f %02x%02x%02x", &light.position[X], &light.position[Y], &light.position[Z],
+						&light.strength, &r, &g, &b);
 				light.color[R] = (float) r / 255;
 				light.color[G] = (float) g / 255;
 				light.color[B] = (float) b / 255;
@@ -220,24 +224,25 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					doi.reference = NULL; //TODO: Implement reference points
 					listPush(map->objects->dynamicInstances, &doi);
 
-				} else if (equals(buff, "ACTIVE")) {
-					ActiveObjectInstance doi;
-					int objectId, referencePoint;
-					sscanf(buff, "I %d %d ACTIVE %f %f %f %f %f %f %f %f %f %d %d", &doi.id, &objectId,
-							&doi.position[X], &doi.position[Y], &doi.position[Z],
-							&doi.rotation[X], &doi.rotation[Y], &doi.rotation[Z],
-							&doi.scale[X], &doi.scale[Y], &doi.scale[Z], &visible, &referencePoint);
-					doi.visible = visible ? GL_TRUE : GL_FALSE;
+				} else if (equals(type, "ACTIVE")) {
+					ActiveObjectInstance aoi;
+					int objectId;
+					sscanf(buff, "I %d %d ACTIVE %f %f %f %f %f %f %f %f %f %d", &aoi.id, &objectId,
+							&aoi.position[X], &aoi.position[Y], &aoi.position[Z],
+							&aoi.rotation[X], &aoi.rotation[Y], &aoi.rotation[Z],
+							&aoi.scale[X], &aoi.scale[Y], &aoi.scale[Z], &visible);
+					aoi.visible = visible ? GL_TRUE : GL_FALSE;
+					aoi.activePart = 0;
 
 					ListElement *it;
 					for (it = map->objects->activeObjects->first; it != NULL; it = it->next) {
 						if (((ActiveObject *) it->data)->id == objectId) {
-							doi.object = (ActiveObject *) it->data;
+							aoi.object = (ActiveObject *) it->data;
 							break;
 						}
 					}
 
-					listPush(map->objects->dynamicInstances, &doi);
+					listPush(map->objects->activeInstances, &aoi);
 				}
 
 				break;
@@ -250,10 +255,12 @@ Map* loadMap(const GameInstance *this, char path[]) {
 
 				Component comp;
 				comp.text = new(TextComponent);
+				comp.type = CT_TEXT;
 				char text[255];
 				unsigned int r, g, b;
-				sscanf(buff, "A %u %f %f %d %d %s %02x%02x%02x %f %d", &comp.id, &comp.x, &comp.y, &comp.relativeX,
-						&comp.relativeY, text, &r, &g, &b, &comp.text->color[A], &comp.text->fontSize);
+				sscanf(buff, "A %u %f %f %d %d %d %d %s %02x%02x%02x %f %d", &comp.id, &comp.position[X], &comp.position[Y],
+						&comp.position[Z], &comp.relativeX, &comp.relativeY, &comp.text->align, text, &r, &g, &b,
+						&comp.text->color[A], &comp.text->fontSize);
 				comp.text->color[R] = (float) r / 255;
 				comp.text->color[G] = (float) g / 255;
 				comp.text->color[B] = (float) b / 255;
@@ -266,6 +273,8 @@ Map* loadMap(const GameInstance *this, char path[]) {
 						comp.text->text[i] = ' ';
 
 				comp.onRender = renderTextComponent;
+				comp.onCalc = calcTextButton;
+				comp.onClick = clickStartButton;
 
 				listPush(map->menu->components, &comp);
 				break;
@@ -276,35 +285,27 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					map->menu->components = newList(Component);
 				}
 
-				Component *comp = new(Component);
-				unsigned int objectId;
-				sscanf(buff, "A %u %f %f %d %d %u", &comp->id, &comp->x, &comp->y, &comp->relativeX,
-						&comp->relativeY, &objectId);
+				Component comp;
+				comp.type = CT_OBJECT;
+				comp.object = new(ObjectComponent);
+				int objectId;
+				sscanf(buff, "B %d %f %f %f %d %d %d", &comp.id, &comp.position[X], &comp.position[Y],
+						&comp.position[Z], &comp.relativeX, &comp.relativeY, &objectId);
 
 				ListElement *it;
 				for (it = map->objects->activeInstances->first; it != NULL; it = it->next) {
 					if (((ActiveObjectInstance *) it->data)->id == objectId) {
-						comp->object->object = (ActiveObjectInstance *) it->data;
+						comp.object->object = (ActiveObjectInstance *) it->data;
 						break;
 					}
 				}
 
-				comp->onRender = renderTextComponent;
+				comp.onRender = NULL;
+				comp.onCalc = calcObjectComponentPosition;
 
-				listPush(map->menu->components, comp);
+				listPush(map->menu->components, &comp);
 				break;
 			}
-//			case 'C': {
-//				char type[32];
-//				sscanf(buff, "C %*d %s", type);
-//
-//				if (strcmp(type, "SPAWN") == 0) {
-//					sscanf("C %*d SPAWN %f %f", &map->spawn[X], &map->spawn[Y]);
-//					map->spawn[Z] = 4;
-//					printf("Map loaded %f %f\n", map->spawn[X], map->spawn[Y]);
-//				}
-//				break;
-//			}
 		}
 	}
 
@@ -312,6 +313,10 @@ Map* loadMap(const GameInstance *this, char path[]) {
 
 	printf("[Map] Sucessfully loaded\n");
 	return map;
+}
+
+void freeMap(Map map) {
+
 }
 
 

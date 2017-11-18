@@ -1,8 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
+#include <ctype.h>
 #include "includes.h"
-
-// Generic Value
 
 GenericType* newGenericValue(void *value, size_t size) {
 	GenericType *gt = new(GenericType);
@@ -78,7 +77,7 @@ void freeGenericValue(GenericType *value) {
 	free(value);
 }
 
-// Absolute Position
+
 
 GLfloat getAbsoluteX(GameInstance *this, RelativeX relX) {
 	if (relX == X_LEFT)
@@ -110,27 +109,86 @@ GLfloat getCursorProjectedY(GameInstance *this, double y) {
 			((this->options.height / 2 - y) / this->options.height)) * 1.8 * this->options.aspectRatio;
 }
 
-void updateCursor(GameInstance *this, int cursorId) {
+GLfloat getFontAlign(GameInstance *this, char str[], FontSize fontSize, Align align) {
+	if (align == ALIGN_LEFT)
+		return 0;
+
+	GLfloat size = 0;
+	int i = 0;
+	while (str[i] != '\0') {
+		size += getChar(this->font, toupper(str[i]))->width + 1;
+		++i;
+	}
+	size /= fontSize;
+
+	return align == ALIGN_CENTER ? size / 2 : size;
+}
+
+/**
+ * TODO: Update it to Active Object
+ */
+ActiveObjectInstance* updateCursor(GameInstance *this, int cursorId) {
 	double cursorX, cursorY;
 	glfwGetCursorPos(this->window, &cursorX, &cursorY);
 
 	ListElement *it;
-	StaticObjectInstance *cursor;
-	for (it = this->map->objects->staticInstances->first; it != NULL; it = it->next)
-		if (((StaticObjectInstance *) it->data)->id == cursorId)
-			cursor = ((StaticObjectInstance *) it->data);
+	ActiveObjectInstance *cursor = NULL;
+	for (it = this->map->objects->activeInstances->first; it != NULL; it = it->next)
+		if (((ActiveObjectInstance *) it->data)->id == cursorId) {
+			cursor = ((ActiveObjectInstance *) it->data);
+			break;
+		}
+
+	if (cursor == NULL)
+		return NULL;
 
 	cursor->position[X] = getCursorProjectedX(this, cursorX);
 	cursor->position[Y] = getCursorProjectedY(this, cursorY);
 	cursor->position[Z] = 1 + (1.0 / 16);
-	renderStaticObject(this, cursor);
+
+	cursor->activePart = glfwGetMouseButton(this->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0;
+
+	return cursor;
 }
 
-// Render Components
-
 void renderTextComponent(Component *comp, GameInstance *this) {
-	renderFontTo(this, comp->text->text, (GLfloat[]) {
-			comp->x + getAbsoluteX(this, comp->relativeX),
-			comp->y + getAbsoluteY(this, comp->relativeY), 1.0f},
-			comp->text->color, comp->text->fontSize);
+	renderFontToComponent(this, comp->text->text, (GLfloat[]) {
+			comp->position[X] + getAbsoluteX(this, comp->relativeX)
+					- getFontAlign(this, comp->text->text, comp->text->fontSize, comp->text->align),
+			comp->position[Y] + getAbsoluteY(this, comp->relativeY), 1.0f},
+			comp->text->color, comp->text->fontSize, comp->text->rawMin, comp->text->rawMax);
+}
+
+void calcObjectComponentPosition(Component *comp, GameInstance *this, ActiveObjectInstance *cursor) {
+	comp->object->object->position[X] = comp->position[X] + getAbsoluteX(this, comp->relativeX);
+	comp->object->object->position[Y] = comp->position[Y] + getAbsoluteY(this, comp->relativeY);
+}
+
+void calcTextButton(Component *comp, GameInstance *this, ActiveObjectInstance *cursor) {
+	if (comp->text->rawMin[X] <= cursor->position[X] &&
+			comp->text->rawMin[Y] <= cursor->position[Y] &&
+			comp->text->rawMax[X] >= cursor->position[X] &&
+			comp->text->rawMax[Y] >= cursor->position[Y]) {
+
+		if (glfwGetMouseButton(this->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+			setColor(comp->text->color, 0.6, 0.6, 0.6, 1.0);
+		} else {
+			setColor(comp->text->color, 0.8, 0.8, 0.8, 1.0);
+		}
+	} else {
+		setColor(comp->text->color, 1.0, 1.0, 1.0, 1.0);
+	}
+
+	if (glfwGetMouseButton(this->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+		comp->onClick(comp, this);
+	}
+}
+
+
+void clickStartButton(Component *comp, GameInstance *this) {
+	freeMap(this->map);
+	this->map = loadMap(this, "assets/maps/test2.map");
+	this->state = INGAME;
+	initPlayer(this);
+	updateCamera(this);
 }

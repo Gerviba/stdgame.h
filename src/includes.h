@@ -48,5 +48,8 @@ static const float PI = 3.14159265358979323846;
 #define sig(a) (a == 0 ? 0 : a > 0 ? 1 : -1)
 #define equals(a, b) (strcmp(a, b) == 0)
 #define new(x) (malloc(sizeof(x)))
+#define setColor(color, r, g, b, a) ({color[0] = r; color[1] = g; color[2] = b; color[3] = a;})
+#define setPosition(position, x, y, z) ({color[0] = x; color[1] = y; color[2] = z;}) //TODO: Alakítsam át erre a többit
+#define setPositionArray(pos, from) ({pos[0] = from[0]; pos[1] = from[1]; pos[2] = from[2];})
 
 #endif /* __INCLUDES_H__ */

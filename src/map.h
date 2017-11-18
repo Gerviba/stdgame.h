@@ -58,7 +58,7 @@ typedef enum {
 #define MOVE_BLOCK_X			(TT_BORDER_RIGHT | TT_BORDER_LEFT) & 0b11110
 
 typedef struct {
-	GLfloat x, y;
+	GLfloat position[3];
 	GLfloat strength; //TODO: Implement
 	GLfloat color[3];
 } Light;

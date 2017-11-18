@@ -33,6 +33,8 @@ typedef struct {
 
 void initFont(GameInstance*);
 void renderFontTo(GameInstance*, char[], GLfloat[3], GLfloat[4], FontSize);
+void renderFontToComponent(GameInstance*, char[], GLfloat[3], GLfloat[4], FontSize, GLfloat[3], GLfloat[3]);
 void freeFont(GameInstance*);
+Char* getChar(Font*, char);
 
 #endif /* FONT_H_ */

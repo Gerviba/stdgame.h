@@ -115,7 +115,7 @@ void freeFont(GameInstance *this) {
 	free(this->font);
 }
 
-static Char* getChar(Font *font, char c) {
+Char* getChar(Font *font, char c) {
 	ListElement *it;
 	for (it = font->chars->first; it != NULL; it = it->next)
 		if (c == ((Char *)it->data)->code)
@@ -210,4 +210,36 @@ void renderFontTo(GameInstance *this, char str[], GLfloat position[3], GLfloat d
 		x += c->width + 1;
 		++i;
 	}
+}
+
+void renderFontToComponent(GameInstance *this, char str[], GLfloat position[3], GLfloat defaultColor[4],
+		FontSize size, GLfloat min[3], GLfloat max[3]) {
+	const GLfloat dist = 1.0 / size;
+
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef(position[X], position[Y], position[Z]);
+	glScalef(dist, dist, dist);
+
+	GLfloat moveMat[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, moveMat);
+	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, moveMat);
+	glPopMatrix();
+
+	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
+
+	min[X] = position[X];
+	min[Y] = position[Y] - dist;
+
+	int i = 0;
+	GLfloat x = 0;
+	while (str[i] != '\0') {
+		Char *c = getChar(this->font, toupper(str[i]));
+		renderChar(this, this->font, c, x, 1.0f, defaultColor);
+		x += c->width + 1;
+		++i;
+	}
+
+	max[X] = position[X] + (x * dist);
+	max[Y] = position[Y] + (6 * dist);
 }

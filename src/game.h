@@ -1,10 +1,10 @@
 #ifndef GAME_H_
 #define GAME_H_
 
+#include "font.h"
 #include "object.h"
 #include "map.h"
 #include "character.h"
-#include "font.h"
 
 #define MAX_NUM_LIGHTS 28
 
@@ -85,5 +85,11 @@ void gameInit(GameInstance*);
 void onRender(GameInstance*);
 void onLogic(GameInstance*);
 void setPerspective(GameInstance*, float, float, float, float);
+
+void renderStaticObject(GameInstance*, StaticObjectInstance*);
+void renderDynamicObject(GameInstance*, DynamicObjectInstance*);
+void renderActiveObject(GameInstance*, ActiveObjectInstance*);
+void renderTile(GameInstance*, Tile*);
+void initStraticInstance(GameInstance*, StaticObjectInstance*);
 
 #endif /* GAME_H_ */

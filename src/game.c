@@ -9,15 +9,16 @@
 	#include <sys/time.h>
 #endif /* _WIN32 */
 
-#include "includes.h"
+#include "stdgame.h"
 
+// TODO: lehet, hogy ezek nem kellenek
 extern GLuint shaderAttachFromFile(GLuint, GLenum, const char *); //TODO: add to shader.h
 extern void onLogicIngame(GameInstance*, float);
 extern void onLogicMenu(GameInstance*, float);
 
 void setPerspective(GameInstance *this, float fov, float aspect, float near, float far) {
-	this->options.tanFov = tanf(fov);
-	this->options.aspectRatio = 1.0 / aspect;
+	this->options->tanFov = tanf(fov);
+	this->options->aspectRatio = 1.0 / aspect;
 	float f = 1.0f / tanf(fov / 2.0f);
 
 	this->camera->projMat[0] = f / aspect;
@@ -44,15 +45,15 @@ void setPerspective(GameInstance *this, float fov, float aspect, float near, flo
 }
 
 static void loadDefaultOptions(GameInstance *this) {
-	this->options.moveLeft[0] = GLFW_KEY_A;
-	this->options.moveLeft[1] = GLFW_KEY_LEFT;
-	this->options.moveRight[0] = GLFW_KEY_D;
-	this->options.moveRight[1] = GLFW_KEY_RIGHT;
-	this->options.jump[0] = GLFW_KEY_W;
-	this->options.jump[1] = GLFW_KEY_SPACE;
-	this->options.sneek[0] = GLFW_KEY_S;
-	this->options.sneek[1] = GLFW_KEY_DOWN;
-	this->options.attack[0] = GLFW_KEY_RIGHT_CONTROL;
+	this->options->moveLeft[0] = GLFW_KEY_A;
+	this->options->moveLeft[1] = GLFW_KEY_LEFT;
+	this->options->moveRight[0] = GLFW_KEY_D;
+	this->options->moveRight[1] = GLFW_KEY_RIGHT;
+	this->options->jump[0] = GLFW_KEY_W;
+	this->options->jump[1] = GLFW_KEY_SPACE;
+	this->options->sneek[0] = GLFW_KEY_S;
+	this->options->sneek[1] = GLFW_KEY_DOWN;
+	this->options->attack[0] = GLFW_KEY_RIGHT_CONTROL;
 }
 
 void loadTileVAO(const GameInstance *this) {
@@ -63,6 +64,7 @@ void loadTileVAO(const GameInstance *this) {
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
+	/** (3 x Position, 2 x Texture coord, 3 x Normal vectors) x 4 */
 	GLfloat v[] = {
 			0.0f, 0.0f, 0.0f,	0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
 			1.0f, 0.0f, 0.0f,	1.0f, 1.0f, 	0.0f, 0.0f, 1.0f,
@@ -191,7 +193,7 @@ void onRender(GameInstance *this) {
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(this->shader->texturePosition, 0);
 
-	ListElement *it;
+	ListItem *it;
 	for (it = this->map->tiles->first; it != NULL; it = it->next)
 		renderTile(this, (Tile *) it->data);
 
@@ -269,7 +271,7 @@ void onLogic(GameInstance *this) {
 	}
 #endif
 
-	ListElement *it;
+	ListItem *it;
 	i = 0;
 	for (it = this->map->lights->first; it != NULL; it = it->next, ++i) {
 		Light light = *(Light *)it->data;

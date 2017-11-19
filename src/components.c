@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
-#include "includes.h"
+
+#include "stdgame.h"
 
 GenericType* newGenericValue(void *value, size_t size) {
 	GenericType *gt = new(GenericType);
@@ -77,36 +78,34 @@ void freeGenericValue(GenericType *value) {
 	free(value);
 }
 
-
-
 GLfloat getAbsoluteX(GameInstance *this, RelativeX relX) {
 	if (relX == X_LEFT)
-		return this->camera->position[X] - (this->options.tanFov * (this->camera->position[Z] - 1));
+		return this->camera->position[X] - (this->options->tanFov * (this->camera->position[Z] - 1));
 	else if (relX == X_RIGHT)
-		return this->options.tanFov * (this->camera->position[Z] - 1) + this->camera->position[X];
+		return this->options->tanFov * (this->camera->position[Z] - 1) + this->camera->position[X];
 	else
 		return this->camera->position[X];
 }
 
 GLfloat getAbsoluteY(GameInstance *this, RelativeY relY) {
 	if (relY == Y_BOTTOM)
-		return this->camera->position[Y] - ((this->options.tanFov * (this->camera->position[Z] - 1))
-				* this->options.aspectRatio);
+		return this->camera->position[Y] - ((this->options->tanFov * (this->camera->position[Z] - 1))
+				* this->options->aspectRatio);
 	else if (relY == Y_TOP)
-		return ((this->options.tanFov * (this->camera->position[Z] - 1) * this->options.aspectRatio)
+		return ((this->options->tanFov * (this->camera->position[Z] - 1) * this->options->aspectRatio)
 				+ this->camera->position[Y]);
 	else
 		return this->camera->position[Y];
 }
 
 GLfloat getCursorProjectedX(GameInstance *this, double x) {
-	return this->camera->position[X] + ((this->options.tanFov * (this->camera->position[Z] - 1)) *
-			-((this->options.width / 2 - x) / this->options.width)) * 1.8;
+	return this->camera->position[X] + ((this->options->tanFov * (this->camera->position[Z] - 1)) *
+			-((this->options->width / 2 - x) / this->options->width)) * 1.8;
 }
 
 GLfloat getCursorProjectedY(GameInstance *this, double y) {
-	return this->camera->position[Y] + ((this->options.tanFov * (this->camera->position[Z] - 1)) *
-			((this->options.height / 2 - y) / this->options.height)) * 1.8 * this->options.aspectRatio;
+	return this->camera->position[Y] + ((this->options->tanFov * (this->camera->position[Z] - 1)) *
+			((this->options->height / 2 - y) / this->options->height)) * 1.8 * this->options->aspectRatio;
 }
 
 GLfloat getFontAlign(GameInstance *this, char str[], FontSize fontSize, Align align) {
@@ -131,7 +130,7 @@ ActiveObjectInstance* updateCursor(GameInstance *this, int cursorId) {
 	double cursorX, cursorY;
 	glfwGetCursorPos(this->window, &cursorX, &cursorY);
 
-	ListElement *it;
+	ListItem *it;
 	ActiveObjectInstance *cursor = NULL;
 	for (it = this->map->objects->activeInstances->first; it != NULL; it = it->next)
 		if (((ActiveObjectInstance *) it->data)->id == cursorId) {
@@ -183,7 +182,6 @@ void calcTextButton(Component *comp, GameInstance *this, ActiveObjectInstance *c
 		comp->onClick(comp, this);
 	}
 }
-
 
 void clickStartButton(Component *comp, GameInstance *this) {
 	freeMap(this->map);

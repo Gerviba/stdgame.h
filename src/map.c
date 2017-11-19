@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "includes.h"
 #include "components.h"
+#include "stdgame.h"
 
 extern void renderTextComponent(Component*, GameInstance*);
 extern void calcTextButton(Component*, GameInstance*, ActiveObjectInstance*);
@@ -15,7 +15,7 @@ void loadTexture(GLuint *textureId, char path[]) {
 
 	char finalPath[255] = "assets/textures/";
 	strcat(finalPath, path);
-	printf("[Map] Loading texture: %s\n", finalPath);
+	DEBUG("Map", "Loading texture: %s", finalPath);
 
 	int width, height;
 	unsigned char* image = SOIL_load_image(finalPath, &width, &height, 0, SOIL_LOAD_RGB);
@@ -47,7 +47,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 
 	FILE *file;
 	char buff[255];
-	printf("[Map] Loading map: %s\n", path);
+	DEBUG("Map", "Loading map: %s", path);
 
 	file = fopen(path, "r");
 	while (fgets(buff, 255, file)) {
@@ -96,7 +96,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					if (side[i] < 0)
 						continue;
 
-					ListElement *it;
+					ListItem *it;
 					for (it = map->textures->first; it != NULL; it = it->next) {
 						if (((Texture *)it->data)->id == side[i]) {
 							*pointers[i] = (Texture *)it->data;
@@ -117,7 +117,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 
 				sscanf(buff, "T %f %f %d %d", &tile.x, &tile.y, &texBlockId, &tileType);
 				tile.type = (TileType) tileType;
-				ListElement *it;
+				ListItem *it;
 				for (it = map->textureBlocks->first; it != NULL; it = it->next) {
 					if (((TextureBlock *)it->data)->id == texBlockId) {
 						tile.texture = (TextureBlock *)it->data;
@@ -194,7 +194,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 							&soi.scale[X], &soi.scale[Y], &soi.scale[Z], &visible);
 					soi.visible = visible ? GL_TRUE : GL_FALSE;
 
-					ListElement *it;
+					ListItem *it;
 					for (it = map->objects->staticObjects->first; it != NULL; it = it->next) {
 						if (((StaticObject *) it->data)->id == objectId) {
 							soi.object = (StaticObject *) it->data;
@@ -213,7 +213,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 							&doi.scale[X], &doi.scale[Y], &doi.scale[Z], &visible, &referencePoint);
 					doi.visible = visible ? GL_TRUE : GL_FALSE;
 
-					ListElement *it;
+					ListItem *it;
 					for (it = map->objects->dynamicObjects->first; it != NULL; it = it->next) {
 						if (((DynamicObject *) it->data)->id == objectId) {
 							doi.object = (DynamicObject *) it->data;
@@ -234,7 +234,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					aoi.visible = visible ? GL_TRUE : GL_FALSE;
 					aoi.activePart = 0;
 
-					ListElement *it;
+					ListItem *it;
 					for (it = map->objects->activeObjects->first; it != NULL; it = it->next) {
 						if (((ActiveObject *) it->data)->id == objectId) {
 							aoi.object = (ActiveObject *) it->data;
@@ -292,7 +292,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 				sscanf(buff, "B %d %f %f %f %d %d %d", &comp.id, &comp.position[X], &comp.position[Y],
 						&comp.position[Z], &comp.relativeX, &comp.relativeY, &objectId);
 
-				ListElement *it;
+				ListItem *it;
 				for (it = map->objects->activeInstances->first; it != NULL; it = it->next) {
 					if (((ActiveObjectInstance *) it->data)->id == objectId) {
 						comp.object->object = (ActiveObjectInstance *) it->data;
@@ -311,7 +311,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 
 	fclose(file);
 
-	printf("[Map] Sucessfully loaded\n");
+	DEBUG("Map", "Successfully loaded");
 	return map;
 }
 

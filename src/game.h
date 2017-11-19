@@ -1,14 +1,80 @@
+/**
+ * @file game.h
+ * @author Gerviba (Szabo Gergely)
+ * @brief Game initialisation and game loop
+ */
+
 #ifndef GAME_H_
 #define GAME_H_
 
+#include "stdgame.h"
 #include "font.h"
 #include "object.h"
 #include "map.h"
-#include "character.h"
+#include "player.h"
 
+/** Maximum allowed lights to render */
 #define MAX_NUM_LIGHTS 28
 
-typedef struct {
+/** Game state */
+typedef enum {
+	/** Main menu like menu */
+	MENU,
+	/** Ingame GUI with player movement allowed */
+	INGAME,
+	/** Ingame GUI or menu with player movement and mob timing disabled */
+	PAUSE
+} GameState;
+
+/**
+ * It contains all the data that the game requires.
+ */
+struct GameInstance {
+	ShaderInfo *shader;
+	CameraInfo *camera;
+	Map *map;
+	LigingInfo *lighting;
+	Player *player;
+	Font *font;
+	Options *options;
+
+	GLuint tileVAO;
+	GLuint blankTextureId;
+	GLFWwindow *window;
+	int score;
+	GameState state;
+
+};
+
+struct Options {
+	GLuint msaa;
+	GLboolean fullscreen;
+	GLuint height;
+	GLuint width;
+	GLboolean shadow;
+	GLboolean cameraMovement;
+	GLfloat tanFov;
+	GLfloat aspectRatio;
+
+	int moveLeft[2];
+	int moveRight[2];
+	int jump[2];
+	int sneek[3];
+	int attack[2];
+	int speell1[2];
+	int speell2[2];
+	int speell3[2];
+	int speell4[2];
+	int menu;
+
+};
+
+struct InputActionWrapper {
+	enum {KEYBOARD, MOUSE, GAMEPAD} type;
+	int identifier;
+};
+
+struct ShaderInfo {
 	GLuint shaderId;
 	GLuint cameraPosition;
 	GLuint lightPosition;
@@ -20,9 +86,9 @@ typedef struct {
 	GLuint viewMat;
 	GLuint moveMat;
 	GLuint modelMat;
-} ShaderInfo;
+};
 
-typedef struct {
+struct CameraInfo {
 	GLfloat rotation[3];
 	GLfloat position[3];
 	GLfloat projMat[16];
@@ -30,66 +96,49 @@ typedef struct {
 
 	GLfloat destinationRotation[3];
 	GLfloat destinationPosition[3];
-} CameraInfo;
+};
 
-typedef struct {
+struct LigingInfo {
 	int numLights;
 	float lightPosition[MAX_NUM_LIGHTS * 3];
 	float lightColor[MAX_NUM_LIGHTS * 3];
-} LigingInfo;
+};
 
-typedef enum {
-	MENU,
-	INGAME
-} GameState;
-
-typedef struct {
-	ShaderInfo *shader;
-	CameraInfo *camera;
-	Map *map;
-	LigingInfo *lighting;
-	Player *player;
-	Font *font;
-
-	GLuint tileVAO;
-	GLuint blankTextureId;
-	GLFWwindow *window;
-	int score;
-	GameState state;
-
+/**
+ * 3D position type
+ *
+ * The `position.xyz` returns a 3-dimensional GLfloat array, and `position.x`, `position.y` and
+ * `position.z` returns a component of the selected dimension.
+ */
+union Position {
+	GLfloat xyz[3];
 	struct {
-		GLuint msaa;
-		GLboolean fullscreen;
-		GLuint height;
-		GLuint width;
-		GLboolean shadow;
-		GLboolean cameraMovement;
-		GLfloat tanFov;
-		GLfloat aspectRatio;
+		GLfloat x;
+		GLfloat y;
+		GLfloat z;
+	};
+};
 
-		int moveLeft[2];
-		int moveRight[2];
-		int jump[2];
-		int sneek[3];
-		int attack[2];
-		int speell1[2];
-		int speell2[2];
-		int speell3[2];
-		int speell4[2];
-		int menu;
-
-	} options;
-} GameInstance;
+/**
+ * RGBA color type
+ *
+ * The `color.rgba` returns a 4-dimensional GLfloat array, the `color.r` returns the red, the `color.g`
+ * returns green, the `color.b` return the blue and the `color.a `returns the alpha component of the
+ * RGBA color.
+ */
+union Color {
+	GLfloat rgba[4];
+	struct {
+		GLfloat r;
+		GLfloat g;
+		GLfloat b;
+		GLfloat a;
+	};
+};
 
 void gameInit(GameInstance*);
 void onRender(GameInstance*);
 void onLogic(GameInstance*);
-void setPerspective(GameInstance*, float, float, float, float);
-
-void renderStaticObject(GameInstance*, StaticObjectInstance*);
-void renderDynamicObject(GameInstance*, DynamicObjectInstance*);
-void renderActiveObject(GameInstance*, ActiveObjectInstance*);
-void renderTile(GameInstance*, Tile*);
-void initStraticInstance(GameInstance*, StaticObjectInstance*);
+void setPerspective(GameInstance* this, float fov, float aspect, float near, float far);
 
 #endif /* GAME_H_ */

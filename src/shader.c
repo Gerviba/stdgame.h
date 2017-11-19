@@ -1,9 +1,15 @@
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include "includes.h"
 
+
+/**
+ * Load shader from file
+ * \param filePath The shader file's path
+ */
 static char* shaderLoadSource(const char *filePath) {
 	const size_t blockSize = 512;
 	FILE *fp;
@@ -43,6 +49,11 @@ static char* shaderLoadSource(const char *filePath) {
 	return source;
 }
 
+/**
+ * Compile shader program
+ * \param type Vertex or Fragment shader
+ * \param filePath The shader file's path
+ */
 static GLuint shaderCompileFromFile(GLenum type, const char *filePath) {
 	char *source;
 	GLuint shader;
@@ -76,6 +87,12 @@ static GLuint shaderCompileFromFile(GLenum type, const char *filePath) {
 	return shader;
 }
 
+/**<
+ * Load and attach shader program
+ * \param program identifier
+ * \param type Vertex or Fragment shader
+ * \param filePath The shader file's path
+ */
 GLuint shaderAttachFromFile(GLuint program, GLenum type, const char *filePath) {
 	GLuint shader = shaderCompileFromFile(type, filePath);
 	if (shader != 0) {

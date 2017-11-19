@@ -1,6 +1,7 @@
 #ifndef COMPONENTS_H_
 #define COMPONENTS_H_
 
+#include "stdgame.h"
 #include "game.h"
 
 typedef enum {
@@ -27,29 +28,7 @@ typedef enum {
 	ALIGN_RIGHT		= 1
 } Align;
 
-typedef struct {
-	void *value;
-	size_t valueLength;
-} GenericType;
-
-typedef struct {
-	FontSize fontSize;
-	char *text; //TODO: free
-	GLfloat color[4];
-	Align align;
-	GLfloat rawMax[3];
-	GLfloat rawMin[3];
-} TextComponent;
-
-typedef struct {
-	ActiveObjectInstance *object;
-} ObjectComponent;
-
-typedef struct {
-	GLuint textureId;
-} ImageComponent;
-
-typedef struct Component {
+struct Component {
 	GLuint id;
 	GenericType *value;
 	GLfloat position[3];
@@ -68,7 +47,29 @@ typedef struct Component {
 	void (*onRender)(struct Component*, GameInstance*);
 	void (*onCalc)(struct Component*, GameInstance*, ActiveObjectInstance*);
 	void (*onClick)(struct Component*, GameInstance*);
-} Component;
+};
+
+struct GenericType {
+	void *value;
+	size_t valueLength;
+};
+
+struct TextComponent {
+	FontSize fontSize;
+	char *text; //TODO: free
+	GLfloat color[4];
+	Align align;
+	GLfloat rawMax[3];
+	GLfloat rawMin[3];
+};
+
+struct ObjectComponent {
+	ActiveObjectInstance *object;
+};
+
+struct ImageComponent {
+	GLuint textureId;
+};
 
 GenericType* newGenericValue(void*, size_t);
 GenericType* newGenericIntValue(GLint);

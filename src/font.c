@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "includes.h"
+
+#include "stdgame.h"
 
 static Char* loadChar(char path[], char charId, GLfloat *colors) {
 	FILE *file;
@@ -108,7 +109,7 @@ void initFont(GameInstance *this) {
 void freeFont(GameInstance *this) {
 	free(this->font->unknown);
 	free(this->font->colors);
-	ListElement *it;
+	ListItem *it;
 	for (it = this->font->chars->first; it != NULL; it = it->next)
 		listFree(((Char *)it->data)->parts);
 	listFree(this->font->chars);
@@ -116,7 +117,7 @@ void freeFont(GameInstance *this) {
 }
 
 Char* getChar(Font *font, char c) {
-	ListElement *it;
+	ListItem *it;
 	for (it = font->chars->first; it != NULL; it = it->next)
 		if (c == ((Char *)it->data)->code)
 			return it->data;
@@ -124,7 +125,7 @@ Char* getChar(Font *font, char c) {
 }
 
 static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor) {
-	ListElement *it;
+	ListItem *it;
 	for (it = c->parts->first; it != NULL; it = it->next) {
 		CharPart part = *(CharPart *)it->data;
 		glUniform4fv(this->shader->baseColor, 1, part.colorId == -1 ?

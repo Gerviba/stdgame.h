@@ -1,8 +1,11 @@
 #ifndef OBJECT_H_
 #define OBJECT_H_
 
+#include "stdgame.h"
+
 /**
- * 0bUDTRBL
+ * Object part type
+ * Format: 0bUDTRBL
  * U = UP
  * D = DOWN
  * T = TOP
@@ -10,7 +13,7 @@
  * B = BOTTOM
  * L = LEFT
  *
- * TRBL olyan mint a css box-modellben.
+ * Similar to the CSS box model.
  */
 typedef enum {
 	PT_NULL 							= 0b000000,
@@ -86,18 +89,18 @@ typedef enum {
 #define PTMASK_RENDER_BOTTOM	PT_BOTTOM
 #define PTMASK_RENDER_LEFT		PT_LEFT
 
-typedef struct {
+struct StaticObjectPart {
 	PartType type;
 	GLfloat *color; // -> colors[4]
 	GLfloat position[3];
-} StaticObjectPart;
+};
 
-typedef struct {
+struct PartColor {
 	int id;
 	GLfloat color[4];
-} PartColor;
+};
 
-typedef struct {
+struct StaticObject {
 	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
@@ -105,9 +108,9 @@ typedef struct {
 	GLfloat moveMat[16];
 	LinkedList /*StaticObjectPart*/ *parts;
 	LinkedList /*PartColor*/ *colors;
-} StaticObject;
+};
 
-typedef struct {
+struct StaticObjectInstance {
 	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
@@ -115,15 +118,15 @@ typedef struct {
 	GLfloat moveMat[16];
 	GLboolean visible;
 	StaticObject *object;
-} StaticObjectInstance;
+};
 
-typedef struct {
+struct ReferencePoint {
 	GLfloat position[3];
 	GLfloat rotation[3];
 	GLfloat scale[3];
-} ReferencePoint;
+};
 
-typedef struct {
+struct DynamicObject {
 	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
@@ -131,9 +134,9 @@ typedef struct {
 	GLfloat moveMat[16];
 	LinkedList /*StaticObjectPart*/ *parts;
 	LinkedList /*PartColor*/ *colors;
-} DynamicObject;
+};
 
-typedef struct {
+struct DynamicObjectInstance {
 	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
@@ -142,15 +145,15 @@ typedef struct {
 	GLboolean visible;
 	ReferencePoint *reference;
 	DynamicObject *object;
-} DynamicObjectInstance;
+};
 
-typedef struct {
+struct ActiveObject {
 	int id;
 	int size;
 	DynamicObject *parts;
-} ActiveObject;
+};
 
-typedef struct {
+struct ActiveObjectInstance {
 	int id;
 	int activePart;
 	GLfloat position[3];
@@ -159,9 +162,9 @@ typedef struct {
 	GLboolean visible;
 	ActiveObject *object;
 	GLfloat moveMat[16];
-} ActiveObjectInstance;
+};
 
-typedef struct {
+struct ObjectInfo {
 	LinkedList /*StaticObject*/ *staticObjects;
 	LinkedList /*StaticObjectInstance*/ *staticInstances;
 
@@ -170,10 +173,16 @@ typedef struct {
 
 	LinkedList /*ActiveObject*/ *activeObjects;
 	LinkedList /*ActiveObjectInstance*/ *activeInstances;
-} ObjectInfo;
+};
 
 StaticObject *loadStaticObject(char[]);
 DynamicObject *loadDynamicObject(char[]);
 ActiveObject *loadActiveObject(char[]);
+
+void renderStaticObject(GameInstance*, StaticObjectInstance*);
+void renderDynamicObject(GameInstance*, DynamicObjectInstance*);
+void renderActiveObject(GameInstance*, ActiveObjectInstance*);
+void renderTile(GameInstance*, Tile*);
+void initStraticInstance(GameInstance*, StaticObjectInstance*);
 
 #endif /* OBJECT_H_ */

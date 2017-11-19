@@ -1,5 +1,6 @@
 #include <stdlib.h>
-#include "includes.h"
+
+#include "stdgame.h"
 
 void enableOptions(GameInstance *this, Menu *menu) {
 	this->camera->destinationRotation[Y] = 90.0f;
@@ -13,28 +14,28 @@ void onLogicIngame(GameInstance *this, float delta) {
 	DynamicObjectInstance *obj = ((DynamicObjectInstance *) this->map->objects->dynamicInstances->first->data);
 
 	float deltaMoveX = 0;
-	if (glfwGetKey(this->window, this->options.moveLeft[0]) == GLFW_PRESS
-			|| glfwGetKey(this->window, this->options.moveLeft[1]) == GLFW_PRESS) {
+	if (glfwGetKey(this->window, this->options->moveLeft[0]) == GLFW_PRESS
+			|| glfwGetKey(this->window, this->options->moveLeft[1]) == GLFW_PRESS) {
 		deltaMoveX += -delta * 2;
 		obj->rotation[Y] = 0;
 		this->camera->destinationRotation[Y] = 2;
 	}
 
-	if (glfwGetKey(this->window, this->options.moveRight[0]) == GLFW_PRESS
-			|| glfwGetKey(this->window, this->options.moveRight[1]) == GLFW_PRESS) {
+	if (glfwGetKey(this->window, this->options->moveRight[0]) == GLFW_PRESS
+			|| glfwGetKey(this->window, this->options->moveRight[1]) == GLFW_PRESS) {
 		deltaMoveX += delta * 2;
 		obj->rotation[Y] = 180;
 		this->camera->destinationRotation[Y] = -2;
 	}
 
-	if (!(glfwGetKey(this->window, this->options.moveLeft[0]) == GLFW_PRESS
-			|| glfwGetKey(this->window, this->options.moveLeft[1]) == GLFW_PRESS) &&
-			!(glfwGetKey(this->window, this->options.moveRight[0]) == GLFW_PRESS
-			|| glfwGetKey(this->window, this->options.moveRight[1]) == GLFW_PRESS)) {
+	if (!(glfwGetKey(this->window, this->options->moveLeft[0]) == GLFW_PRESS
+			|| glfwGetKey(this->window, this->options->moveLeft[1]) == GLFW_PRESS) &&
+			!(glfwGetKey(this->window, this->options->moveRight[0]) == GLFW_PRESS
+			|| glfwGetKey(this->window, this->options->moveRight[1]) == GLFW_PRESS)) {
 		this->camera->destinationRotation[Y] = 0;
 	}
 
-	ListElement *it;
+	ListItem *it;
 	for (it = this->map->tiles->first; it != NULL; it = it->next) {
 		Tile *tile = (Tile *) it->data;
 		if ((int) tile->y == (int) this->player->position[Y]
@@ -105,7 +106,7 @@ void onLogicMenu(GameInstance *this, float delta) {
 
 	ActiveObjectInstance *cursor = updateCursor(this, 1);
 	if (cursor != NULL) {
-		ListElement *it;
+		ListItem *it;
 		for (it = this->map->menu->components->first; it != NULL; it = it->next) {
 			Component *comp = (Component *) it->data;
 			if (comp->onCalc != NULL)

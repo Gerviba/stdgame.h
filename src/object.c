@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "includes.h"
+
+#include "stdgame.h"
 
 StaticObject *loadStaticObject(char path[]) {
 	StaticObject *obj = new(StaticObject);
@@ -62,7 +63,7 @@ StaticObject *loadStaticObject(char path[]) {
 				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
 						&part.position[Z], &part.type, &colorId);
 
-				ListElement *it;
+				ListItem *it;
 				for (it = obj->colors->first; it != NULL; it = it->next) {
 					if (((TextureBlock *) it->data)->id == colorId) {
 						part.color = ((PartColor *) it->data)->color;
@@ -139,7 +140,7 @@ DynamicObject *loadDynamicObject(char path[]) {
 				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
 						&part.position[Z], &part.type, &colorId);
 
-				ListElement *it;
+				ListItem *it;
 				for (it = obj->colors->first; it != NULL; it = it->next) {
 					if (((TextureBlock *) it->data)->id == colorId) {
 						part.color = ((PartColor *) it->data)->color;
@@ -228,7 +229,7 @@ ActiveObject *loadActiveObject(char path[]) {
 				sscanf(buff, "B %d %f %f %f %d %d", &state, &part.position[X], &part.position[Y],
 						&part.position[Z], &part.type, &colorId);
 
-				ListElement *it;
+				ListItem *it;
 				for (it = colors->first; it != NULL; it = it->next) {
 					if (((PartColor *) it->data)->id == colorId) {
 						part.color = ((PartColor *) it->data)->color;
@@ -251,7 +252,7 @@ void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
 
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
-	ListElement *it;
+	ListItem *it;
 	for (it = obj->parts->first; it != NULL; it = it->next) {
 		StaticObjectPart part = *(StaticObjectPart *) it->data;
 		glUniform4fv(this->shader->baseColor, 1, part.color);
@@ -333,7 +334,7 @@ void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 	glPopMatrix();
 
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
-	ListElement *it;
+	ListItem *it;
 	for (it = obj->parts->first; it != NULL; it = it->next) {
 		StaticObjectPart part = *(StaticObjectPart *) it->data;
 		glUniform4fv(this->shader->baseColor, 1, part.color);
@@ -415,7 +416,7 @@ void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
 	glPopMatrix();
 
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
-	ListElement *it;
+	ListItem *it;
 	for (it = obj->parts->first; it != NULL; it = it->next) {
 		StaticObjectPart part = *(StaticObjectPart *) it->data; // TODO: . to ->
 		glUniform4fv(this->shader->baseColor, 1, part.color);

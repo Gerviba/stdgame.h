@@ -1,6 +1,7 @@
 #ifndef MAP_H_
 #define MAP_H_
 
+#include "object.h"
 #include "linkedlist.h"
 #include "menu.h"
 
@@ -57,48 +58,48 @@ typedef enum {
 #define MOVE_BLOCK_Y			(TT_BORDER_TOP | TT_BORDER_BOTTOM) & 0b11110
 #define MOVE_BLOCK_X			(TT_BORDER_RIGHT | TT_BORDER_LEFT) & 0b11110
 
-typedef struct {
+struct Light {
 	GLfloat position[3];
 	GLfloat strength; //TODO: Implement
 	GLfloat color[3];
-} Light;
+};
 
-typedef struct {
+struct Texture {
 	int id;
 	GLuint textureId;
-} Texture;
+};
 
-typedef struct {
+struct TextureBlock {
 	int id;
 	Texture *base;
 	Texture *top;
 	Texture *right;
 	Texture *bottom;
 	Texture *left;
-} TextureBlock;
+};
 
-typedef struct {
+struct Tile {
 	float x, y;
 	TextureBlock *texture;
 	TileType type;
-} Tile;
+};
 
-typedef struct {
+struct EventRegion {
 	float x1, y1;
 	float x2, y2;
 	int modHP;
 	int modMana;
 	float modG;
-} EventRegion;
+};
 
-typedef struct {
+struct MessageRegion {
 	float x1, y1;
 	float x2, y2;
 	char message1[100];
 	char message2[100];
-} MessageRegion;
+};
 
-typedef struct {
+struct Map {
 	char name[64];
 	char author[64];
 	char description[242];
@@ -113,6 +114,6 @@ typedef struct {
 
 	ObjectInfo *objects;
 	Menu *menu;
-} Map;
+};
 
 #endif /* MAP_H_ */

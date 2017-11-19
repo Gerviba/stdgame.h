@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "includes.h"
+
+#include "stdgame.h"
 
 LinkedList newLinkedList(size_t size) {
 	LinkedList list = {0, size, NULL, NULL};
@@ -18,7 +19,7 @@ LinkedList* newLinkedListPointer(size_t size) {
 }
 
 void listPush(LinkedList *list, void *data) {
-	ListElement *new = new(ListElement);
+	ListItem *new = new(ListItem);
 	new->data = malloc(list->dataSize);
 	new->next = NULL;
 
@@ -36,13 +37,13 @@ void listPush(LinkedList *list, void *data) {
 	++list->size;
 }
 
-void* listGetValue(ListElement *it) {
+void* listGetValue(ListItem *it) {
 	return it->data;
 }
 
 void listFree(LinkedList *list) {
-	ListElement* head = list->first;
-	ListElement* tmp;
+	ListItem* head = list->first;
+	ListItem* tmp;
 
 	while (head != NULL) {
 		tmp = head;

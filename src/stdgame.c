@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
-#include "includes.h"
+#include "stdgame.h"
 
 static int mode = 0;
 static int modelId = 0;
@@ -37,7 +36,7 @@ void debugKeyPress(const char key, int x, int y) {
 		}
 	} else if (mode == 1) {
 		StaticObjectInstance *obj;
-		ListElement *it;
+		ListItem *it;
 		for (it = gi->map->objects->staticInstances->first; it != NULL; it = it->next) {
 			if (((StaticObjectInstance *)it->data)->id == modelId) {
 				obj = (StaticObjectInstance *)it->data;
@@ -113,6 +112,7 @@ int main(int argc, char *argv[]) {
 	this->camera->rotation[X] = 0.0f;
 	this->camera->rotation[Y] = 0.0f;
 	this->camera->rotation[Z] = 0.0f;
+	this->options = new(Options);
 
 	glfwSetErrorCallback(onError);
 
@@ -129,9 +129,9 @@ int main(int argc, char *argv[]) {
 	this->window = glfwCreateWindow(mode->width, mode->height,
 			"stdgame | The Epic Platformer Game",
 			glfwGetPrimaryMonitor(), NULL);
-	this->options.height = mode->height;
-	this->options.width = mode->width;
-	printf("[Info] Window size: %dx%d\n", mode->width, mode->height); //TODO: Load from config
+	this->options->height = mode->height;
+	this->options->width = mode->width;
+	DEBUG("Info", "Window size: %dx%d", mode->width, mode->height); //TODO: Load from config
 
 	if (!this->window) {
 		glfwTerminate();
@@ -189,5 +189,7 @@ int main(int argc, char *argv[]) {
 
 	glfwDestroyWindow(this->window);
 	glfwTerminate();
+
+	DEBUG("Info", "Closing game");
 	exit(EXIT_SUCCESS);
 }

@@ -105,7 +105,7 @@ void gameInit(GameInstance *this) {
 		log = malloc(length);
 		glGetProgramInfoLog(this->shader->shaderId, length, &result, log);
 
-		fprintf(stderr, "[Error] Shader program linking failed: %s\n", log);
+		ERROR("Shader program linking failed: %s", log);
 		free(log);
 
 		glDeleteProgram(this->shader->shaderId);
@@ -131,7 +131,7 @@ void gameInit(GameInstance *this) {
 
 	initFont(this);
 	onLogic(this);
-	printf("[Render] First logic done\n");
+	DEBUG("Logic", "First logic done\n");
 
 	updateCamera(this);
 	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
@@ -145,29 +145,6 @@ void updateCamera(GameInstance* this) {
 	glTranslatef(-this->camera->position[X],
 			-this->camera->position[Y],
 			-this->camera->position[Z]);
-}
-
-static void renderGUI(GameInstance* this) {
-	GLfloat color[] = {1.0f, 1.0f, 1.0f, 1.0f};
-	renderFontTo(this, "Test message, $ *", (GLfloat[]) {6.0f, 7.0625f, 1.0f}, color, FS_NORMAL_DPI);
-
-	char str[16];
-	if (glfwGetKey(this->window, GLFW_KEY_UP) == GLFW_PRESS)
-		++this->score;
-	sprintf(str, "%d *", this->score);
-
-	renderFontTo(this, str, (GLfloat[]) {
-			this->camera->position[X] + 2.0f - (strlen(str) * 0.0625f * 4),
-			this->camera->position[Y] + 1.0625f, 1.0f}, color, FS_NORMAL_DPI);
-	renderFontTo(this, "$$$", (GLfloat[]) {
-			this->camera->position[X] - 2.0f,
-			this->camera->position[Y] + 1.0625f,
-			1.0f}, color, FS_NORMAL_DPI);
-
-
-//	renderFontTo(this, "#", (GLfloat[]) {
-//			getCursorProjectedX(this, cursorX),
-//			getCursorProjectedY(this, cursorY), 1.0f}, color, FS_NORMAL_DPI);
 }
 
 void onRender(GameInstance *this) {
@@ -193,11 +170,33 @@ void onRender(GameInstance *this) {
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(this->shader->texturePosition, 0);
 
-	ListItem *it;
+	Iterator it;
 	for (it = this->map->tiles->first; it != NULL; it = it->next)
 		renderTile(this, (Tile *) it->data);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+#ifdef DEBUG_LIGHT
+	{
+		Iterator it;
+		int i = 0;
+		for (it = this->map->lights->first; it != NULL; it = it->next, ++i) {
+			Light light = *(Light *)it->data;
+
+			glPushMatrix();
+			glTranslatef(this->lighting->lightPosition[i * 3 + 0],
+					this->lighting->lightPosition[i * 3 + 1],
+					this->lighting->lightPosition[i * 3 + 2]);
+			glColor3fv(this->lighting->lightColor + (i * 3));
+			GLfloat tempColor[4] = { //TODO: copy it to tempColor arg
+					*(this->lighting->lightColor + (i * 3)),
+					*(this->lighting->lightColor + (i * 3) + 1),
+					*(this->lighting->lightColor + (i * 3) + 2), 1.0 };
+			renderFontTo(this, ",", this->lighting->lightPosition + (i * 3), tempColor, FS_LOW_DPI);
+			glPopMatrix();
+		}
+	}
+#endif
 
 	for (it = this->map->objects->staticInstances->first; it != NULL; it = it->next)
 		renderStaticObject(this, (StaticObjectInstance *) it->data);
@@ -206,15 +205,9 @@ void onRender(GameInstance *this) {
 	for (it = this->map->objects->activeInstances->first; it != NULL; it = it->next)
 		renderActiveObject(this, (ActiveObjectInstance *) it->data);
 
-//	if (this->state == INGAME) {
-//		renderGUI(this);
-//	} else if (this->state == MENU) {
-//
-//	}
-
 	if (this->map->menu != NULL) {
 		for (it = this->map->menu->components->first; it != NULL; it = it->next) {
-			Component* comp = (Component *) it->data;
+			Component* comp = it->data;
 			if (comp->onRender != NULL)
 				comp->onRender(comp, this);
 		}
@@ -224,6 +217,10 @@ void onRender(GameInstance *this) {
     glUseProgram(0);
 
 	updateCamera(this);
+}
+
+GLfloat getDistSquared2D(GLfloat a[3], GLfloat b[3]) {
+	return (a[X] - b[X]) * (a[X] - b[X]) + (a[Y] - b[Y]) * (a[Y] - b[Y]);
 }
 
 static unsigned int getTicks(void) {
@@ -248,10 +245,10 @@ void onLogic(GameInstance *this) {
 	secondsElapsed = (float) (ticks - prevTicks) / 1000.0f;
 	prevTicks = ticks;
 
-	int width, height;
-	glfwGetFramebufferSize(this->window, &width, &height);
-	double cursorX, cursorY;
-	glfwGetCursorPos(this->window, &cursorX, &cursorY);
+//	int width, height;
+//	glfwGetFramebufferSize(this->window, &width, &height);
+//	double cursorX, cursorY;
+//	glfwGetCursorPos(this->window, &cursorX, &cursorY);
 
 #ifndef DEBUG_MOVEMENT
 	if (this->camera->destinationRotation[Y] > 0) {
@@ -271,29 +268,21 @@ void onLogic(GameInstance *this) {
 	}
 #endif
 
-	ListItem *it;
-	i = 0;
-	for (it = this->map->lights->first; it != NULL; it = it->next, ++i) {
-		Light light = *(Light *)it->data;
-		this->lighting->lightColor[i * 3 + 0] = light.color[R];
-		this->lighting->lightColor[i * 3 + 1] = light.color[G];
-		this->lighting->lightColor[i * 3 + 2] = light.color[B];
-		this->lighting->lightPosition[i * 3 + 0] = light.position[X];
-		this->lighting->lightPosition[i * 3 + 1] = light.position[Y];
-		this->lighting->lightPosition[i * 3 + 2] = light.position[Z];
+	Iterator it;
+	for (it = this->map->lights->first, i = 0; it != NULL && i < MAX_NUM_LIGHTS; it = it->next) {
+		Light *light = it->data;
+		if (getDistSquared2D(light->position, this->camera->position) > 100)
+			continue;
 
-#ifdef DEBUG
-		glPushMatrix();
-		glTranslatef(this->lighting->lightPosition[i * 3 + 0],
-				this->lighting->lightPosition[i * 3 + 1],
-				this->lighting->lightPosition[i * 3 + 2]);
-		glColor3fv(this->lighting->lightColor + (i * 3));
-//		glutSolidSphere(0.04, 36, 36);
-		glPopMatrix();
-#endif
+		this->lighting->lightColor[i * 3 + R] = light->color[R];
+		this->lighting->lightColor[i * 3 + G] = light->color[G];
+		this->lighting->lightColor[i * 3 + B] = light->color[B];
+		this->lighting->lightPosition[i * 3 + X] = light->position[X];
+		this->lighting->lightPosition[i * 3 + Y] = light->position[Y];
+		this->lighting->lightPosition[i * 3 + Z] = light->position[Z];
+		++i;
 	}
 	this->lighting->numLights = i;
-
 
 	if (this->state == INGAME)
 		onLogicIngame(this, secondsElapsed);

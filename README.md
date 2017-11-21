@@ -1,7 +1,7 @@
-# <stdgame.h>
+# <stdgame>
 
-> This project is my Prog1 homework project.
-> Github url: https://github.com/Gerviba/stdgame.h/tree/master/src
+> This project is my Prog1 homework project. <br>
+> Github url: https://github.com/Gerviba/stdgame.h
 
 ### Specs
 - C and OpenGL based multiplatform game

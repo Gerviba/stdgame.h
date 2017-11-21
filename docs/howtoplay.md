@@ -24,4 +24,8 @@
 - Key
 - Coin
 
-### 
+### Traps
+
+### Mobs
+
+### Maps

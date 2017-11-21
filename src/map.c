@@ -28,7 +28,36 @@ void loadTexture(GLuint *textureId, char path[]) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
-Map* loadMap(const GameInstance *this, char path[]) {
+void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align, GLfloat x, GLfloat y) {
+	Component comp;
+	comp.id = id;
+	comp.text = new(TextComponent);
+	comp.type = CT_TEXT;
+	comp.relativeX = relX;
+	comp.relativeY = relY;
+	comp.text->fontSize = FS_NORMAL_DPI;
+	comp.position[X] = x;
+	comp.position[Y] = y;
+	comp.position[Z] = 1;
+	comp.text->align = align;
+
+	comp.text->color[R] = 1;
+	comp.text->color[G] = 1;
+	comp.text->color[B] = 1;
+	comp.text->color[A] = 1;
+
+	comp.text->text = malloc(sizeof(char) * (strlen(text) + 1));
+	strcpy(comp.text->text, text);
+	int i, length;
+	for (i = 0, length = strlen(comp.text->text); i < length; ++i)
+		if (comp.text->text[i] == '_')
+			comp.text->text[i] = ' ';
+
+	comp.onRender = renderTextComponent;
+	listPush(map->menu->components, &comp);
+}
+
+Map* loadMap(GameInstance *this, char path[]) {
 	Map *map = new(Map);
 	map->tiles = newList(Tile);
 	map->lights = newList(Light);
@@ -43,13 +72,18 @@ Map* loadMap(const GameInstance *this, char path[]) {
 	map->objects->activeObjects = newList(ActiveObject);
 	map->objects->activeInstances = newList(ActiveObjectInstance);
 
-	map->menu = NULL;
+	map->menu = new(Menu);
+	map->menu->components = newList(Component);
 
 	FILE *file;
 	char buff[255];
 	DEBUG("Map", "Loading map: %s", path);
 
 	file = fopen(path, "r");
+	if (file == NULL) {
+		ERROR("Failed to load map: %s", path);
+	}
+
 	while (fgets(buff, 255, file)) {
 		switch (buff[X]) {
 			case '$': { // Meta
@@ -71,6 +105,13 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					map->ambient[B] = map->ambient[R];
 				} else if (equals(type, "SPAWN")) {
 					sscanf(buff, "$ %*s %f %f %f", &map->spawn[X], &map->spawn[Y], &map->spawn[Z]);
+				} else if (equals(type, "STATE")) {
+					sscanf(buff, "$ %*s %d", &this->state);
+					if (this->state == INGAME) {
+						addTextComponent(map, "$$$", 100, X_LEFT, Y_TOP, ALIGN_LEFT, (1.0 / 16) * 8, -(1.0 / 16) * 9);
+						addTextComponent(map, "300 *", 101, X_RIGHT, Y_TOP, ALIGN_RIGHT, -(1.0 / 16) * 8, -(1.0 / 16) * 9);
+					}
+
 				}
 				break;
 			}
@@ -96,7 +137,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					if (side[i] < 0)
 						continue;
 
-					ListItem *it;
+					Iterator it;
 					for (it = map->textures->first; it != NULL; it = it->next) {
 						if (((Texture *)it->data)->id == side[i]) {
 							*pointers[i] = (Texture *)it->data;
@@ -117,7 +158,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 
 				sscanf(buff, "T %f %f %d %d", &tile.x, &tile.y, &texBlockId, &tileType);
 				tile.type = (TileType) tileType;
-				ListItem *it;
+				Iterator it;
 				for (it = map->textureBlocks->first; it != NULL; it = it->next) {
 					if (((TextureBlock *)it->data)->id == texBlockId) {
 						tile.texture = (TextureBlock *)it->data;
@@ -131,7 +172,8 @@ Map* loadMap(const GameInstance *this, char path[]) {
 			case 'S': { // Static Light
 				Light light;
 				unsigned int r, g, b;
-				sscanf(buff, "S %f %f %f %f %02x%02x%02x", &light.position[X], &light.position[Y], &light.position[Z],
+				sscanf(buff, "S %f %f %f %f %02x%02x%02x",
+						&light.position[X], &light.position[Y], &light.position[Z],
 						&light.strength, &r, &g, &b);
 				light.color[R] = (float) r / 255;
 				light.color[G] = (float) g / 255;
@@ -176,7 +218,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					listPush(map->objects->activeObjects, aobj);
 
 				} else {
-					printf("[Warn] Invalid object type: '%s'\n", type);
+					DEBUG("Warn", "Invalid object type: '%s'", type);
 				}
 				break;
 			}
@@ -194,7 +236,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 							&soi.scale[X], &soi.scale[Y], &soi.scale[Z], &visible);
 					soi.visible = visible ? GL_TRUE : GL_FALSE;
 
-					ListItem *it;
+					Iterator it;
 					for (it = map->objects->staticObjects->first; it != NULL; it = it->next) {
 						if (((StaticObject *) it->data)->id == objectId) {
 							soi.object = (StaticObject *) it->data;
@@ -213,7 +255,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 							&doi.scale[X], &doi.scale[Y], &doi.scale[Z], &visible, &referencePoint);
 					doi.visible = visible ? GL_TRUE : GL_FALSE;
 
-					ListItem *it;
+					Iterator it;
 					for (it = map->objects->dynamicObjects->first; it != NULL; it = it->next) {
 						if (((DynamicObject *) it->data)->id == objectId) {
 							doi.object = (DynamicObject *) it->data;
@@ -234,7 +276,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					aoi.visible = visible ? GL_TRUE : GL_FALSE;
 					aoi.activePart = 0;
 
-					ListItem *it;
+					Iterator it;
 					for (it = map->objects->activeObjects->first; it != NULL; it = it->next) {
 						if (((ActiveObject *) it->data)->id == objectId) {
 							aoi.object = (ActiveObject *) it->data;
@@ -243,23 +285,20 @@ Map* loadMap(const GameInstance *this, char path[]) {
 					}
 
 					listPush(map->objects->activeInstances, &aoi);
+				} else {
+					DEBUG("Warn", "Invalid object type: '%s'", type);
 				}
-
 				break;
 			}
 			case 'A': { // TextComponent
-				if (map->menu == NULL) {
-					map->menu = new(Menu);
-					map->menu->components = newList(Component);
-				}
-
 				Component comp;
 				comp.text = new(TextComponent);
 				comp.type = CT_TEXT;
 				char text[255];
 				unsigned int r, g, b;
-				sscanf(buff, "A %u %f %f %d %d %d %d %s %02x%02x%02x %f %d", &comp.id, &comp.position[X], &comp.position[Y],
-						&comp.position[Z], &comp.relativeX, &comp.relativeY, &comp.text->align, text, &r, &g, &b,
+				sscanf(buff, "A %u %f %f %d %d %d %d %s %02x%02x%02x %f %d", &comp.id,
+						&comp.position[X], &comp.position[Y], &comp.position[Z],
+						&comp.relativeX, &comp.relativeY, &comp.text->align, text, &r, &g, &b,
 						&comp.text->color[A], &comp.text->fontSize);
 				comp.text->color[R] = (float) r / 255;
 				comp.text->color[G] = (float) g / 255;
@@ -280,11 +319,6 @@ Map* loadMap(const GameInstance *this, char path[]) {
 				break;
 			}
 			case 'B': { // ObjectComponent
-				if (map->menu == NULL) {
-					map->menu = new(Menu);
-					map->menu->components = newList(Component);
-				}
-
 				Component comp;
 				comp.type = CT_OBJECT;
 				comp.object = new(ObjectComponent);
@@ -292,7 +326,7 @@ Map* loadMap(const GameInstance *this, char path[]) {
 				sscanf(buff, "B %d %f %f %f %d %d %d", &comp.id, &comp.position[X], &comp.position[Y],
 						&comp.position[Z], &comp.relativeX, &comp.relativeY, &objectId);
 
-				ListItem *it;
+				Iterator it;
 				for (it = map->objects->activeInstances->first; it != NULL; it = it->next) {
 					if (((ActiveObjectInstance *) it->data)->id == objectId) {
 						comp.object->object = (ActiveObjectInstance *) it->data;
@@ -315,6 +349,9 @@ Map* loadMap(const GameInstance *this, char path[]) {
 	return map;
 }
 
+/**
+ * @todo Implement
+ */
 void freeMap(Map map) {
 
 }

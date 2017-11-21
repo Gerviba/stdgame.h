@@ -136,9 +136,10 @@ union Color {
 	};
 };
 
-void gameInit(GameInstance*);
-void onRender(GameInstance*);
-void onLogic(GameInstance*);
+void gameInit(GameInstance* this);
+void onRender(GameInstance* this);
+void updateCamera(GameInstance* this);
+void onLogic(GameInstance* this);
 void setPerspective(GameInstance* this, float fov, float aspect, float near, float far);
 
 #endif /* GAME_H_ */

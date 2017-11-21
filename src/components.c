@@ -130,7 +130,7 @@ ActiveObjectInstance* updateCursor(GameInstance *this, int cursorId) {
 	double cursorX, cursorY;
 	glfwGetCursorPos(this->window, &cursorX, &cursorY);
 
-	ListItem *it;
+	Iterator it;
 	ActiveObjectInstance *cursor = NULL;
 	for (it = this->map->objects->activeInstances->first; it != NULL; it = it->next)
 		if (((ActiveObjectInstance *) it->data)->id == cursorId) {

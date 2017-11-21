@@ -20,11 +20,11 @@ StaticObject *loadStaticObject(char path[]) {
 
 	FILE *file;
 	char buff[255];
-	printf("[Object] Loading object: %s\n", path);
+	DEBUG("Object", "Loading object: %s", path);
 
 	file = fopen(path, "r");
 	if (!file) {
-		printf("[Object] Failed to load. File not accessable.\n");
+		ERROR("Failed to load. File not accessable.");
 		return NULL;
 	}
 
@@ -63,7 +63,7 @@ StaticObject *loadStaticObject(char path[]) {
 				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
 						&part.position[Z], &part.type, &colorId);
 
-				ListItem *it;
+				Iterator it;
 				for (it = obj->colors->first; it != NULL; it = it->next) {
 					if (((TextureBlock *) it->data)->id == colorId) {
 						part.color = ((PartColor *) it->data)->color;
@@ -97,11 +97,11 @@ DynamicObject *loadDynamicObject(char path[]) {
 
 	FILE *file;
 	char buff[255];
-	printf("[Object] Loading object: %s\n", path);
+	DEBUG("Object", "Loading object: %s", path);
 
 	file = fopen(path, "r");
 	if (!file) {
-		printf("[Object] Failed to load. File not accessable.\n");
+		ERROR("Failed to load. File not accessable.");
 		return NULL;
 	}
 
@@ -140,7 +140,7 @@ DynamicObject *loadDynamicObject(char path[]) {
 				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
 						&part.position[Z], &part.type, &colorId);
 
-				ListItem *it;
+				Iterator it;
 				for (it = obj->colors->first; it != NULL; it = it->next) {
 					if (((TextureBlock *) it->data)->id == colorId) {
 						part.color = ((PartColor *) it->data)->color;
@@ -168,11 +168,11 @@ ActiveObject *loadActiveObject(char path[]) {
 
 	FILE *file;
 	char buff[255];
-	printf("[Object] Loading object: %s\n", path);
+	DEBUG("Object", "Loading object: %s", path);
 
 	file = fopen(path, "r");
 	if (!file) {
-		printf("[Object] Failed to load. File not accessable.\n");
+		ERROR("Failed to load. File not accessable.");
 		return NULL;
 	}
 
@@ -229,7 +229,7 @@ ActiveObject *loadActiveObject(char path[]) {
 				sscanf(buff, "B %d %f %f %f %d %d", &state, &part.position[X], &part.position[Y],
 						&part.position[Z], &part.type, &colorId);
 
-				ListItem *it;
+				Iterator it;
 				for (it = colors->first; it != NULL; it = it->next) {
 					if (((PartColor *) it->data)->id == colorId) {
 						part.color = ((PartColor *) it->data)->color;
@@ -252,7 +252,7 @@ void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
 
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
-	ListItem *it;
+	Iterator it;
 	for (it = obj->parts->first; it != NULL; it = it->next) {
 		StaticObjectPart part = *(StaticObjectPart *) it->data;
 		glUniform4fv(this->shader->baseColor, 1, part.color);
@@ -329,12 +329,12 @@ void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 	glRotatef(-(obj->rotation[Y] + instance->rotation[Y]), 0.0f, 1.0f, 0.0f);
 	glRotatef(-(obj->rotation[Z] + instance->rotation[Z]), 0.0f, 0.0f, 1.0f);
 
-	glGetFloatv(GL_MODELVIEW_MATRIX, &instance->moveMat);
+	glGetFloatv(GL_MODELVIEW_MATRIX, instance->moveMat);
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
 	glPopMatrix();
 
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
-	ListItem *it;
+	Iterator it;
 	for (it = obj->parts->first; it != NULL; it = it->next) {
 		StaticObjectPart part = *(StaticObjectPart *) it->data;
 		glUniform4fv(this->shader->baseColor, 1, part.color);
@@ -411,12 +411,12 @@ void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
 	glRotatef(-(obj->rotation[Y] + instance->rotation[Y]), 0.0f, 1.0f, 0.0f);
 	glRotatef(-(obj->rotation[Z] + instance->rotation[Z]), 0.0f, 0.0f, 1.0f);
 
-	glGetFloatv(GL_MODELVIEW_MATRIX, &instance->moveMat);
+	glGetFloatv(GL_MODELVIEW_MATRIX, instance->moveMat);
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
 	glPopMatrix();
 
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
-	ListItem *it;
+	Iterator it;
 	for (it = obj->parts->first; it != NULL; it = it->next) {
 		StaticObjectPart part = *(StaticObjectPart *) it->data; // TODO: . to ->
 		glUniform4fv(this->shader->baseColor, 1, part.color);
@@ -545,6 +545,6 @@ void initStraticInstance(GameInstance *this, StaticObjectInstance *instance) {
 	glRotatef(-(obj->rotation[Y] + instance->rotation[Y]), 0.0f, 1.0f, 0.0f);
 	glRotatef(-(obj->rotation[Z] + instance->rotation[Z]), 0.0f, 0.0f, 1.0f);
 
-	glGetFloatv(GL_MODELVIEW_MATRIX, &instance->moveMat);
+	glGetFloatv(GL_MODELVIEW_MATRIX, instance->moveMat);
 	glPopMatrix();
 }

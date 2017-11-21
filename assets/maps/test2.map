@@ -3,6 +3,7 @@ $ AUTHOR Gerviba
 $ DESCRIPTION This_is_a_test_map
 $ AMBIENT 0.4
 $ SPAWN 4 7 4
+$ STATE 1
 
 X 0 noimg.png
 #X 1

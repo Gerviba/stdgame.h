@@ -13,9 +13,11 @@
 #include "object.h"
 
 /**
- * Font size type
+ * Font size enumeration
  */
 typedef enum {
+	/** 1/64 unit per cube */
+	FS_EXTRALOW_DPI = 64,
 	/** 1/32 unit per cube */
 	FS_LOW_DPI = 32,
 	/** 1/16 unit per cube */

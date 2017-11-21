@@ -7,20 +7,48 @@
 #ifndef STDGAME_H__
 #define STDGAME_H__
 
+#include <stdio.h>
+
 /** Debug modes: ***************/
 //#define DEBUG 1
 //#define DEBUG_MOVEMENT 1
 //#define DEBUG_MALLOC 1
 #define DEBUG_MESSAGES 1
+//#define DEBUG_LIGHT 1
+#define WARNING_MESSAGES 1
 /*******************************/
 
-/** Debug message macro.
+/**
+ * Debug message macro.
  * @warning Requires GCC to process `##__VA_ARGS__`.
  */
 #ifdef DEBUG_MESSAGES
-	#define DEBUG(module, message, ...) (printf("[%s] " message "\n", module, ##__VA_ARGS__))
+	#define DEBUG(module, message, ...) { \
+		printf("[%s] ", module); \
+		printf(message, ##__VA_ARGS__); \
+		printf("\n"); }
 #else
-	#define DEBUG(...) (NULL)
+	#define DEBUG(...) ;
+#endif
+
+/**
+ * Error message
+ */
+#define ERROR(message, ...) { \
+	fprintf(stderr, "[Error] "); \
+	fprintf(stderr, message, ##__VA_ARGS__); \
+	fprintf(stderr, "\n"); }
+
+/**
+ * Warning message
+ */
+#ifdef WARNING_MESSAGES
+	#define WARNING(message, ...) { \
+		printf("[Warning] "); \
+		printf(message, ##__VA_ARGS__); \
+		printf("\n"); }
+#else
+	#define WARNING(...) ;
 #endif
 
 // character.h
@@ -93,6 +121,7 @@ static const float PI = 3.14159265358979323846;
 
 #include <string.h>
 
+//TODO: Fix import
 #ifdef __linux__
 	#include <GL/gl.h>
 	#include <GL/glext.h>
@@ -122,20 +151,20 @@ static const float PI = 3.14159265358979323846;
 #include "game.h"
 
 /** Minimum of numeric type */
-#define min(a, b) (a < b ? a : b)
+#define min(a, b) a < b ? a : b
 /** Maximum of numeric type */
-#define max(a, b) (a > b ? a : b)
+#define max(a, b) a > b ? a : b
 /** Sign of numeric type */
-#define sig(a) (a == 0 ? 0 : a > 0 ? 1 : -1)
+#define sig(a) a == 0 ? 0 : a > 0 ? 1 : -1
 /** String equals */
-#define equals(a, b) (strcmp(a, b) == 0)
+#define equals(a, b) strcmp(a, b) == 0
 /** Allocate space for new of generic type */
-#define new(x) (malloc(sizeof(x)))
+#define new(x) malloc(sizeof(x))
 /** Color value setter */
-#define setColor(color, r, g, b, a) ({color[0] = r; color[1] = g; color[2] = b; color[3] = a;})
+#define setColor(color, r, g, b, a) {color[0] = r; color[1] = g; color[2] = b; color[3] = a;}
 /** Position value setter */
-#define setPosition(position, x, y, z) ({color[0] = x; color[1] = y; color[2] = z;}) //TODO: Alakítsam át erre a többit
+#define setPosition(position, x, y, z) {color[0] = x; color[1] = y; color[2] = z;} //TODO: Alakítsam át erre a többit
 /** Position value setter for array argument */
-#define setPositionArray(pos, from) ({pos[0] = from[0]; pos[1] = from[1]; pos[2] = from[2];})
+#define setPositionArray(pos, from) {pos[0] = from[0]; pos[1] = from[1]; pos[2] = from[2];}
 
 #endif /* STDGAME_H__ */

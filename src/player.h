@@ -1,5 +1,5 @@
 /**
- * @file character.h
+ * @file player.h
  * @author Gerviba (Szabo Gergely)
  * @brief Player specific types and functions
  */
@@ -19,16 +19,23 @@ typedef enum {
 	MS_SNEEK
 } MovementState;
 
+/**
+ * Player type
+ */
 struct Player {
 	int id;
 	GLfloat position[3];
 	GLfloat velocity[3];
 	GLfloat height;
 	GLfloat width;
+	/** @deprecated Count jumps instead **/
 	GLboolean jumping;
 	ActiveObjectInstance *model;
 };
 
+/**
+ * Initialise player instance
+ */
 void initPlayer(GameInstance *this);
 
 #endif /* PLAYER_H_ */

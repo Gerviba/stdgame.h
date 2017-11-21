@@ -12,6 +12,7 @@ $ DESCRIPTION This_is_a_test_map
 $ BACKGROUND 11FF69
 $ AMBIENT 0.4
 $ SPAWN 0 0 4
+$ STATE 1
 
 # Textures
 # X id filename

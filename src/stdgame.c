@@ -36,7 +36,7 @@ void debugKeyPress(const char key, int x, int y) {
 		}
 	} else if (mode == 1) {
 		StaticObjectInstance *obj;
-		ListItem *it;
+		Iterator it;
 		for (it = gi->map->objects->staticInstances->first; it != NULL; it = it->next) {
 			if (((StaticObjectInstance *)it->data)->id == modelId) {
 				obj = (StaticObjectInstance *)it->data;
@@ -92,11 +92,11 @@ void onKeyAction(GLFWwindow* window, int key, int scancode, int action, int mods
 }
 
 static void onError(int error, const char* description) {
-	fprintf(stderr, "[Error] %s\n", description);
+	DEBUG("Error", description);
 }
 
 void printVersionInfo() {
-	printf("[Info] OpenGL version supported: (%s): \n", glGetString(GL_VERSION));
+	printf("[Info] OpenGL version supported: (%s) \n", glGetString(GL_VERSION));
 	int major, minor, revision;
 	glfwGetVersion(&major, &minor, &revision);
 	printf("[Info] Running against GLFW %i.%i.%i\n", major, minor, revision);

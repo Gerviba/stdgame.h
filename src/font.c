@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "stdgame.h"
 
@@ -41,8 +42,8 @@ static Char* loadChar(char path[], char charId, GLfloat *colors) {
 			case 'B': { // Block
 				CharPart part;
 
-				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
-						&part.position[Z], &part.type, &part.colorId);
+				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y], &part.position[Z],
+						&part.type, &part.colorId);
 				--part.colorId;
 
 				listPush(c->parts, &part);
@@ -60,11 +61,11 @@ void initFont(GameInstance *this) {
 
 	FILE *file;
 	char buff[255];
-	printf("[Font] Loading font: default\n");
+	DEBUG("Font", "Loading font: default");
 
 	file = fopen("assets/fonts/default.font", "r");
 	if (!file) {
-		fprintf(stderr, "[Font] Failed to load font.\n");
+		ERROR("Failed to load font.");
 		return;
 	}
 
@@ -83,25 +84,23 @@ void initFont(GameInstance *this) {
 
 		Char *c = loadChar(finalPath, charId, this->font->colors);
 		if (c == NULL) {
-			fprintf(stderr, "[Font] Failed to load char object from '%s'\n", finalPath);
+			ERROR("Failed to load char object from '%s'", finalPath);
 			continue;
 		}
 
 		listPush(this->font->chars, c);
 	}
 
-	this->font->unknown = loadChar("assets/fonts/_unknown.char", '\0', this->font->colors);
-	if (this->font->unknown == NULL) {
-		fprintf(stderr, "[Font] Failed to load char object from '%s'\n",
-				"assets/fonts/_unknown.char");
-	}
-
 	Char *space = loadChar("assets/fonts/_space.char", ' ', this->font->colors);
 	if (space == NULL) {
-		fprintf(stderr, "[Font] Failed to load char object from '%s'\n",
-				"assets/fonts/_space.char");
+		ERROR("Failed to load char object from '%s'", "assets/fonts/_space.char");
 	} else {
 		listPush(this->font->chars, space);
+	}
+
+	this->font->unknown = loadChar("assets/fonts/_unknown.char", '\0', this->font->colors);
+	if (this->font->unknown == NULL) {
+		ERROR("Failed to load char object from '%s'", "assets/fonts/_unknown.char");
 	}
 }
 
@@ -109,7 +108,7 @@ void initFont(GameInstance *this) {
 void freeFont(GameInstance *this) {
 	free(this->font->unknown);
 	free(this->font->colors);
-	ListItem *it;
+	Iterator it;
 	for (it = this->font->chars->first; it != NULL; it = it->next)
 		listFree(((Char *)it->data)->parts);
 	listFree(this->font->chars);
@@ -117,7 +116,7 @@ void freeFont(GameInstance *this) {
 }
 
 Char* getChar(Font *font, char c) {
-	ListItem *it;
+	Iterator it;
 	for (it = font->chars->first; it != NULL; it = it->next)
 		if (c == ((Char *)it->data)->code)
 			return it->data;
@@ -125,7 +124,7 @@ Char* getChar(Font *font, char c) {
 }
 
 static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor) {
-	ListItem *it;
+	Iterator it;
 	for (it = c->parts->first; it != NULL; it = it->next) {
 		CharPart part = *(CharPart *)it->data;
 		glUniform4fv(this->shader->baseColor, 1, part.colorId == -1 ?

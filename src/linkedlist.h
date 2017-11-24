@@ -9,8 +9,16 @@
 
 /**
  * New list 'constructor' macro for generic type
+ * @param x Type of the list
  */
 #define newList(x) (newLinkedListPointer(sizeof(x)))
+
+/**
+ * Foreach for lists
+ * @param it Iterator
+ * @param first First item of the iteration
+ */
+#define foreach(it, first) for (it = first; it != NULL; it = it->next)
 
 /**
  * List item

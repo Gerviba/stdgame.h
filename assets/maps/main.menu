@@ -1,18 +1,17 @@
-$ NAME Menu
+$ NAME MainMenu
 $ AUTHOR Gerviba
-$ AMBIENT 0.4
+$ AMBIENT 0.3 0.3 0.3
 $ SPAWN 0 0 4
 $ STATE 0
+$ CURSOR true
 
 S 0 0 3.3 1 fdf8da
 S -3 0 3.3 1 fdf8da
 S 3 0 3.3 1 fdf8da
 
 O 0 ACTIVE stdgame.aobj
-O 1 ACTIVE cursor.aobj
 
 I 0 0 ACTIVE 0 0 1 0 0 0 0.338048 0.338048 0.338048 1 
-I 1 1 ACTIVE 0 0 0 0 0 0 0.5 0.5 0.5 1
 
 A 0 0 0 1 0 0 0 START_GAME FFFFFF 1.0 32
 A 1 0 -.3 1 0 0 0 OPTIONS FFFFFF 1.0 32

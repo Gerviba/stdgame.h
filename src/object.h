@@ -175,6 +175,11 @@ struct ObjectInfo {
 	LinkedList /*ActiveObjectInstance*/ *activeInstances;
 };
 
+struct Cursor {
+	ActiveObject *cursorObject;
+	ActiveObjectInstance *pointer;
+};
+
 StaticObject *loadStaticObject(char[]);
 DynamicObject *loadDynamicObject(char[]);
 ActiveObject *loadActiveObject(char[]);

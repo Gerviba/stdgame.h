@@ -1,32 +1,26 @@
-#include <GL/gl.h>
-#include <GL/glext.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "stdgame.h"
 
-
-/**
- * Load shader from file
- * \param filePath The shader file's path
- */
 static char* shaderLoadSource(const char *filePath) {
 	const size_t blockSize = 512;
-	FILE *fp;
-	char buf[blockSize];
+	FILE *file;
+	char buff[blockSize];
 	char *source = NULL;
-	size_t tmp, sourceLength = 0;
+	size_t temp, sourceLength = 0;
 
-	fp = fopen(filePath, "r");
-	if (!fp) {
-		fprintf(stderr, "[Shader] Unable to open %s for reading\n", filePath);
+	file = fopen(filePath, "r");
+	if (!file) {
+		ERROR("Unable to open %s for reading", filePath);
 		return NULL;
 	}
 
-	while ((tmp = fread(buf, 1, blockSize, fp)) > 0) {
-		char *newSource = malloc(sourceLength + tmp + 1);
+	while ((temp = fread(buff, 1, blockSize, file)) > 0) {
+		char *newSource = malloc(sourceLength + temp + 1);
 		if (!newSource) {
-			fprintf(stderr, "[Shader] Malloc failed\n");
+			ERROR("Malloc failed at shaderLoadSource()");
 			if (source)
 				free(source);
 			return NULL;
@@ -36,24 +30,19 @@ static char* shaderLoadSource(const char *filePath) {
 			memcpy(newSource, source, sourceLength);
 			free(source);
 		}
-		memcpy(newSource + sourceLength, buf, tmp);
+		memcpy(newSource + sourceLength, buff, temp);
 
 		source = newSource;
-		sourceLength += tmp;
+		sourceLength += temp;
 	}
 
-	fclose(fp);
+	fclose(file);
 	if (source)
 		source[sourceLength] = '\0';
 
 	return source;
 }
 
-/**
- * Compile shader program
- * \param type Vertex or Fragment shader
- * \param filePath The shader file's path
- */
 static GLuint shaderCompileFromFile(GLenum type, const char *filePath) {
 	char *source;
 	GLuint shader;
@@ -77,7 +66,7 @@ static GLuint shaderCompileFromFile(GLenum type, const char *filePath) {
 		log = malloc(length);
 		glGetShaderInfoLog(shader, length, &result, log);
 
-		fprintf(stderr, "shaderCompileFromFile(): Unable to compile %s: %s\n", filePath, log);
+		ERROR("Unable to compile shader program %s: %s", filePath, log);
 		free(log);
 
 		glDeleteShader(shader);
@@ -87,12 +76,6 @@ static GLuint shaderCompileFromFile(GLenum type, const char *filePath) {
 	return shader;
 }
 
-/**<
- * Load and attach shader program
- * \param program identifier
- * \param type Vertex or Fragment shader
- * \param filePath The shader file's path
- */
 GLuint shaderAttachFromFile(GLuint program, GLenum type, const char *filePath) {
 	GLuint shader = shaderCompileFromFile(type, filePath);
 	if (shader != 0) {

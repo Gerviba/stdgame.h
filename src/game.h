@@ -37,13 +37,13 @@ struct GameInstance {
 	Player *player;
 	Font *font;
 	Options *options;
+	Cursor *cursor;
 
 	GLuint tileVAO;
 	GLuint blankTextureId;
 	GLFWwindow *window;
 	int score;
 	GameState state;
-
 };
 
 struct Options {
@@ -136,10 +136,27 @@ union Color {
 	};
 };
 
+/** Color value setter */
+#define setColor(__color, r, g, b, a) {__color[0] = r; __color[1] = g; __color[2] = b; __color[3] = a;}
+
+/** Position value setter */
+#define setPosition(position, x, y, z) {position[0] = x; position[1] = y; position[2] = z;}
+
+/** Rotation value setter */
+#define setRotation(rotation, x, y, z) {rotation[0] = x; rotation[1] = y; rotation[2] = z;}
+
+/** Scale value setter */
+#define setScale(scale, x, y, z) {scale[0] = x; scale[1] = y; scale[2] = z;}
+
+/** Velocity value setter */
+#define setVelocity(velocity, x, y, z) {velocity[0] = x; velocity[1] = y; velocity[2] = z;}
+
+/** Position value setter for array argument */
+#define setPositionArray(pos, from) {pos[0] = from[0]; pos[1] = from[1]; pos[2] = from[2];}
+
 void gameInit(GameInstance* this);
 void onRender(GameInstance* this);
 void updateCamera(GameInstance* this);
 void onLogic(GameInstance* this);
-void setPerspective(GameInstance* this, float fov, float aspect, float near, float far);
 
 #endif /* GAME_H_ */

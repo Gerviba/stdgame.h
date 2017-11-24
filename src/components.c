@@ -123,31 +123,16 @@ GLfloat getFontAlign(GameInstance *this, char str[], FontSize fontSize, Align al
 	return align == ALIGN_CENTER ? size / 2 : size;
 }
 
-/**
- * TODO: Update it to Active Object
- */
-ActiveObjectInstance* updateCursor(GameInstance *this, int cursorId) {
+void updateCursor(GameInstance *this) {
 	double cursorX, cursorY;
 	glfwGetCursorPos(this->window, &cursorX, &cursorY);
 
-	Iterator it;
-	ActiveObjectInstance *cursor = NULL;
-	for (it = this->map->objects->activeInstances->first; it != NULL; it = it->next)
-		if (((ActiveObjectInstance *) it->data)->id == cursorId) {
-			cursor = ((ActiveObjectInstance *) it->data);
-			break;
-		}
+	this->cursor->pointer->position[X] = getCursorProjectedX(this, cursorX);
+	this->cursor->pointer->position[Y] = getCursorProjectedY(this, cursorY);
+	this->cursor->pointer->position[Z] = 1 + (1.0 / 16);
 
-	if (cursor == NULL)
-		return NULL;
-
-	cursor->position[X] = getCursorProjectedX(this, cursorX);
-	cursor->position[Y] = getCursorProjectedY(this, cursorY);
-	cursor->position[Z] = 1 + (1.0 / 16);
-
-	cursor->activePart = glfwGetMouseButton(this->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0;
-
-	return cursor;
+	this->cursor->pointer->activePart =
+			glfwGetMouseButton(this->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0;
 }
 
 void renderTextComponent(Component *comp, GameInstance *this) {
@@ -158,16 +143,16 @@ void renderTextComponent(Component *comp, GameInstance *this) {
 			comp->text->color, comp->text->fontSize, comp->text->rawMin, comp->text->rawMax);
 }
 
-void calcObjectComponentPosition(Component *comp, GameInstance *this, ActiveObjectInstance *cursor) {
+void calcObjectComponentPosition(Component *comp, GameInstance *this) {
 	comp->object->object->position[X] = comp->position[X] + getAbsoluteX(this, comp->relativeX);
 	comp->object->object->position[Y] = comp->position[Y] + getAbsoluteY(this, comp->relativeY);
 }
 
-void calcTextButton(Component *comp, GameInstance *this, ActiveObjectInstance *cursor) {
-	if (comp->text->rawMin[X] <= cursor->position[X] &&
-			comp->text->rawMin[Y] <= cursor->position[Y] &&
-			comp->text->rawMax[X] >= cursor->position[X] &&
-			comp->text->rawMax[Y] >= cursor->position[Y]) {
+void calcTextButton(Component *comp, GameInstance *this) {
+	if (comp->text->rawMin[X] <= this->cursor->pointer->position[X] &&
+			comp->text->rawMin[Y] <= this->cursor->pointer->position[Y] &&
+			comp->text->rawMax[X] >= this->cursor->pointer->position[X] &&
+			comp->text->rawMax[Y] >= this->cursor->pointer->position[Y]) {
 
 		if (glfwGetMouseButton(this->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
 			setColor(comp->text->color, 0.6, 0.6, 0.6, 1.0);
@@ -186,7 +171,6 @@ void calcTextButton(Component *comp, GameInstance *this, ActiveObjectInstance *c
 void clickStartButton(Component *comp, GameInstance *this) {
 	freeMap(this->map);
 	this->map = loadMap(this, "assets/maps/test2.map");
-	this->state = INGAME;
 	initPlayer(this);
 	updateCamera(this);
 }

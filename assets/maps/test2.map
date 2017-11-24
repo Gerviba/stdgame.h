@@ -1,7 +1,7 @@
 $ NAME TestMap2
 $ AUTHOR Gerviba
 $ DESCRIPTION This_is_a_test_map
-$ AMBIENT 0.4
+$ AMBIENT 0.3 0.3 0.3
 $ SPAWN 4 7 4
 $ STATE 1
 

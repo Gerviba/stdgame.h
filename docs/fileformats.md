@@ -2,6 +2,7 @@
 
 - maps
   + Map (.map)
+  + Menu (.menu)
 - objects
   + StaticObject: Pre-calculated move matrix (.sobj)
   + DynamicObject: Dynamic move matrix (.dobj)
@@ -14,7 +15,7 @@
 - textures
   + Mostly png files (.png)
   
-### Map
+### Map and Menu
 
 - Use # for comments
 - Max line length: 255 char
@@ -24,13 +25,13 @@
 |Sign|Type|Format|
 |:---:|----|-------|
 |$|Meta|$ KEY VALUE...|
-|X|Texture|X id filename|
-|Y|TextureBlock|Y id base top right bottom left|
-|T|Tile|T x y Y.id TileType|
+|X|Texture|X id filename (1) |
+|Y|TextureBlock|Y id base top right bottom left (1) |
+|T|Tile|T x y Y.id TileType (1) |
 |S|Static Light|S x y strength color|
 |L|Ligthing|L x y strength1 color1 strength2 color2 time|
 |O|Object Active|O id STATIC/DYNAMIC/ACTIVE filename|
-|I|Object Instance|I O.id STATIC/DYNAMIC/ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference(1) |
+|I|Object Instance|I O.id STATIC/DYNAMIC/ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference (2) |
 |C|Coords|C id type x y|
 |M|Message|M x1 y1 x2 y2 line1 (line2)|
 |R|Region|R x1 y1 x2 y2 delatHP gravity velocity soundActivation activateAction|
@@ -38,14 +39,16 @@
 |B|ObjectComponent|A id x y relativeX relativeY alignX I(ACTIVE).id |
 |D|ImageComponent|D id path x y z height width|
 
-- (1) reference required and available only for dynamic objects
+- (1) Texture, TextureBlock and Tile lines are only processed in maps and the first loaded menu file.
+- (2) Reference: required and available only for dynamic objects.
 - Meta:
   + `NAME` name
   + `AUTHOR` name
   + `DESCRIPTION` String (Use _ for space)
   + `AMBIENT` percent (0.0 - 1.0)
   + `SPAWN` x y z
-  + `STATE` GameState (0: MENU/ 1: INGAME/ 2: PAUSE)
+  + `STATE` GameState (0: MENU/ 1: INGAME/ 2: PAUSE) *(optional, default: 0)*
+  + `CURSOR` true/false *(optional, default: false)*
 
 ### StaticObject and DynamicObject
 
@@ -94,6 +97,8 @@
 
 ### Font v1 (.font)
 
+Format: 
+
 ```
 	character filename
 	%c %s
@@ -104,6 +109,8 @@
 ### Font v2 (.font32)
 
 *Unimplemented*
+
+Format:
 
 ```
 	characterId filename

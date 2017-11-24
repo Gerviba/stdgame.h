@@ -125,7 +125,7 @@ Char* getChar(Font *font, char c) {
 
 static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor) {
 	Iterator it;
-	for (it = c->parts->first; it != NULL; it = it->next) {
+	foreach (it, c->parts->first) {
 		CharPart part = *(CharPart *)it->data;
 		glUniform4fv(this->shader->baseColor, 1, part.colorId == -1 ?
 				defaultColor : &font->colors[4 * part.colorId]);

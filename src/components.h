@@ -45,7 +45,7 @@ struct Component {
 	void (*onLoad)(struct Component*, GameInstance*);
 	void (*onDestroy)(struct Component*, GameInstance*);
 	void (*onRender)(struct Component*, GameInstance*);
-	void (*onCalc)(struct Component*, GameInstance*, ActiveObjectInstance*);
+	void (*onCalc)(struct Component*, GameInstance*);
 	void (*onClick)(struct Component*, GameInstance*);
 };
 
@@ -86,10 +86,10 @@ GLfloat getAbsoluteY(GameInstance*, RelativeY);
 GLfloat getCursorProjectedX(GameInstance*, double);
 GLfloat getCursorProjectedY(GameInstance*, double);
 
-ActiveObjectInstance* updateCursor(GameInstance*, int);
 void renderTextComponent(Component*, GameInstance*);
-void calcTextButton(Component*, GameInstance*, ActiveObjectInstance*);
-void calcObjectComponentPosition(Component*, GameInstance*, ActiveObjectInstance*);
+void calcTextButton(Component*, GameInstance*);
+void calcObjectComponentPosition(Component*, GameInstance*);
 void clickStartButton(Component*, GameInstance*);
+void updateCursor(GameInstance *this);
 
 #endif /* COMPONENTS_H_ */

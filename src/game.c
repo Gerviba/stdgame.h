@@ -13,36 +13,6 @@
 
 // TODO: lehet, hogy ezek nem kellenek
 extern GLuint shaderAttachFromFile(GLuint, GLenum, const char *); //TODO: add to shader.h
-extern void onLogicIngame(GameInstance*, float);
-extern void onLogicMenu(GameInstance*, float);
-
-void setPerspective(GameInstance *this, float fov, float aspect, float near, float far) {
-	this->options->tanFov = tanf(fov);
-	this->options->aspectRatio = 1.0 / aspect;
-	float f = 1.0f / tanf(fov / 2.0f);
-
-	this->camera->projMat[0] = f / aspect;
-	this->camera->projMat[1] = 0.0f;
-	this->camera->projMat[2] = 0.0f;
-	this->camera->projMat[3] = 0.0f;
-
-	this->camera->projMat[4] = 0.0f;
-	this->camera->projMat[5] = f;
-	this->camera->projMat[6] = 0.0f;
-	this->camera->projMat[7] = 0.0f;
-
-	this->camera->projMat[8] = 0.0f;
-	this->camera->projMat[9] = 0.0f;
-	this->camera->projMat[10] = (far + near) / (near - far);
-	this->camera->projMat[11] = -1.0f;
-
-	this->camera->projMat[12] = 0.0f;
-	this->camera->projMat[13] = 0.0f;
-	this->camera->projMat[14] = (2.0f * far * near) / (near - far);
-	this->camera->projMat[15] = 0.0f;
-
-	glMultMatrixf(this->camera->projMat);
-}
 
 static void loadDefaultOptions(GameInstance *this) {
 	this->options->moveLeft[0] = GLFW_KEY_A;
@@ -79,8 +49,6 @@ void loadTileVAO(const GameInstance *this) {
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 8, sizeof(GLfloat) * 5);
 	glEnableVertexAttribArray(2);
-
-	// TODO: cleanup
 }
 
 void gameInit(GameInstance *this) {
@@ -127,11 +95,12 @@ void gameInit(GameInstance *this) {
 	loadTexture(&this->blankTextureId, "null.png");
 
 	this->state = MENU;
-	this->map = loadMap(this, "assets/maps/menu.map");
+	this->map = loadMap(this, "assets/maps/main.menu");
 
 	initFont(this);
+	DEBUG("Logic", "Ready to start")
 	onLogic(this);
-	DEBUG("Logic", "First logic done\n");
+	DEBUG("Logic", "First logic done");
 
 	updateCamera(this);
 	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
@@ -171,7 +140,7 @@ void onRender(GameInstance *this) {
 	glUniform1i(this->shader->texturePosition, 0);
 
 	Iterator it;
-	for (it = this->map->tiles->first; it != NULL; it = it->next)
+	foreach (it, this->map->tiles->first)
 		renderTile(this, (Tile *) it->data);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -188,30 +157,30 @@ void onRender(GameInstance *this) {
 					this->lighting->lightPosition[i * 3 + 1],
 					this->lighting->lightPosition[i * 3 + 2]);
 			glColor3fv(this->lighting->lightColor + (i * 3));
-			GLfloat tempColor[4] = { //TODO: copy it to tempColor arg
-					*(this->lighting->lightColor + (i * 3)),
-					*(this->lighting->lightColor + (i * 3) + 1),
-					*(this->lighting->lightColor + (i * 3) + 2), 1.0 };
-			renderFontTo(this, ",", this->lighting->lightPosition + (i * 3), tempColor, FS_LOW_DPI);
+			renderFontTo(this, ",", this->lighting->lightPosition + (i * 3), (GLfloat[]) {
+				*(this->lighting->lightColor + (i * 3)),
+				*(this->lighting->lightColor + (i * 3) + 1),
+				*(this->lighting->lightColor + (i * 3) + 2), 1.0 }, FS_LOW_DPI);
 			glPopMatrix();
 		}
 	}
 #endif
 
-	for (it = this->map->objects->staticInstances->first; it != NULL; it = it->next)
+	foreach (it, this->map->objects->staticInstances->first)
 		renderStaticObject(this, (StaticObjectInstance *) it->data);
-	for (it = this->map->objects->dynamicInstances->first; it != NULL; it = it->next)
+	foreach (it, this->map->objects->dynamicInstances->first)
 		renderDynamicObject(this, (DynamicObjectInstance *) it->data);
-	for (it = this->map->objects->activeInstances->first; it != NULL; it = it->next)
+	foreach (it, this->map->objects->activeInstances->first)
 		renderActiveObject(this, (ActiveObjectInstance *) it->data);
 
-	if (this->map->menu != NULL) {
-		for (it = this->map->menu->components->first; it != NULL; it = it->next) {
-			Component* comp = it->data;
-			if (comp->onRender != NULL)
-				comp->onRender(comp, this);
-		}
+	foreach (it, this->map->menu->components->first) {
+		Component* comp = it->data;
+		if (comp->onRender != NULL)
+			comp->onRender(comp, this);
 	}
+
+	if (this->map->menu->useCursor)
+		renderActiveObject(this, this->cursor->pointer);
 
     // TODO: Cleanup
     glUseProgram(0);
@@ -233,6 +202,107 @@ static unsigned int getTicks(void) {
 	#endif /* _WIN32 */
 }
 
+void onLogicIngame(GameInstance *this, float delta) {
+	DynamicObjectInstance *obj = ((DynamicObjectInstance *) this->map->objects->dynamicInstances->first->data);
+
+	float deltaMoveX = 0;
+	if (glfwGetKey(this->window, this->options->moveLeft[0]) == GLFW_PRESS
+			|| glfwGetKey(this->window, this->options->moveLeft[1]) == GLFW_PRESS) {
+		deltaMoveX += -delta * 2;
+		obj->rotation[Y] = 0;
+		this->camera->destinationRotation[Y] = 2;
+	}
+
+	if (glfwGetKey(this->window, this->options->moveRight[0]) == GLFW_PRESS
+			|| glfwGetKey(this->window, this->options->moveRight[1]) == GLFW_PRESS) {
+		deltaMoveX += delta * 2;
+		obj->rotation[Y] = 180;
+		this->camera->destinationRotation[Y] = -2;
+	}
+
+	if (!(glfwGetKey(this->window, this->options->moveLeft[0]) == GLFW_PRESS
+			|| glfwGetKey(this->window, this->options->moveLeft[1]) == GLFW_PRESS) &&
+			!(glfwGetKey(this->window, this->options->moveRight[0]) == GLFW_PRESS
+			|| glfwGetKey(this->window, this->options->moveRight[1]) == GLFW_PRESS)) {
+		this->camera->destinationRotation[Y] = 0;
+	}
+
+	Iterator it;
+	foreach (it, this->map->tiles->first) {
+		Tile *tile = it->data;
+		if ((tile->type & MOVE_BLOCK_X) != 0 &&
+				((int) tile->y == (int) this->player->position[Y] ||
+					(int) tile->y == (int) (this->player->position[Y] + 1.0f) ||
+					(int) tile->y == (int) (this->player->position[Y] + this->player->height)) &&
+				((tile->x + 1 < this->player->position[X]
+					&& tile->x + 1 >= this->player->position[X] + deltaMoveX) ||
+				(tile->x >= this->player->position[X] + this->player->width
+					&& tile->x < this->player->position[X] + deltaMoveX + this->player->width))) {
+
+			deltaMoveX = 0;
+			break;
+		}
+	}
+	this->player->position[X] += deltaMoveX;
+
+	if (glfwGetKey(this->window, GLFW_KEY_SPACE) == GLFW_PRESS
+			|| glfwGetKey(this->window, GLFW_KEY_W) == GLFW_PRESS) {
+		this->player->velocity[Y] = 10;
+	}
+
+	float deltaMoveY = this->player->velocity[Y] * 0.00981;
+	this->player->velocity[Y] -= 0.5;
+	if (this->player->velocity[Y] < -15)
+		this->player->velocity[Y] = -15;
+
+
+	foreach (it, this->map->tiles->first) {
+		Tile *tile = it->data;
+		if ((tile->type & MOVE_BLOCK_Y) != 0 &&
+				((int) tile->x == (int) (this->player->position[X]) ||
+				(int) tile->x == (int) (this->player->position[X] + this->player->width))) {
+
+			if (tile->y + 1 > deltaMoveY + this->player->position[Y]
+					&& tile->y + 1 <= this->player->position[Y]) {
+				this->player->position[Y] = tile->y + 1;
+				this->player->velocity[Y] = -0.00001;
+				deltaMoveY = 0;
+			} else if (tile->y <= deltaMoveY + this->player->position[Y] + this->player->height
+					&& tile->y > this->player->position[Y] + this->player->height) {
+				this->player->velocity[Y] = -0.00001;
+				deltaMoveY = 0;
+			}
+		}
+	}
+
+	this->player->position[Y] += deltaMoveY;
+
+#ifndef DEBUG_MOVEMENT
+	this->camera->position[X] = this->player->position[X] + 2;
+	this->camera->position[Y] = this->player->position[Y] + 1;
+	this->camera->position[Z] = 5.2; //4.8
+#endif
+
+	// DEBUG
+	obj->position[X] = this->player->position[X];
+	obj->position[Y] = this->player->position[Y];
+	// END DEBUG
+
+}
+
+void onLogicMenu(GameInstance *this, float delta) {
+	this->camera->position[Z] = this->map->spawn[Z];
+
+	updateCursor(this);
+	Iterator it;
+	foreach (it, this->map->menu->components->first) {
+		Component *comp = it->data;
+		if (comp->onCalc != NULL)
+			comp->onCalc(comp, this);
+	}
+
+}
+
 void onLogic(GameInstance *this) {
 	static unsigned int prevTicks = 0;
 	unsigned int ticks;
@@ -244,11 +314,6 @@ void onLogic(GameInstance *this) {
 	ticks = getTicks();
 	secondsElapsed = (float) (ticks - prevTicks) / 1000.0f;
 	prevTicks = ticks;
-
-//	int width, height;
-//	glfwGetFramebufferSize(this->window, &width, &height);
-//	double cursorX, cursorY;
-//	glfwGetCursorPos(this->window, &cursorX, &cursorY);
 
 #ifndef DEBUG_MOVEMENT
 	if (this->camera->destinationRotation[Y] > 0) {
@@ -269,7 +334,7 @@ void onLogic(GameInstance *this) {
 #endif
 
 	Iterator it;
-	for (it = this->map->lights->first, i = 0; it != NULL && i < MAX_NUM_LIGHTS; it = it->next) {
+	foreach (it, this->map->lights->first) {
 		Light *light = it->data;
 		if (getDistSquared2D(light->position, this->camera->position) > 100)
 			continue;

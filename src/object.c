@@ -8,15 +8,9 @@ StaticObject *loadStaticObject(char path[]) {
 	StaticObject *obj = new(StaticObject);
 	obj->parts = newList(StaticObjectPart);
 	obj->colors = newList(PartColor);
-	obj->position[X] = 0;
-	obj->position[Y] = 0;
-	obj->position[Z] = 0;
-	obj->rotation[X] = 0;
-	obj->rotation[Y] = 0;
-	obj->rotation[Z] = 0;
-	obj->scale[X] = 1.0f / 16;
-	obj->scale[Y] = 1.0f / 16;
-	obj->scale[Z] = 1.0f / 16;
+	setPosition(obj->position, 0.0f, 0.0f, 0.0f);
+	setRotation(obj->rotation, 0.0f, 0.0f, 0.0f);
+	setScale(obj->scale,  1.0f / 16,  1.0f / 16,  1.0f / 16);
 
 	FILE *file;
 	char buff[255];
@@ -24,7 +18,7 @@ StaticObject *loadStaticObject(char path[]) {
 
 	file = fopen(path, "r");
 	if (!file) {
-		ERROR("Failed to load. File not accessable.");
+		ERROR("Failed to load static object. File '%s' is not accessable.", path);
 		return NULL;
 	}
 
@@ -85,15 +79,9 @@ DynamicObject *loadDynamicObject(char path[]) {
 	DynamicObject *obj = new(DynamicObject);
 	obj->parts = newList(StaticObjectPart);
 	obj->colors = newList(PartColor);
-	obj->position[X] = 0;
-	obj->position[Y] = 0;
-	obj->position[Z] = 0;
-	obj->rotation[X] = 0;
-	obj->rotation[Y] = 0;
-	obj->rotation[Z] = 0;
-	obj->scale[X] = 1.0f / 16;
-	obj->scale[Y] = 1.0f / 16;
-	obj->scale[Z] = 1.0f / 16;
+	setPosition(obj->position, 0.0f, 0.0f, 0.0f);
+	setRotation(obj->rotation, 0.0f, 0.0f, 0.0f);
+	setScale(obj->scale,  1.0f / 16,  1.0f / 16,  1.0f / 16);
 
 	FILE *file;
 	char buff[255];
@@ -101,7 +89,7 @@ DynamicObject *loadDynamicObject(char path[]) {
 
 	file = fopen(path, "r");
 	if (!file) {
-		ERROR("Failed to load. File not accessable.");
+		ERROR("Failed to load dynamic object. File '%s' is not accessable.", path);
 		return NULL;
 	}
 
@@ -161,6 +149,7 @@ DynamicObject *loadDynamicObject(char path[]) {
 ActiveObject *loadActiveObject(char path[]) {
 	ActiveObject *aobj = new(ActiveObject);
 
+	//TODO: Use coord union
 	GLfloat position[3] = {0.0f, 0.0f, 0.0f};
 	GLfloat rotation[3] = {0.0f, 0.0f, 0.0f};
 	GLfloat scale[3] = {0.0f, 0.0f, 0.0f};
@@ -172,7 +161,7 @@ ActiveObject *loadActiveObject(char path[]) {
 
 	file = fopen(path, "r");
 	if (!file) {
-		ERROR("Failed to load. File not accessable.");
+		ERROR("Failed to load active object. File '%s' is not accessable.", path);
 		return NULL;
 	}
 
@@ -198,15 +187,9 @@ ActiveObject *loadActiveObject(char path[]) {
 					for (i = 0; i < aobj->size; ++i) {
 						aobj->parts[i].parts = newList(StaticObjectPart);
 						aobj->parts[i].colors = colors;
-						aobj->parts[i].position[X] = position[X];
-						aobj->parts[i].position[Y] = position[Y];
-						aobj->parts[i].position[Z] = position[Z];
-						aobj->parts[i].rotation[X] = rotation[X];
-						aobj->parts[i].rotation[Y] = rotation[Y];
-						aobj->parts[i].rotation[Z] = rotation[Z];
-						aobj->parts[i].scale[X] = scale[X];
-						aobj->parts[i].scale[Y] = scale[Y];
-						aobj->parts[i].scale[Z] = scale[Z];
+						setPosition(aobj->parts[i].position, position[X], position[Y], position[Z]);
+						setRotation(aobj->parts[i].rotation, rotation[X], rotation[Y], rotation[Z]);
+						setScale(aobj->parts[i].scale, scale[X], scale[Y], scale[Z]);
 					}
 				}
 				break;
@@ -253,7 +236,7 @@ void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
 	Iterator it;
-	for (it = obj->parts->first; it != NULL; it = it->next) {
+	foreach (it, obj->parts->first) {
 		StaticObjectPart part = *(StaticObjectPart *) it->data;
 		glUniform4fv(this->shader->baseColor, 1, part.color);
 
@@ -335,7 +318,7 @@ void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
 	Iterator it;
-	for (it = obj->parts->first; it != NULL; it = it->next) {
+	foreach (it, obj->parts->first) {
 		StaticObjectPart part = *(StaticObjectPart *) it->data;
 		glUniform4fv(this->shader->baseColor, 1, part.color);
 
@@ -417,7 +400,7 @@ void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
 
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
 	Iterator it;
-	for (it = obj->parts->first; it != NULL; it = it->next) {
+	foreach (it, obj->parts->first) {
 		StaticObjectPart part = *(StaticObjectPart *) it->data; // TODO: . to ->
 		glUniform4fv(this->shader->baseColor, 1, part.color);
 

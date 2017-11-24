@@ -89,6 +89,7 @@ typedef struct DynamicObjectInstance DynamicObjectInstance;
 typedef struct ActiveObject ActiveObject;
 typedef struct ActiveObjectInstance ActiveObjectInstance;
 typedef struct ObjectInfo ObjectInfo;
+typedef struct Cursor Cursor;
 
 // game.h
 typedef struct GameInstance GameInstance;
@@ -97,7 +98,7 @@ typedef struct InputActionWrapper InputActionWrapper;
 typedef struct ShaderInfo ShaderInfo;
 typedef struct CameraInfo CameraInfo;
 typedef struct LigingInfo LigingInfo;
-typedef union Position Position;
+typedef union Position Position, Rotation, Velocity, Scale;
 typedef union Color Color;
 
 /** PI constant */
@@ -121,26 +122,11 @@ static const float PI = 3.14159265358979323846;
 
 #include <string.h>
 
-//TODO: Fix import
-#ifdef __linux__
-	#include <GL/gl.h>
-	#include <GL/glext.h>
-	#include <GL/glu.h>
-	#include <GLFW/glfw3.h>
-	#include "SOIL/SOIL.h"
-#elif defined APPLE
-	#include <OpenGL/gl.h>
-	#include <OpenGL/glext.h>
-	#include <OpenGL/glu.h>
-	#include <GLFW/glfw3.h>
-	#include "SOIL/SOIL.h"
-#else
-	#include <gl.h>
-	#include <glext.h>
-	#include <glu.h>
-	#include <glfw3.h>
-	#include "SOIL.h"
-#endif
+#include <gl.h>
+#include <glext.h>
+#include <glu.h>
+#include <glfw3.h>
+#include "SOIL.h"
 
 #include "linkedlist.h"
 #include "font.h"
@@ -160,11 +146,5 @@ static const float PI = 3.14159265358979323846;
 #define equals(a, b) strcmp(a, b) == 0
 /** Allocate space for new of generic type */
 #define new(x) malloc(sizeof(x))
-/** Color value setter */
-#define setColor(color, r, g, b, a) {color[0] = r; color[1] = g; color[2] = b; color[3] = a;}
-/** Position value setter */
-#define setPosition(position, x, y, z) {color[0] = x; color[1] = y; color[2] = z;} //TODO: Alakítsam át erre a többit
-/** Position value setter for array argument */
-#define setPositionArray(pos, from) {pos[0] = from[0]; pos[1] = from[1]; pos[2] = from[2];}
 
 #endif /* STDGAME_H__ */

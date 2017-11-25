@@ -7,8 +7,8 @@
     - Ingame
 - Options
   + Graphics: Graphical settings (MSAA, FullScreen, Shadow, etc)
-  + Controls: Movement, spells, 
-- Credits: Prints credits
+  + Controls: Movement, spells, attack
+- Credits: Credits and license info
 - Exit: Quit game
 
 ### Movement (with default settings)

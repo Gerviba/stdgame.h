@@ -1,10 +1,5 @@
 #include <stdlib.h>
-
 #include "stdgame.h"
-
-void enableOptions(GameInstance *this, Menu *menu) {
-//	this->camera->destinationRotation[Y] = 90.0f;
-}
 
 void renderIngameGUI(GameInstance* this) {
 	GLfloat color[] = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -27,6 +22,11 @@ void onClickMenu(GameInstance* this) {
 }
 
 void onScrollMenu(GameInstance* this, double offset) {
+	if (this->map->menu->scrollOffset - offset > this->map->menu->scrollMax ||
+			this->map->menu->scrollOffset - offset < this->map->menu->scrollMin)
+		return;
+
+	this->map->menu->scrollOffset -= offset;
 	Iterator it;
 	foreach (it, this->map->menu->components->first) {
 		Component *comp = it->data;

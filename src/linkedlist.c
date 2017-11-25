@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-
 #include "stdgame.h"
 
+//TODO: Remove this:
 static int COUNTCOUNT = 0;
 
 LinkedList newLinkedList(size_t size) {

@@ -1,6 +1,4 @@
 #include <stdlib.h>
-
-#include "player.h"
 #include "stdgame.h"
 
 void initPlayer(GameInstance *this) {
@@ -10,7 +8,8 @@ void initPlayer(GameInstance *this) {
 	setPosition(this->player->position, this->map->spawn[X], this->map->spawn[Y], 0);
 	this->player->height = 1.3f;
 	this->player->width = 0.5f;
-	this->player->jumping = GL_FALSE;
+	this->player->jump = 0;
+	this->player->lastJump = glfwGetTime();
 	setVelocity(this->player->velocity, 0.0f, 0.0f, 0.0f);
 	//TODO: Player model
 }

@@ -88,6 +88,9 @@ Map* loadMap(GameInstance *this, char path[]) {
 	map->menu->useCursor = GL_FALSE;
 	map->menu->onClick = NULL;
 	map->menu->onScroll = NULL;
+	map->menu->scrollMin = 0;
+	map->menu->scrollMax = 0;
+	map->menu->scrollOffset = 0;
 
 	this->state = MENU;
 	FILE *file;
@@ -122,9 +125,12 @@ Map* loadMap(GameInstance *this, char path[]) {
 				} else if (equals(type, "STATE")) {
 					sscanf(buff, "$ %*s %d", (int*) &this->state);
 					if (this->state == INGAME) {
-						addTextComponent(map, "$$$", 100, X_LEFT, Y_TOP, ALIGN_LEFT, (1.0 / 16) * 8, -(1.0 / 16) * 9, FS_NORMAL_DPI);
-						addTextComponent(map, "300 *", 101, X_RIGHT, Y_TOP, ALIGN_RIGHT, -(1.0 / 16) * 8, -(1.0 / 16) * 9, FS_NORMAL_DPI);
-						addTextComponent(map, "Press F to open", 102, X_CENTER, Y_CENTER, ALIGN_CENTER, 0, 0, FS_LOW_DPI);
+						addTextComponent(map, "$$$", 100, X_LEFT, Y_TOP, ALIGN_LEFT,
+								(1.0 / 16) * 8, -(1.0 / 16) * 9, FS_NORMAL_DPI);
+						addTextComponent(map, "300 *", 101, X_RIGHT, Y_TOP, ALIGN_RIGHT,
+								-(1.0 / 16) * 8, -(1.0 / 16) * 9, FS_NORMAL_DPI);
+						addTextComponent(map, "Press F to open", 102, X_CENTER, Y_CENTER, ALIGN_CENTER,
+								0, 0, FS_LOW_DPI);
 					}
 					map->menu->onClick = this->state == INGAME ? NULL : onClickMenu;
 				} else if (equals(type, "CURSOR")) {
@@ -132,7 +138,9 @@ Map* loadMap(GameInstance *this, char path[]) {
 					map->menu->useCursor = sscanf(buff, "$ %*s %s", value) == 1 && equals(value, "true");
 				} else if (equals(type, "SCROLL")) {
 					char value[6];
-					map->menu->onScroll = sscanf(buff, "$ %*s %s", value) == 1 && equals(value, "true") ? onScrollMenu : NULL;
+					map->menu->onScroll = sscanf(buff, "$ %*s %s %f %f", value,
+							&map->menu->scrollMin, &map->menu->scrollMax) == 3
+							&& equals(value, "true") ? onScrollMenu : NULL;
 				}
 				break;
 			}
@@ -193,12 +201,22 @@ Map* loadMap(GameInstance *this, char path[]) {
 			case 'S': { // Static Light
 				Light light;
 				unsigned int r, g, b;
-				sscanf(buff, "S %f %f %f %f %02x%02x%02x",
+				int referencePoint;
+				sscanf(buff, "S %f %f %f %f %02x%02x%02x %f %f %d",
 						&light.position[X], &light.position[Y], &light.position[Z],
-						&light.strength, &r, &g, &b);
+						&light.strength, &r, &g, &b, &light.specular, &light.intensity,
+						&referencePoint);
 				light.color[R] = (float) r / 255;
 				light.color[G] = (float) g / 255;
 				light.color[B] = (float) b / 255;
+
+				Iterator it;
+				foreach (it, this->referencePoints->first) {
+					if (((ReferencePoint *) it->data)->id == referencePoint) {
+						light.reference = it->data;
+						break;
+					}
+				}
 
 				listPush(map->lights, &light);
 				break;
@@ -279,12 +297,18 @@ Map* loadMap(GameInstance *this, char path[]) {
 					Iterator it;
 					foreach (it, map->objects->dynamicObjects->first) {
 						if (((DynamicObject *) it->data)->id == objectId) {
-							doi.object = (DynamicObject *) it->data;
+							doi.object = it->data;
 							break;
 						}
 					}
 
-					doi.reference = NULL; //TODO: Implement reference points
+					foreach (it, this->referencePoints->first) {
+						if (((ReferencePoint *) it->data)->id == referencePoint) {
+							doi.reference = it->data;
+							break;
+						}
+					}
+
 					listPush(map->objects->dynamicInstances, &doi);
 
 				} else if (equals(type, "ACTIVE")) {

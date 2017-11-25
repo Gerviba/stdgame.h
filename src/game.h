@@ -44,6 +44,8 @@ struct GameInstance {
 	GLFWwindow *window;
 	int score;
 	GameState state;
+
+	LinkedList /*ReferencePoint*/ *referencePoints;
 };
 
 struct Options {
@@ -79,6 +81,7 @@ struct ShaderInfo {
 	GLuint cameraPosition;
 	GLuint lightPosition;
 	GLuint lightColor;
+	GLuint lightInfo;
 	GLuint texturePosition;
 	GLuint numLights;
 	GLuint baseColor;
@@ -100,8 +103,9 @@ struct CameraInfo {
 
 struct LigingInfo {
 	int numLights;
-	float lightPosition[MAX_NUM_LIGHTS * 3];
-	float lightColor[MAX_NUM_LIGHTS * 3];
+	GLfloat lightPosition[MAX_NUM_LIGHTS * 3];
+	GLfloat lightColor[MAX_NUM_LIGHTS * 3];
+	GLfloat lightInfo[MAX_NUM_LIGHTS * 3];
 };
 
 /**

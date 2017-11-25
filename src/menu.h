@@ -5,7 +5,9 @@ struct Menu {
 	int id;
 	LinkedList /*Component*/ *components;
 	GLboolean useCursor;
-	int cursorId;
+	GLfloat scrollMin;
+	GLfloat scrollMax;
+	GLfloat scrollOffset;
 
 	void (*onClick)(GameInstance*);
 	void (*onScroll)(GameInstance*, double);

@@ -60,8 +60,11 @@ typedef enum {
 
 struct Light {
 	GLfloat position[3];
-	GLfloat strength; //TODO: Implement
+	GLfloat strength;
 	GLfloat color[3];
+	GLfloat specular;
+	GLfloat intensity;
+	ReferencePoint *reference;
 };
 
 struct Texture {

@@ -121,9 +121,11 @@ struct StaticObjectInstance {
 };
 
 struct ReferencePoint {
+	GLint id;
 	GLfloat position[3];
 	GLfloat rotation[3];
 	GLfloat scale[3];
+	GLfloat timing;
 };
 
 struct DynamicObject {
@@ -189,5 +191,7 @@ void renderDynamicObject(GameInstance*, DynamicObjectInstance*);
 void renderActiveObject(GameInstance*, ActiveObjectInstance*);
 void renderTile(GameInstance*, Tile*);
 void initStraticInstance(GameInstance*, StaticObjectInstance*);
+void initReferencePoints(GameInstance *this);
+void updateReferencePoint(GameInstance *this, GLfloat delta);
 
 #endif /* OBJECT_H_ */

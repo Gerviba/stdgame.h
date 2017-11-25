@@ -3,9 +3,6 @@
 #include <math.h>
 #include "stdgame.h"
 
-// TODO: lehet, hogy ezek nem kellenek
-extern GLuint shaderAttachFromFile(GLuint, GLenum, const char *); //TODO: add to shader.h
-
 static void loadDefaultOptions(GameInstance *this) {
 	this->options->moveLeft[0] = GLFW_KEY_A;
 	this->options->moveLeft[1] = GLFW_KEY_LEFT;
@@ -75,6 +72,7 @@ void gameInit(GameInstance *this) {
 	this->shader->cameraPosition = glGetUniformLocation(this->shader->shaderId, "cameraPosition");
 	this->shader->lightPosition = glGetUniformLocation(this->shader->shaderId, "lightPosition");
 	this->shader->lightColor = glGetUniformLocation(this->shader->shaderId, "lightColor");
+	this->shader->lightInfo = glGetUniformLocation(this->shader->shaderId, "lightInfo");
 	this->shader->texturePosition = glGetUniformLocation(this->shader->shaderId, "tex");
 	this->shader->numLights = glGetUniformLocation(this->shader->shaderId, "numLights");
 	this->shader->baseColor = glGetUniformLocation(this->shader->shaderId, "baseColor");
@@ -85,6 +83,7 @@ void gameInit(GameInstance *this) {
 
 	loadTileVAO(this);
 	loadTexture(&this->blankTextureId, "null.png");
+	initReferencePoints(this);
 
 	this->state = MENU;
 	this->map = loadMap(this, "assets/maps/main.menu");
@@ -120,6 +119,7 @@ void onRender(GameInstance *this) {
 	glUniform3fv(this->shader->cameraPosition, 1, this->camera->position);
 	glUniform3fv(this->shader->lightPosition, this->lighting->numLights, this->lighting->lightPosition);
 	glUniform3fv(this->shader->lightColor, this->lighting->numLights, this->lighting->lightColor);
+	glUniform3fv(this->shader->lightInfo, this->lighting->numLights, this->lighting->lightInfo);
 	glUniform1i(this->shader->numLights, this->lighting->numLights);
 	glUniform4fv(this->shader->baseColor, 1, BASE_COLOR);
 	glUniformMatrix4fv(this->shader->projMat, 1, GL_FALSE, this->camera->projMat);
@@ -184,7 +184,7 @@ GLfloat getDistSquared2D(GLfloat a[3], GLfloat b[3]) {
 	return (a[X] - b[X]) * (a[X] - b[X]) + (a[Y] - b[Y]) * (a[Y] - b[Y]);
 }
 
-void onLogicIngame(GameInstance *this, float delta) {
+void onLogicIngame(GameInstance *this, GLfloat delta) {
 	DynamicObjectInstance *obj = ((DynamicObjectInstance *) this->map->objects->dynamicInstances->first->data);
 
 	float deltaMoveX = 0;
@@ -227,16 +227,18 @@ void onLogicIngame(GameInstance *this, float delta) {
 	}
 	this->player->position[X] += deltaMoveX;
 
-	if (glfwGetKey(this->window, GLFW_KEY_SPACE) == GLFW_PRESS
-			|| glfwGetKey(this->window, GLFW_KEY_W) == GLFW_PRESS) {
-		this->player->velocity[Y] = 10;
+	if (this->player->jump < 2 && this->player->lastJump + 0.3 < glfwGetTime()
+			&& (glfwGetKey(this->window, GLFW_KEY_SPACE) == GLFW_PRESS
+			|| glfwGetKey(this->window, GLFW_KEY_W) == GLFW_PRESS)) {
+		++this->player->jump;
+		this->player->velocity[Y] = 8 + (this->player->jump * 2);
+		this->player->lastJump = glfwGetTime();
 	}
 
 	float deltaMoveY = this->player->velocity[Y] * 0.00981;
 	this->player->velocity[Y] -= 0.5;
 	if (this->player->velocity[Y] < -15)
 		this->player->velocity[Y] = -15;
-
 
 	foreach (it, this->map->tiles->first) {
 		Tile *tile = it->data;
@@ -249,10 +251,13 @@ void onLogicIngame(GameInstance *this, float delta) {
 				this->player->position[Y] = tile->y + 1;
 				this->player->velocity[Y] = -0.00001;
 				deltaMoveY = 0;
+				this->player->jump = 0;
+				this->player->lastJump = 0;
 			} else if (tile->y <= deltaMoveY + this->player->position[Y] + this->player->height
 					&& tile->y > this->player->position[Y] + this->player->height) {
 				this->player->velocity[Y] = -0.00001;
 				deltaMoveY = 0;
+				this->player->jump = 2;
 			}
 		}
 	}
@@ -272,7 +277,7 @@ void onLogicIngame(GameInstance *this, float delta) {
 
 }
 
-void onLogicMenu(GameInstance *this, float delta) {
+void onLogicMenu(GameInstance *this, GLfloat delta) {
 	this->camera->position[Z] = this->map->spawn[Z];
 
 	updateCursor(this);
@@ -288,7 +293,7 @@ void onLogicMenu(GameInstance *this, float delta) {
 
 }
 
-static GLfloat getDelta() {
+static GLfloat getDelta(void) {
 	static GLfloat lastFrame = 0;
 	GLfloat time = glfwGetTime();
 	GLfloat delta = time - lastFrame;
@@ -297,6 +302,9 @@ static GLfloat getDelta() {
 }
 
 void onLogic(GameInstance *this) {
+	const GLfloat delta = getDelta();
+
+	updateReferencePoint(this, delta);
 
 #ifndef DEBUG_MOVEMENT
 	if (this->camera->destinationRotation[Y] > 0) {
@@ -326,16 +334,19 @@ void onLogic(GameInstance *this) {
 		this->lighting->lightColor[i * 3 + R] = light->color[R];
 		this->lighting->lightColor[i * 3 + G] = light->color[G];
 		this->lighting->lightColor[i * 3 + B] = light->color[B];
-		this->lighting->lightPosition[i * 3 + X] = light->position[X];
-		this->lighting->lightPosition[i * 3 + Y] = light->position[Y];
-		this->lighting->lightPosition[i * 3 + Z] = light->position[Z];
+		this->lighting->lightPosition[i * 3 + X] = light->position[X] + light->reference->position[X];
+		this->lighting->lightPosition[i * 3 + Y] = light->position[Y] + light->reference->position[Y];
+		this->lighting->lightPosition[i * 3 + Z] = light->position[Z] + light->reference->position[Z];
+		this->lighting->lightInfo[i * 3 + R] = light->specular;
+		this->lighting->lightInfo[i * 3 + G] = light->strength;
+		this->lighting->lightInfo[i * 3 + B] = light->intensity;
 		++i;
 	}
 	this->lighting->numLights = i;
 
 	if (this->state == INGAME)
-		onLogicIngame(this, getDelta());
+		onLogicIngame(this, delta);
 	else
-		onLogicMenu(this, getDelta());
+		onLogicMenu(this, delta);
 
 }

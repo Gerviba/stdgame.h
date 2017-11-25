@@ -1,33 +1,77 @@
+/**
+ * @file components.h
+ * @author Gerviba (Szabo Gergely)
+ * @brief Components and event management for menus
+ */
+
 #ifndef COMPONENTS_H_
 #define COMPONENTS_H_
 
 #include "stdgame.h"
-#include "game.h"
 
+/**
+ * Component type
+ */
 typedef enum {
+	/**
+	 * Object like component.
+	 * Requires a loaded ActiveObjectInstance.
+	 * @see ActiveObjectInstance
+	 */
 	CT_OBJECT,
+	/**
+	 * Text component.
+	 * Optimal for messages and buttons.
+	 * @see TextComponent
+	 */
 	CT_TEXT,
+	/**
+	 * Image component.
+	 * A texture will be loaded end rendered to this component.
+	 * @see ImageComponent
+	 */
 	CT_IMAGE,
 } ComponentType;
 
+/**
+ * Component relative horizontal position
+ */
 typedef enum {
+	/** Relative to the left horizontal side of the screen */
 	X_LEFT 		= -1,
+	/** Relative to the horizontal center of the screen */
 	X_CENTER 	= 0,
+	/** Relative to the right horizontal side of the screen */
 	X_RIGHT 	= 1
 } RelativeX;
 
+/**
+ * Component relative vertical position
+ */
 typedef enum {
+	/** Relative to the top vertical side of the screen */
 	Y_BOTTOM 	= -1,
+	/** Relative to the vertical center of the screen */
 	Y_CENTER 	= 0,
+	/** Relative to the right vertical side of the screen */
 	Y_TOP 		= 1
 } RelativeY;
 
+/**
+ * Alignment for text components
+ */
 typedef enum {
+	/** The anchor point will be placed to the left side of the object */
 	ALIGN_LEFT		= -1,
+	/** The anchor point will be placed to the center of the object */
 	ALIGN_CENTER	= 0,
+	/** The anchor point will be placed to the right side of the object */
 	ALIGN_RIGHT		= 1
 } Align;
 
+/**
+ * The component base
+ */
 struct Component {
 	GLuint id;
 	GenericType *value;
@@ -49,6 +93,18 @@ struct Component {
 	void (*onClick)(struct Component*, GameInstance*);
 };
 
+/**
+ * Generic type variable
+ * @see newGenericValue()
+ * @see newGenericIntValue()
+ * @see newGenericFloatValue()
+ * @see setGenericValue()
+ * @see setGenericIntValue()
+ * @see setGenericFloatValue()
+ * @see getGenericIntValue()
+ * @see getGenericFloatValue()
+ * @see freeGenericValue()
+ */
 struct GenericType {
 	void *value;
 	size_t valueLength;

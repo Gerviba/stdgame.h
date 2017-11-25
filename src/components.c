@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
-
 #include "stdgame.h"
 
 GenericType* newGenericValue(void *value, size_t size) {

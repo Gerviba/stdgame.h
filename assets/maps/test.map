@@ -91,10 +91,10 @@ T 6 0 3 17
 T 6 -1 3 1
 
 # Static Lighting, Lighting
-# S x y strength color[RRGGBB]
+# S x y strength color[RRGGBB] specular intensity
 # L x y strength1 color1[RRGGBB] strength2 color2[RRGGBB] time //TODO
-S 1 1.5 1 F4DB33
-S 4 1.5 1 F4DB33
+S 1 1.5 1 F4DB33 0 1 0
+S 4 1.5 1 F4DB33 0 1 0
 
 #S 1 1.5 1 97d964
 #S 4 1.5 1 82c41e
@@ -114,7 +114,7 @@ L 3 1 1 FF00FF 00FF00 4000
 # Object Instances
 # I id O.id STATIC x y z alpha beta gamma SizeX SizeY SizeZ visible
 # I id O.id DYNAMIC x y z alpha beta gamma SizeX SizeY SizeZ visible reference
-# I id O.id ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference
+# I id O.id ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible
 
 # Coords
 # C id type x y ...

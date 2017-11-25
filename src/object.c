@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
 #include "stdgame.h"
 
 StaticObject *loadStaticObject(char path[]) {
@@ -125,8 +124,9 @@ DynamicObject *loadDynamicObject(char path[]) {
 				StaticObjectPart part;
 				int colorId;
 
-				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
-						&part.position[Z], &part.type, &colorId);
+				sscanf(buff, "B %f %f %f %d %d",
+						&part.position[X], &part.position[Y], &part.position[Z],
+						(int*) &part.type, &colorId);
 
 				Iterator it;
 				for (it = obj->colors->first; it != NULL; it = it->next) {
@@ -209,8 +209,9 @@ ActiveObject *loadActiveObject(char path[]) {
 				StaticObjectPart part;
 				int colorId, state;
 
-				sscanf(buff, "B %d %f %f %f %d %d", &state, &part.position[X], &part.position[Y],
-						&part.position[Z], &part.type, &colorId);
+				sscanf(buff, "B %d %f %f %f %d %d", &state,
+						&part.position[X], &part.position[Y], &part.position[Z],
+						(int*) &part.type, &colorId);
 
 				Iterator it;
 				for (it = colors->first; it != NULL; it = it->next) {
@@ -302,15 +303,15 @@ void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 	glPushMatrix();
 	glLoadIdentity();
 
-	glTranslatef(obj->position[X] + instance->position[X],
-			obj->position[Y] + instance->position[Y],
-			obj->position[Z] + instance->position[Z]);
-	glScalef(obj->scale[X] * instance->scale[X],
-			obj->scale[Y] * instance->scale[Y],
-			obj->scale[Z] * instance->scale[Z]);
-	glRotatef(-(obj->rotation[X] + instance->rotation[X]), 1.0f, 0.0f, 0.0f);
-	glRotatef(-(obj->rotation[Y] + instance->rotation[Y]), 0.0f, 1.0f, 0.0f);
-	glRotatef(-(obj->rotation[Z] + instance->rotation[Z]), 0.0f, 0.0f, 1.0f);
+	glTranslatef(obj->position[X] + instance->position[X] + instance->reference->position[X],
+			obj->position[Y] + instance->position[Y] + instance->reference->position[Y],
+			obj->position[Z] + instance->position[Z] + instance->reference->position[Z]);
+	glScalef(obj->scale[X] * instance->scale[X] * instance->reference->scale[X],
+			obj->scale[Y] * instance->scale[Y] * instance->reference->scale[Y],
+			obj->scale[Z] * instance->scale[Z] * instance->reference->scale[Z]);
+	glRotatef(-(obj->rotation[X] + instance->rotation[X] + instance->reference->rotation[X]), 1.0f, 0.0f, 0.0f);
+	glRotatef(-(obj->rotation[Y] + instance->rotation[Y] + instance->reference->rotation[Y]), 0.0f, 1.0f, 0.0f);
+	glRotatef(-(obj->rotation[Z] + instance->rotation[Z] + instance->reference->rotation[Z]), 0.0f, 0.0f, 1.0f);
 
 	glGetFloatv(GL_MODELVIEW_MATRIX, instance->moveMat);
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
@@ -530,4 +531,33 @@ void initStraticInstance(GameInstance *this, StaticObjectInstance *instance) {
 
 	glGetFloatv(GL_MODELVIEW_MATRIX, instance->moveMat);
 	glPopMatrix();
+}
+
+void initReferencePoints(GameInstance *this) {
+	this->referencePoints = newList(ReferencePoint);
+	GLint i;
+	for (i = 0; i < 3; ++i) {
+		ReferencePoint rp;
+		rp.id = i;
+		rp.timing = 0;
+		setPosition(rp.position, 0.0f, 0.0f, 0.0f);
+		setRotation(rp.rotation, 0.0f, 0.0f, 0.0f);
+		setScale(rp.scale, 1.0f, 1.0f, 1.0f);
+		listPush(this->referencePoints, &rp);
+	}
+}
+
+void updateReferencePoint(GameInstance *this, GLfloat delta) {
+	Iterator it;
+	foreach (it, this->referencePoints->first) {
+		ReferencePoint *rp = it->data;
+		if (rp->id == 1) {
+			rp->timing += delta;
+			if (rp->timing > PI)
+				rp->timing -= 2 * PI;
+
+			rp->position[Y] = sinf(rp->timing * 2) / 6;
+			rp->rotation[Z] = rp->timing * 180.0;
+		}
+	}
 }

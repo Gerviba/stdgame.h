@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
-
 #include "stdgame.h"
 
 Char* loadChar(char path[], char charId, GLfloat *colors) {

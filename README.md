@@ -4,7 +4,7 @@
 > Github url: https://github.com/Gerviba/stdgame.h
 
 ### Specs
-- C and OpenGL based multiplatform game
+- C and OpenGL based multiplatform platformer game
 - GNU GPL v3.0 license
 - Required: glfw3+, SOIL, OpenGL1.5+
 
@@ -14,7 +14,7 @@ v0.5 - Half done 2017.11.12.
 
 ### How to create map/mob or object
 
-See: `docs/fileformats.md`
+See: `docs/fileformats.md` or in doxygen `Related Pages -> Assets - File formats` 
 
 ### How to build from source
 

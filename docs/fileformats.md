@@ -28,14 +28,14 @@
 |X|Texture|X id filename (1) |
 |Y|TextureBlock|Y id base top right bottom left (1) |
 |T|Tile|T x y Y.id TileType (1) |
-|S|Static Light|S x y strength color|
+|S|Static Light|S x y strength rrggbb specular intensity reference (2)|
 |L|Ligthing|L x y strength1 color1 strength2 color2 time|
 |O|Object Active|O id STATIC/DYNAMIC/ACTIVE filename|
 |I|Object Instance|I O.id STATIC/DYNAMIC/ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference (2) |
 |C|Coords|C id type x y|
 |M|Message|M x1 y1 x2 y2 line1 (line2)|
 |R|Region|R x1 y1 x2 y2 delatHP gravity velocity soundActivation activateAction|
-|A|TextComponent|A id x y relativeX relativeY message rrggbb alpha fontsize action (3) |
+|A|TextComponent|A id x y relativeX relativeY align message rrggbb alpha fontsize action (3) |
 |B|ObjectComponent|A id x y relativeX relativeY alignX I(ACTIVE).id action (3) |
 |D|ImageComponent|D id path x y z height width action (3) |
 
@@ -49,10 +49,9 @@
   + `SPAWN` x y z
   + `STATE` GameState (0: MENU/ 1: INGAME/ 2: PAUSE) *(optional, default: 0)*
   + `CURSOR` true/false *(optional, default: false)*
-  + `SCROLL` true/false *(optional, default: false)*
+  + `SCROLL` true/false min max *(optional, default: false, 0, 0)*
 
 - (3) Action types:
-
 |Action|Effect|
 |----|------|
 |0|(Nothing)|
@@ -63,6 +62,26 @@
 |4|Open main menu|
 |5|Start game|
 |-1|Quit game|
+
+- RelativeX, RelativeY and Align enums:
+|Enum|Name|Value|Description|
+|----|----|-----:|-----------|
+|RelativeX|X_LEFT|-1|Relative to the left horizontal side of the screen|
+|RelativeX|X_CENTER|0|Relative to the horizontal center of the screen|
+|RelativeX|X_RIGHT|1|Relative to the right horizontal side of the screen|
+|RelativeY|Y_TOP|-1|Relative to the top vertical side of the screen|
+|RelativeY|Y_CENTER|0|Relative to the vertical center of the screen|
+|RelativeY|Y_BOTTOM|1|Relative to the right vertical side of the screen|
+|Align|ALIGN_LEFT|-1|The anchor point will be placed to the left side of the text|
+|Align|ALIGN_CENTER|0|The anchor point will be placed to the center of the text|
+|Align|ALIGN_RIGHT|1|The anchor point will be placed to the right side of the text|
+
+- Reference points:
+|Id|Name|
+|:---:|----|
+|0|(Nothing)|
+|1|Floating item|
+|2|Player position|
 
 ### StaticObject and DynamicObject
 
@@ -130,3 +149,10 @@ Format:
 	characterId filename
 	%u %s
 ```
+
+### Vertex Shader
+
+|Argument name|Type|Description|
+|-------------|----|-----------|
+|ligthColor|uniform vec3 [28]|RGB color (0.0 - 1.0) |
+|ligthInfo|uniform vec3 [28]|Specular 1:on/0:off, distFactor, lightIntensity|

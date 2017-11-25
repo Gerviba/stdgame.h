@@ -28,8 +28,8 @@ struct Player {
 	GLfloat velocity[3];
 	GLfloat height;
 	GLfloat width;
-	/** @deprecated Count jumps instead **/
-	GLboolean jumping;
+	GLuint jump;
+	double lastJump;
 	ActiveObjectInstance *model;
 };
 

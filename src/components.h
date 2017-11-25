@@ -58,6 +58,7 @@ struct TextComponent {
 	FontSize fontSize;
 	char *text; //TODO: free
 	GLfloat color[4];
+	GLfloat baseColor[4];
 	Align align;
 	GLfloat rawMax[3];
 	GLfloat rawMin[3];

@@ -35,9 +35,9 @@
 |C|Coords|C id type x y|
 |M|Message|M x1 y1 x2 y2 line1 (line2)|
 |R|Region|R x1 y1 x2 y2 delatHP gravity velocity soundActivation activateAction|
-|A|TextComponent|A id x y relativeX relativeY message rrggbb alpha|
-|B|ObjectComponent|A id x y relativeX relativeY alignX I(ACTIVE).id |
-|D|ImageComponent|D id path x y z height width|
+|A|TextComponent|A id x y relativeX relativeY message rrggbb alpha fontsize action (3) |
+|B|ObjectComponent|A id x y relativeX relativeY alignX I(ACTIVE).id action (3) |
+|D|ImageComponent|D id path x y z height width action (3) |
 
 - (1) Texture, TextureBlock and Tile lines are only processed in maps and the first loaded menu file.
 - (2) Reference: required and available only for dynamic objects.
@@ -49,6 +49,20 @@
   + `SPAWN` x y z
   + `STATE` GameState (0: MENU/ 1: INGAME/ 2: PAUSE) *(optional, default: 0)*
   + `CURSOR` true/false *(optional, default: false)*
+  + `SCROLL` true/false *(optional, default: false)*
+
+- (3) Action types:
+
+|Action|Effect|
+|----|------|
+|0|(Nothing)|
+|1|Open map selector|
+|2|Open options|
+|3|Open credits|
+|31|Open GitHub|
+|4|Open main menu|
+|5|Start game|
+|-1|Quit game|
 
 ### StaticObject and DynamicObject
 

@@ -1,14 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
-#ifdef _WIN32
-	#include <windows.h>
-	#include <wingdi.h>
-#else
-	#include <sys/time.h>
-#endif /* _WIN32 */
-
 #include "stdgame.h"
 
 // TODO: lehet, hogy ezek nem kellenek
@@ -192,16 +184,6 @@ GLfloat getDistSquared2D(GLfloat a[3], GLfloat b[3]) {
 	return (a[X] - b[X]) * (a[X] - b[X]) + (a[Y] - b[Y]) * (a[Y] - b[Y]);
 }
 
-static unsigned int getTicks(void) {
-	#ifdef _WIN32
-		return GetTickCount();
-	#else
-		struct timeval t;
-		gettimeofday(&t, NULL);
-		return (t.tv_sec * 1000) + (t.tv_usec / 1000);
-	#endif /* _WIN32 */
-}
-
 void onLogicIngame(GameInstance *this, float delta) {
 	DynamicObjectInstance *obj = ((DynamicObjectInstance *) this->map->objects->dynamicInstances->first->data);
 
@@ -294,6 +276,9 @@ void onLogicMenu(GameInstance *this, float delta) {
 	this->camera->position[Z] = this->map->spawn[Z];
 
 	updateCursor(this);
+	this->camera->rotation[Y] = -this->cursor->pointer->position[X] * 2;
+	this->camera->rotation[X] = this->cursor->pointer->position[Y] * 2;
+
 	Iterator it;
 	foreach (it, this->map->menu->components->first) {
 		Component *comp = it->data;
@@ -303,17 +288,15 @@ void onLogicMenu(GameInstance *this, float delta) {
 
 }
 
-void onLogic(GameInstance *this) {
-	static unsigned int prevTicks = 0;
-	unsigned int ticks;
-	float secondsElapsed;
-	int i;
+static GLfloat getDelta() {
+	static GLfloat lastFrame = 0;
+	GLfloat time = glfwGetTime();
+	GLfloat delta = time - lastFrame;
+	lastFrame = time;
+	return delta;
+}
 
-	if (prevTicks == 0)
-		prevTicks = getTicks();
-	ticks = getTicks();
-	secondsElapsed = (float) (ticks - prevTicks) / 1000.0f;
-	prevTicks = ticks;
+void onLogic(GameInstance *this) {
 
 #ifndef DEBUG_MOVEMENT
 	if (this->camera->destinationRotation[Y] > 0) {
@@ -333,6 +316,7 @@ void onLogic(GameInstance *this) {
 	}
 #endif
 
+	int i;
 	Iterator it;
 	foreach (it, this->map->lights->first) {
 		Light *light = it->data;
@@ -350,8 +334,8 @@ void onLogic(GameInstance *this) {
 	this->lighting->numLights = i;
 
 	if (this->state == INGAME)
-		onLogicIngame(this, secondsElapsed);
+		onLogicIngame(this, getDelta());
 	else
-		onLogicMenu(this, secondsElapsed);
+		onLogicMenu(this, getDelta());
 
 }

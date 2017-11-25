@@ -4,12 +4,15 @@
 
 #include "stdgame.h"
 
+static int COUNTCOUNT = 0;
+
 LinkedList newLinkedList(size_t size) {
 	LinkedList list = {0, size, NULL, NULL};
 	return list;
 }
 
 LinkedList* newLinkedListPointer(size_t size) {
+	++COUNTCOUNT;
 	LinkedList *list = new(LinkedList);
 	list->size = 0;
 	list->dataSize = size;
@@ -55,4 +58,8 @@ void listFree(LinkedList *list) {
 	list->size = 0;
 	list->first = NULL;
 	list->last = NULL;
+}
+
+void printCount() {
+	printf("%d\n", COUNTCOUNT);
 }

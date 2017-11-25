@@ -5,7 +5,7 @@
 
 #include "stdgame.h"
 
-static Char* loadChar(char path[], char charId, GLfloat *colors) {
+Char* loadChar(char path[], char charId, GLfloat *colors) {
 	FILE *file;
 	char buff[255];
 
@@ -43,7 +43,7 @@ static Char* loadChar(char path[], char charId, GLfloat *colors) {
 				CharPart part;
 
 				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y], &part.position[Z],
-						&part.type, &part.colorId);
+						(int*) &part.type, &part.colorId);
 				--part.colorId;
 
 				listPush(c->parts, &part);
@@ -123,7 +123,7 @@ Char* getChar(Font *font, char c) {
 	return font->unknown;
 }
 
-static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor) {
+void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor) {
 	Iterator it;
 	foreach (it, c->parts->first) {
 		CharPart part = *(CharPart *)it->data;
@@ -135,7 +135,7 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, -1, 0.0f,
 					0.0f, 1, 0.0f, 0.0f,
-					x + part.position[X], part.position[Y] + 1, z + part.position[Z], 1.0f});
+					x + part.position[X], part.position[Y] + 1 + c->y, z + part.position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -144,7 +144,7 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, cosf(PI + PI / 2), -sinf(PI + PI / 2), 0.0f,
 					0.0f, sinf(PI + PI / 2), cosf(PI + PI / 2), 0.0f,
-					x + part.position[X], part.position[Y], z + part.position[Z] - 1, 1.0f});
+					x + part.position[X], part.position[Y] + c->y, z + part.position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -153,7 +153,7 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					cosf(PI), 0.0f, sinf(PI), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI), 0.0f, cosf(PI), 0.0f,
-					x + part.position[X] + 1, part.position[Y], z + part.position[Z] - 1, 1.0f});
+					x + part.position[X] + 1, part.position[Y] + c->y, z + part.position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -162,7 +162,7 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					cosf(PI / 2), 0.0f, sinf(PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI / 2), 0.0f, cosf(PI / 2), 0.0f,
-					x + part.position[X], part.position[Y], z + part.position[Z] - 1, 1.0f});
+					x + part.position[X], part.position[Y] + c->y, z + part.position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -171,7 +171,7 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 1.0f, 0.0f,
-					x + part.position[X], part.position[Y], z + part.position[Z], 1.0f});
+					x + part.position[X], part.position[Y] + c->y, z + part.position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -180,7 +180,7 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					cosf(PI + PI / 2), 0.0f, sinf(PI + PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI + PI / 2), 0.0f, cosf(PI + PI / 2), 0.0f,
-					x + part.position[X] + 1, part.position[Y], z + part.position[Z], 1.0f});
+					x + part.position[X] + 1, part.position[Y] + c->y, z + part.position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 

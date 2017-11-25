@@ -104,27 +104,26 @@ typedef union Color Color;
 /** PI constant */
 static const float PI = 3.14159265358979323846;
 
-/** @deprecated Use Position.x insted. */
+/** X constant for coordinate arrays */
 #define X 0
-/** @deprecated Use Position.y insted. */
+/** Y constant for coordinate arrays */
 #define Y 1
-/** @deprecated Use Position.z insted. */
+/** Z constant for coordinate arrays */
 #define Z 2
 
-/** @deprecated Use Color.r insted. */
+/** Red constant for color arrays */
 #define R 0
-/** @deprecated Use Color.g insted. */
+/** Green constant for color arrays */
 #define G 1
-/** @deprecated Use Color.b insted. */
+/** Blue constant for color arrays */
 #define B 2
-/** @deprecated Use Color.a insted. */
+/** Alpha constant for color arrays */
 #define A 3
 
 #include <string.h>
-
 #include <gl.h>
 #include <glext.h>
-#include <glu.h>
+#include <glu.h> //TODO: Ez feltétlen kell?
 #include <glfw3.h>
 #include "SOIL.h"
 
@@ -146,5 +145,24 @@ static const float PI = 3.14159265358979323846;
 #define equals(a, b) strcmp(a, b) == 0
 /** Allocate space for new of generic type */
 #define new(x) malloc(sizeof(x))
+
+void initGLFW();
+void createWindow(GameInstance* this, const GLFWvidmode* mode);
+void setupOpenGL(GameInstance* this, double width, double height);
+void setPerspective(GameInstance *this, float fov, float aspect, float near, float far);
+void printVersionInfo();
+void initCursor(GameInstance* this);
+void fixViewport(GameInstance* this);
+void doGameLoop(GameInstance* this);
+void getGameInstance(GameInstance **this);
+
+void onClickEvent(GLFWwindow* window, int button, int action, int mods);
+void onScrollEvent(GLFWwindow* window, double xoffset, double yoffset);
+void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);
+void onErrorEvent(int error, const char* description);
+
+#ifdef DEBUG_MOVEMENT
+void onDebugKeyPress(const char key, int x, int y);
+#endif
 
 #endif /* STDGAME_H__ */

@@ -103,5 +103,7 @@ void freeFont(GameInstance*);
 
 
 Char* getChar(Font*, char);
+void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor);
+Char* loadChar(char path[], char charId, GLfloat *colors);
 
 #endif /* FONT_H_ */

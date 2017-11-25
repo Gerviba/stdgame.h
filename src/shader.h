@@ -19,13 +19,13 @@ GLuint shaderAttachFromFile(GLuint program, GLenum type, const char *filePath);
  * Load shader from file
  * @param filePath The shader file's path
  */
-static char* shaderLoadSource(const char *filePath);
+char* shaderLoadSource(const char *filePath);
 
 /**
  * Compile shader program
  * @param type Vertex or Fragment shader
  * @param filePath The shader file's path
  */
-static GLuint shaderCompileFromFile(GLenum type, const char *filePath);
+GLuint shaderCompileFromFile(GLenum type, const char *filePath);
 
 #endif /* SHADER_H_ */

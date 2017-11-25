@@ -52,8 +52,14 @@ _ _underscore.char
 " _quote.char
 ( _bracket_open.char
 ) _bracket_close.char
+[ _sqbracket_open.char
+] _sqbracket_close.char
 * _coin.char
 $ _heart.char
 ^ _exit.char
 = _play.char
 % _pause.char
+{ _arrow_left.char
+} _arrow_right.char
+~ _arrow_up.char
+` _arrow_down.char

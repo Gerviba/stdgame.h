@@ -100,12 +100,12 @@ GLfloat getAbsoluteY(GameInstance *this, RelativeY relY) {
 
 GLfloat getCursorProjectedX(GameInstance *this, double x) {
 	return this->camera->position[X] + ((this->options->tanFov * (this->camera->position[Z] - 1)) *
-			-((this->options->width / 2 - x) / this->options->width)) * 1.8;
+			-((this->options->width / 2 - x) / this->options->width)) * 2;
 }
 
 GLfloat getCursorProjectedY(GameInstance *this, double y) {
 	return this->camera->position[Y] + ((this->options->tanFov * (this->camera->position[Z] - 1)) *
-			((this->options->height / 2 - y) / this->options->height)) * 1.8 * this->options->aspectRatio;
+			((this->options->height / 2 - y) / this->options->height)) * 2 * this->options->aspectRatio;
 }
 
 GLfloat getFontAlign(GameInstance *this, char str[], FontSize fontSize, Align align) {
@@ -149,22 +149,33 @@ void calcObjectComponentPosition(Component *comp, GameInstance *this) {
 }
 
 void calcTextButton(Component *comp, GameInstance *this) {
+	if (comp->onClick == NULL)
+		return;
+
 	if (comp->text->rawMin[X] <= this->cursor->pointer->position[X] &&
 			comp->text->rawMin[Y] <= this->cursor->pointer->position[Y] &&
 			comp->text->rawMax[X] >= this->cursor->pointer->position[X] &&
 			comp->text->rawMax[Y] >= this->cursor->pointer->position[Y]) {
 
 		if (glfwGetMouseButton(this->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-			setColor(comp->text->color, 0.6, 0.6, 0.6, 1.0);
+			setColor(comp->text->color,
+					comp->text->baseColor[R] * 0.6,
+					comp->text->baseColor[G] * 0.6,
+					comp->text->baseColor[B] * 0.6,
+					comp->text->baseColor[A]);
 		} else {
-			setColor(comp->text->color, 0.8, 0.8, 0.8, 1.0);
+			setColor(comp->text->color,
+					comp->text->baseColor[R] * 0.8,
+					comp->text->baseColor[G] * 0.8,
+					comp->text->baseColor[B] * 0.8,
+					comp->text->baseColor[A]);
 		}
 	} else {
-		setColor(comp->text->color, 1.0, 1.0, 1.0, 1.0);
-	}
-
-	if (glfwGetMouseButton(this->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-		comp->onClick(comp, this);
+		setColor(comp->text->color,
+				comp->text->baseColor[R],
+				comp->text->baseColor[G],
+				comp->text->baseColor[B],
+				comp->text->baseColor[A]);
 	}
 }
 
@@ -173,4 +184,37 @@ void clickStartButton(Component *comp, GameInstance *this) {
 	this->map = loadMap(this, "assets/maps/test2.map");
 	initPlayer(this);
 	updateCamera(this);
+}
+
+void clickOptions(Component *comp, GameInstance *this) {
+	freeMap(this->map);
+	this->map = loadMap(this, "assets/maps/options.menu");
+	updateCamera(this);
+}
+
+void clickCredits(Component *comp, GameInstance *this) {
+	freeMap(this->map);
+	this->map = loadMap(this, "assets/maps/credits.menu");
+	updateCamera(this);
+}
+
+void clickExit(Component *comp, GameInstance *this) {
+	glfwSetWindowShouldClose(this->window, GL_TRUE);
+}
+
+void clickBack(Component *comp, GameInstance *this) {
+	freeMap(this->map);
+	this->map = loadMap(this, "assets/maps/main.menu");
+	updateCamera(this);
+}
+
+void clickOpenGithub() {
+
+#ifdef  __WIN32
+	system("start /c https://github.com/Gerviba/stdgame.h");
+#elif defined APPLE
+	system("open https://github.com/Gerviba/stdgame.h");
+#else
+	system("xdg-open https://github.com/Gerviba/stdgame.h &");
+#endif
 }

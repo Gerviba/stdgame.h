@@ -4,7 +4,7 @@
 #include <string.h>
 #include "stdgame.h"
 
-static char* shaderLoadSource(const char *filePath) {
+char* shaderLoadSource(const char *filePath) {
 	const size_t blockSize = 512;
 	FILE *file;
 	char buff[blockSize];
@@ -43,7 +43,7 @@ static char* shaderLoadSource(const char *filePath) {
 	return source;
 }
 
-static GLuint shaderCompileFromFile(GLenum type, const char *filePath) {
+GLuint shaderCompileFromFile(GLenum type, const char *filePath) {
 	char *source;
 	GLuint shader;
 	GLint length, result;

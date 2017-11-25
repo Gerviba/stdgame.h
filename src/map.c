@@ -4,10 +4,13 @@
 #include <ctype.h>
 #include "stdgame.h"
 
-extern void renderTextComponent(Component*, GameInstance*);
-extern void calcTextButton(Component*, GameInstance*);
-extern void calcObjectComponentPosition(Component*, GameInstance*);
+//TODO: Remove them from here:
+extern void clickExit(Component*, GameInstance*);
+extern void clickCredits(Component*, GameInstance*);
+extern void clickBack(Component*, GameInstance*);
+extern void clickOpenGithub(Component*, GameInstance*);
 extern void clickStartButton(Component*, GameInstance*);
+extern void clickOptions(Component*, GameInstance*);
 
 void loadTexture(GLuint *textureId, char path[]) {
 	glGenTextures(1, textureId);
@@ -28,7 +31,8 @@ void loadTexture(GLuint *textureId, char path[]) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
-void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align, GLfloat x, GLfloat y, FontSize size) {
+void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align,
+		GLfloat x, GLfloat y, FontSize size) {
 	Component comp;
 	comp.id = id;
 	comp.text = new(TextComponent);
@@ -38,7 +42,6 @@ void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY r
 	comp.text->fontSize = size;
 	setPosition(comp.position, x, y, 1);
 	comp.text->align = align;
-
 	setColor(comp.text->color, 1, 1, 1, 1);
 
 	comp.text->text = malloc(sizeof(char) * (strlen(text) + 1));
@@ -50,6 +53,19 @@ void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY r
 
 	comp.onRender = renderTextComponent;
 	listPush(map->menu->components, &comp);
+}
+
+void (*getAction(int id))(Component*, GameInstance*) {
+	switch (id) {
+	case 0: return NULL;
+	case 2: return clickOptions;
+	case 3: return clickCredits;
+	case 31: return clickOpenGithub;
+	case 4: return clickBack;
+	case 5: return clickStartButton;
+	case -1: return clickExit;
+	default: return NULL;
+	}
 }
 
 Map* loadMap(GameInstance *this, char path[]) {
@@ -70,9 +86,10 @@ Map* loadMap(GameInstance *this, char path[]) {
 	map->menu = new(Menu);
 	map->menu->components = newList(Component);
 	map->menu->useCursor = GL_FALSE;
+	map->menu->onClick = NULL;
+	map->menu->onScroll = NULL;
 
 	this->state = MENU;
-
 	FILE *file;
 	char buff[255];
 	DEBUG("Map", "Loading map: %s", path);
@@ -109,10 +126,13 @@ Map* loadMap(GameInstance *this, char path[]) {
 						addTextComponent(map, "300 *", 101, X_RIGHT, Y_TOP, ALIGN_RIGHT, -(1.0 / 16) * 8, -(1.0 / 16) * 9, FS_NORMAL_DPI);
 						addTextComponent(map, "Press F to open", 102, X_CENTER, Y_CENTER, ALIGN_CENTER, 0, 0, FS_LOW_DPI);
 					}
-
+					map->menu->onClick = this->state == INGAME ? NULL : onClickMenu;
 				} else if (equals(type, "CURSOR")) {
 					char value[6];
 					map->menu->useCursor = sscanf(buff, "$ %*s %s", value) == 1 && equals(value, "true");
+				} else if (equals(type, "SCROLL")) {
+					char value[6];
+					map->menu->onScroll = sscanf(buff, "$ %*s %s", value) == 1 && equals(value, "true") ? onScrollMenu : NULL;
 				}
 				break;
 			}
@@ -286,6 +306,7 @@ Map* loadMap(GameInstance *this, char path[]) {
 					}
 
 					listPush(map->objects->activeInstances, &aoi);
+
 				} else {
 					WARNING("Invalid object type: '%s'", type);
 				}
@@ -295,15 +316,23 @@ Map* loadMap(GameInstance *this, char path[]) {
 				Component comp;
 				comp.text = new(TextComponent);
 				comp.type = CT_TEXT;
+
 				char text[255];
 				unsigned int r, g, b;
-				sscanf(buff, "A %u %f %f %f %d %d %d %s %02x%02x%02x %f %d", &comp.id,
+				int action;
+
+				sscanf(buff, "A %u %f %f %f %d %d %d %s %02x%02x%02x %f %d %d", &comp.id,
 						&comp.position[X], &comp.position[Y], &comp.position[Z],
 						(int*) &comp.relativeX, (int*) &comp.relativeY, (int*) &comp.text->align,
-						text, &r, &g, &b, &comp.text->color[A], (int*) &comp.text->fontSize);
-				comp.text->color[R] = (float) r / 255;
-				comp.text->color[G] = (float) g / 255;
-				comp.text->color[B] = (float) b / 255;
+						text, &r, &g, &b, &comp.text->baseColor[A], (int*) &comp.text->fontSize, &action);
+				comp.text->baseColor[R] = (float) r / 255;
+				comp.text->baseColor[G] = (float) g / 255;
+				comp.text->baseColor[B] = (float) b / 255;
+				setColor(comp.text->color,
+						comp.text->baseColor[R],
+						comp.text->baseColor[G],
+						comp.text->baseColor[B],
+						comp.text->baseColor[A]);
 				comp.text->text = malloc(sizeof(char) * (strlen(text) + 1));
 				strcpy(comp.text->text, text);
 
@@ -314,7 +343,7 @@ Map* loadMap(GameInstance *this, char path[]) {
 
 				comp.onRender = renderTextComponent;
 				comp.onCalc = calcTextButton;
-				comp.onClick = clickStartButton;
+				comp.onClick = getAction(action);
 
 				listPush(map->menu->components, &comp);
 				break;

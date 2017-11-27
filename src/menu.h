@@ -28,8 +28,12 @@ void loadDefaultOptions(GameInstance* this);
 
 void loadOptions(GameInstance *this);
 
-void updateControlsMods(GameInstance* this, int mods, int key);
+void saveOptions(GameInstance *this);
 
-void updateControlsKey(unsigned int key, GameInstance* this);
+void updateControlsMods(GameInstance *this, int mods, int key);
+
+void updateControlsKey(unsigned int key, GameInstance *this);
+
+GLboolean updateControlsMouse(GameInstance *this, int button);
 
 #endif /* MENU_H_ */

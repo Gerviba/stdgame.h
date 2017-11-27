@@ -18,26 +18,32 @@ int main(int argc, char *argv[]) {
 
 	loadDefaultOptions(this);
 	loadOptions(this);
-	initGLFW();
-	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-	createWindow(this, mode);
-	setupOpenGL(this, mode->width, mode->height);
-	printVersionInfo();
-	initCursor(this);
-	gameInit(this);
-	fixViewport(this);
 
-	doGameLoop(this);
+	do {
+		this->options->reloadProgram = GL_FALSE;
+		initGLFW(this);
+		const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		createWindow(this, mode);
+		setupWindowSize(mode, this);
+		printVersionInfo();
+		initCursor(this);
+		gameInit(this);
+		fixViewport(this);
+
+		doGameLoop(this);
+
+		saveOptions(this);
+		glfwDestroyWindow(this->window);
+		glfwTerminate();
+	} while(this->options->reloadProgram);
 
 	DEBUG("Info", "Closing game");
-	saveOptions(this);
-	glfwDestroyWindow(this->window);
-	glfwTerminate();
+
 	printCount();
 	exit(EXIT_SUCCESS);
 }
 
-void initGLFW() {
+void initGLFW(GameInstance *this) {
 	glfwSetErrorCallback(onErrorEvent);
 
 	if (!glfwInit()) {
@@ -45,15 +51,29 @@ void initGLFW() {
 		exit(EXIT_FAILURE);
 	}
 
-	glfwWindowHint(GLFW_SAMPLES, 16);
+	if (this->options->msaa != 0)
+		glfwWindowHint(GLFW_SAMPLES, this->options->msaa);
+	DEBUG("Info", "MSAA: x%d", this->options->msaa);
+
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 }
 
 void createWindow(GameInstance* this, const GLFWvidmode* mode) {
-	this->window = glfwCreateWindow(mode->width, mode->height,
-			"stdgame | The Epic Platformer Game", glfwGetPrimaryMonitor(),
-			NULL);
+	if (this->options->fullscreen) {
+		this->window = glfwCreateWindow(mode->width, mode->height,
+				"stdgame | The Epic Platformer Game", glfwGetPrimaryMonitor(), NULL);
+	} else {
+		if (this->options->windowedWidth == 0)
+			this->options->windowedWidth = this->options->width;
+		if (this->options->windowedHeight == 0)
+			this->options->windowedHeight = this->options->height;
+
+		this->window = glfwCreateWindow(this->options->windowedWidth,
+				this->options->windowedHeight, "stdgame | The Epic Platformer Game",
+				NULL, NULL);
+	}
+
 	this->options->height = mode->height;
 	this->options->width = mode->width;
 
@@ -78,11 +98,12 @@ void createWindow(GameInstance* this, const GLFWvidmode* mode) {
 	glfwSwapInterval(1);
 }
 
-void setupOpenGL(GameInstance* this, double width, double height) {
+void setupOpenGL(GameInstance *this, double width, double height) {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClearDepth(1.0f);
 
-	glEnable(GL_MULTISAMPLE);
+	if (this->options->msaa != 0)
+		glEnable(GL_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_CULL_FACE);
@@ -95,6 +116,21 @@ void setupOpenGL(GameInstance* this, double width, double height) {
 	glLoadIdentity();
 	setPerspective(this, PI / 4.0f, (float) width / (float) height, 0.1f, 200.0f);
 	glMatrixMode(GL_MODELVIEW);
+}
+
+void setupWindowSize(const GLFWvidmode* mode, GameInstance* this) {
+	if (this->options->fullscreen) {
+		setupOpenGL(this, mode->width, mode->height);
+	} else {
+		if (this->options->windowedWidth == 0)
+			this->options->windowedWidth = this->options->width;
+
+		if (this->options->windowedHeight == 0)
+			this->options->windowedHeight = this->options->height;
+
+		setupOpenGL(this, this->options->windowedWidth,
+				this->options->windowedHeight);
+	}
 }
 
 void setPerspective(GameInstance *this, float fov, float aspect, float near, float far) {
@@ -174,10 +210,16 @@ void onErrorEvent(int error, const char* description) {
 }
 
 void onClickEvent(GLFWwindow* window, int button, int action, int mods) {
+	if (action == GLFW_RELEASE) {
+		GameInstance *this = NULL;
+		getGameInstance(&this);
+		if (updateControlsMouse(this, button))
+			return;
+	}
+
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
     	GameInstance *this = NULL;
 		getGameInstance(&this);
-
 		if (this->map->menu->onClick != NULL)
 			this->map->menu->onClick(this);
     }
@@ -277,9 +319,9 @@ void onDebugKeyPress(const char key, int x, int y) {
 		case 'M': mode = 2; break;
 		case 'B': scanf("%d", &modelId); break;
 		case 'V': printf("POS: %f %f %f\nROT: %f %f %f\nSCL: %f %f %f\n",
-				obj->position[0], obj->position[1], obj->position[2],
-				obj->rotation[0], obj->rotation[1], obj->rotation[2],
-				obj->scale[0], obj->scale[1], obj->scale[2]);
+				obj->position[X], obj->position[Y], obj->position[Z],
+				obj->rotation[X], obj->rotation[Y], obj->rotation[Z],
+				obj->scale[X], obj->scale[Y], obj->scale[Z]);
 		break;
 
 		default:

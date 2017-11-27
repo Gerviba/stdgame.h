@@ -153,6 +153,7 @@ static const float PI = 3.14159265358979323846;
 void initGLFW();
 void createWindow(GameInstance* this, const GLFWvidmode* mode);
 void setupOpenGL(GameInstance* this, double width, double height);
+void setupWindowSize(const GLFWvidmode* mode, GameInstance* this);
 void setPerspective(GameInstance *this, float fov, float aspect, float near, float far);
 void printVersionInfo();
 void initCursor(GameInstance* this);

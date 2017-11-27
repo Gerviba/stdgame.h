@@ -160,7 +160,6 @@ void onRender(GameInstance *this) {
 	if (this->map->menu->useCursor)
 		renderActiveObject(this, this->cursor->pointer);
 
-    // TODO: Cleanup
     glUseProgram(0);
 
 	updateCamera(this);
@@ -193,16 +192,19 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	if (isActionPerformed(this, &this->options->moveLeft)) {
 		deltaMoveX += -delta * 2;
 		obj->rotation[Y] = 0;
-		this->camera->destinationRotation[Y] = 2;
+		if (this->options->cameraMovement)
+			this->camera->destinationRotation[Y] = 2;
 	}
 
 	if (isActionPerformed(this, &this->options->moveRight)) {
 		deltaMoveX += delta * 2;
 		obj->rotation[Y] = 180;
-		this->camera->destinationRotation[Y] = -2;
+		if (this->options->cameraMovement)
+			this->camera->destinationRotation[Y] = -2;
 	}
 
-	if (!isActionPerformed(this, &this->options->moveLeft) &&
+	if (this->options->cameraMovement &&
+			!isActionPerformed(this, &this->options->moveLeft) &&
 			!isActionPerformed(this, &this->options->moveRight)) {
 		this->camera->destinationRotation[Y] = 0;
 	}

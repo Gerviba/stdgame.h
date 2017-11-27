@@ -12,6 +12,8 @@ extern void clickOpenGithub(Component*, GameInstance*);
 extern void clickStartButton(Component*, GameInstance*);
 extern void clickOptions(Component*, GameInstance*);
 extern void clickControllsSet(Component*, GameInstance*);
+extern void clickGraphicsSet(Component*, GameInstance*);
+extern void calcOptionsGraphicsButton(Component*, GameInstance*);
 
 void loadTexture(GLuint *textureId, char path[]) {
 	glGenTextures(1, textureId);
@@ -60,6 +62,7 @@ void (*getAction(int id)) (Component*, GameInstance*) {
 	switch (id) {
 	case 0: return NULL;
 	case 2: return clickOptions;
+	case 21: return clickGraphicsSet;
 	case 22: return clickControllsSet;
 	case 3: return clickCredits;
 	case 31: return clickOpenGithub;
@@ -148,14 +151,14 @@ void getKeyName(GameInstance *this, char *str, int key) {
 		case GLFW_KEY_PAUSE: strcpy(str, "PAUSE"); break;
 		case GLFW_KEY_PRINT_SCREEN: strcpy(str, "PRNTSCR"); break;
 
-		case GLFW_MOUSE_BUTTON_1: strcpy(str, "MOUSE-1"); break;
-		case GLFW_MOUSE_BUTTON_2: strcpy(str, "MOUSE-2"); break;
-		case GLFW_MOUSE_BUTTON_3: strcpy(str, "MOUSE-3"); break;
-		case GLFW_MOUSE_BUTTON_4: strcpy(str, "MOUSE-4"); break;
-		case GLFW_MOUSE_BUTTON_5: strcpy(str, "MOUSE-5"); break;
-		case GLFW_MOUSE_BUTTON_6: strcpy(str, "MOUSE-6"); break;
-		case GLFW_MOUSE_BUTTON_7: strcpy(str, "MOUSE-7"); break;
-		case GLFW_MOUSE_BUTTON_8: strcpy(str, "MOUSE-8"); break;
+		case GLFW_MOUSE_BUTTON_1: strcpy(str, "M-LEFT"); break;
+		case GLFW_MOUSE_BUTTON_2: strcpy(str, "M-RIGHT"); break;
+		case GLFW_MOUSE_BUTTON_3: strcpy(str, "M-MID"); break;
+		case GLFW_MOUSE_BUTTON_4: strcpy(str, "M-4"); break;
+		case GLFW_MOUSE_BUTTON_5: strcpy(str, "M-5"); break;
+		case GLFW_MOUSE_BUTTON_6: strcpy(str, "M-6"); break;
+		case GLFW_MOUSE_BUTTON_7: strcpy(str, "M-7"); break;
+		case GLFW_MOUSE_BUTTON_8: strcpy(str, "M-8"); break;
 		default: strcpy(str, "N/A"); break;
 		}
 	}
@@ -172,14 +175,14 @@ void getOptionCaption(GameInstance *this, char *name, char *str, int id) {
 		getKeyName(this, str, this->options->sneek.id[id]);
 	} else if (equals(name, "attack")) {
 		getKeyName(this, str, this->options->attack.id[id]);
+	} else if (equals(name, "use")) {
+		getKeyName(this, str, this->options->use.id[id]);
 	} else if (equals(name, "spell1")) {
 		getKeyName(this, str, this->options->spell1.id[id]);
 	} else if (equals(name, "spell2")) {
 		getKeyName(this, str, this->options->spell2.id[id]);
 	} else if (equals(name, "spell3")) {
 		getKeyName(this, str, this->options->spell3.id[id]);
-	} else if (equals(name, "spell4")) {
-		getKeyName(this, str, this->options->spell4.id[id]);
 	} else if (equals(name, "menu")) {
 		getKeyName(this, str, this->options->menu.id[id]);
 	}
@@ -483,7 +486,7 @@ Map* loadMap(GameInstance *this, char path[]) {
 						comp.text->text[i] = ' ';
 
 				comp.onRender = renderTextComponent;
-				comp.onCalc = calcTextButton;
+				comp.onCalc = action == 21 ? calcOptionsGraphicsButton : calcTextButton;
 				comp.onClick = getAction(action);
 
 				if (action == 22) {

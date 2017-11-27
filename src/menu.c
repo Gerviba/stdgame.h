@@ -38,15 +38,21 @@ void onScrollMenu(GameInstance *this, double offset) {
 }
 
 void setOptionsDefaults(GameInstance* this) {
+	this->options->msaa = 16;
+	this->options->fullscreen = GL_TRUE;
+	this->options->windowedHeight = 0;
+	this->options->windowedWidth = 0;
+	this->options->cameraMovement = GL_TRUE;
+
 	array3(this->options->moveLeft.id, GLFW_KEY_A, GLFW_KEY_LEFT, -1.0f);
-	array3(this->options->moveRight.id, GLFW_KEY_W, GLFW_KEY_RIGHT, -1.0f);
+	array3(this->options->moveRight.id, GLFW_KEY_D, GLFW_KEY_RIGHT, -1.0f);
 	array3(this->options->jump.id, GLFW_KEY_SPACE, GLFW_KEY_W, GLFW_KEY_UP);
 	array3(this->options->sneek.id, GLFW_KEY_S, GLFW_KEY_DOWN, -1.0f);
 	array3(this->options->attack.id, GLFW_MOUSE_BUTTON_LEFT, GLFW_KEY_LEFT_CONTROL, GLFW_KEY_RIGHT_CONTROL);
-	array3(this->options->spell1.id, GLFW_KEY_F1, GLFW_KEY_1, -1.0f);
-	array3(this->options->spell2.id, GLFW_KEY_F2, GLFW_KEY_2, -1.0f);
-	array3(this->options->spell3.id, GLFW_KEY_F3, GLFW_KEY_3, -1.0f);
-	array3(this->options->spell4.id, GLFW_KEY_F4, GLFW_KEY_4, -1.0f);
+	array3(this->options->use.id, GLFW_KEY_F, -1.0f, -1.0f);
+	array3(this->options->spell1.id, GLFW_KEY_F2, GLFW_KEY_2, -1.0f);
+	array3(this->options->spell2.id, GLFW_KEY_F3, GLFW_KEY_3, -1.0f);
+	array3(this->options->spell3.id, GLFW_KEY_F4, GLFW_KEY_4, -1.0f);
 	array3(this->options->menu.id, GLFW_KEY_ESCAPE, GLFW_KEY_PAUSE, -1);
 }
 
@@ -64,15 +70,21 @@ void loadDefaultOptions(GameInstance *this) {
 			&this->options->jump,
 			&this->options->sneek,
 			&this->options->attack,
+			&this->options->use,
 			&this->options->spell1,
 			&this->options->spell2,
 			&this->options->spell3,
-			&this->options->spell4,
 			&this->options->menu,
 	};
 
 	int optionVersion = CURRENT_OPTIONS_VERSION;
 	fwrite(&optionVersion, sizeof(int), 1, file);
+
+	fwrite(&this->options->msaa, sizeof(GLuint), 1, file);
+	fwrite(&this->options->fullscreen, sizeof(GLboolean), 1, file);
+	fwrite(&this->options->height, sizeof(GLuint), 1, file);
+	fwrite(&this->options->width, sizeof(GLuint), 1, file);
+	fwrite(&this->options->cameraMovement, sizeof(GLboolean), 1, file);
 
 	int i;
 	for (i = 0; i < 10; ++i)
@@ -95,10 +107,10 @@ void loadOptions(GameInstance *this) {
 			&this->options->jump,
 			&this->options->sneek,
 			&this->options->attack,
+			&this->options->use,
 			&this->options->spell1,
 			&this->options->spell2,
 			&this->options->spell3,
-			&this->options->spell4,
 			&this->options->menu,
 	};
 
@@ -110,6 +122,12 @@ void loadOptions(GameInstance *this) {
 		setOptionsDefaults(this);
 		return;
 	}
+
+	fread(&this->options->msaa, sizeof(GLuint), 1, file);
+	fread(&this->options->fullscreen, sizeof(GLboolean), 1, file);
+	fread(&this->options->height, sizeof(GLuint), 1, file);
+	fread(&this->options->width, sizeof(GLuint), 1, file);
+	fread(&this->options->cameraMovement, sizeof(GLboolean), 1, file);
 
 	int i;
 	for (i = 0; i < 10; ++i)
@@ -132,15 +150,21 @@ void saveOptions(GameInstance *this) {
 			&this->options->jump,
 			&this->options->sneek,
 			&this->options->attack,
+			&this->options->use,
 			&this->options->spell1,
 			&this->options->spell2,
 			&this->options->spell3,
-			&this->options->spell4,
 			&this->options->menu,
 	};
 
 	int optionVersion = CURRENT_OPTIONS_VERSION;
 	fwrite(&optionVersion, sizeof(int), 1, file);
+
+	fwrite(&this->options->msaa, sizeof(GLuint), 1, file);
+	fwrite(&this->options->fullscreen, sizeof(GLboolean), 1, file);
+	fwrite(&this->options->height, sizeof(GLuint), 1, file);
+	fwrite(&this->options->width, sizeof(GLuint), 1, file);
+	fwrite(&this->options->cameraMovement, sizeof(GLboolean), 1, file);
 
 	int i;
 	for (i = 0; i < 10; ++i)
@@ -153,7 +177,7 @@ void updateControlsKey(unsigned int key, GameInstance* this) {
 	if (this->options->selectedToSet != NULL) {
 		key = toupper(key);
 
-		int id = 0, i = 0;
+		int id = 1, i = 0;
 		while (this->options->selectedToSet->text->text[i] != '\0') {
 			if (this->options->selectedToSet->text->text[i] == ' ')
 				++id;
@@ -164,25 +188,25 @@ void updateControlsKey(unsigned int key, GameInstance* this) {
 			id = 0;
 
 		if (equals(this->options->selectedToSet->value->value, "moveLeft"))
-			this->options->moveLeft.id[0] = key;
+			this->options->moveLeft.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "moveRight"))
-			this->options->moveRight.id[0] = key;
+			this->options->moveRight.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "jump"))
-			this->options->jump.id[0] = key;
+			this->options->jump.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "sneek"))
-			this->options->sneek.id[0] = key;
+			this->options->sneek.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "attack"))
-			this->options->attack.id[0] = key;
+			this->options->attack.id[id] = key;
+		else if (equals(this->options->selectedToSet->value->value, "use"))
+			this->options->use.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "spell1"))
-			this->options->spell1.id[0] = key;
+			this->options->spell1.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "spell2"))
-			this->options->spell2.id[0] = key;
+			this->options->spell2.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "spell3"))
-			this->options->spell3.id[0] = key;
-		else if (equals(this->options->selectedToSet->value->value, "spell4"))
-			this->options->spell4.id[0] = key;
+			this->options->spell3.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "menu"))
-			this->options->menu.id[0] = key;
+			this->options->menu.id[id] = key;
 
 		char str[12], finalStr[37];
 		getOptionCaption(this, this->options->selectedToSet->value->value, str, 0);
@@ -199,6 +223,9 @@ void updateControlsKey(unsigned int key, GameInstance* this) {
 		}
 
 		strcpy(this->options->selectedToSet->text->text, finalStr);
+		setColor(this->options->selectedToSet->text->baseColor,
+				0.992156863f, 0.909803922f, 0.529411765f,
+				this->options->selectedToSet->text->baseColor[A]);
 		this->options->selectedToSet = NULL;
 	}
 }
@@ -226,14 +253,14 @@ void updateControlsMods(GameInstance* this, int mods, int key) {
 			this->options->sneek.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "attack"))
 			this->options->attack.id[id] = key;
+		else if (equals(this->options->selectedToSet->value->value, "use"))
+			this->options->use.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "spell1"))
 			this->options->spell1.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "spell2"))
 			this->options->spell2.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "spell3"))
 			this->options->spell3.id[id] = key;
-		else if (equals(this->options->selectedToSet->value->value, "spell4"))
-			this->options->spell4.id[id] = key;
 		else if (equals(this->options->selectedToSet->value->value, "menu"))
 			this->options->menu.id[id] = key;
 
@@ -252,6 +279,66 @@ void updateControlsMods(GameInstance* this, int mods, int key) {
 		}
 
 		strcpy(this->options->selectedToSet->text->text, finalStr);
+		setColor(this->options->selectedToSet->text->baseColor,
+				0.992156863f, 0.909803922f, 0.529411765f,
+				this->options->selectedToSet->text->baseColor[A]);
 		this->options->selectedToSet = NULL;
 	}
+}
+
+GLboolean updateControlsMouse(GameInstance *this, int button) {
+	if (this->options->selectedToSet != NULL) {
+		int id = 1, i = 0;
+		while (this->options->selectedToSet->text->text[i] != '\0') {
+			if (this->options->selectedToSet->text->text[i] == ' ')
+				++id;
+			++i;
+		}
+
+		if (equals(this->options->selectedToSet->text->text, "[-]"))
+			id = 0;
+
+		if (equals(this->options->selectedToSet->value->value, "moveLeft"))
+			this->options->moveLeft.id[id] = button;
+		else if (equals(this->options->selectedToSet->value->value, "moveRight"))
+			this->options->moveRight.id[id] = button;
+		else if (equals(this->options->selectedToSet->value->value, "jump"))
+			this->options->jump.id[id] = button;
+		else if (equals(this->options->selectedToSet->value->value, "sneek"))
+			this->options->sneek.id[id] = button;
+		else if (equals(this->options->selectedToSet->value->value, "attack"))
+			this->options->attack.id[id] = button;
+		else if (equals(this->options->selectedToSet->value->value, "use"))
+			this->options->use.id[id] = button;
+		else if (equals(this->options->selectedToSet->value->value, "spell1"))
+			this->options->spell1.id[id] = button;
+		else if (equals(this->options->selectedToSet->value->value, "spell2"))
+			this->options->spell2.id[id] = button;
+		else if (equals(this->options->selectedToSet->value->value, "spell3"))
+			this->options->spell3.id[id] = button;
+		else if (equals(this->options->selectedToSet->value->value, "menu"))
+			this->options->menu.id[id] = button;
+
+		char str[12], finalStr[37];
+		getOptionCaption(this, this->options->selectedToSet->value->value, str, 0);
+		strcpy(finalStr, str);
+		getOptionCaption(this, this->options->selectedToSet->value->value, str, 1);
+		if (!equals(str, "N/A")) {
+			strcat(finalStr, " ");
+			strcat(finalStr, str);
+			getOptionCaption(this, this->options->selectedToSet->value->value, str, 2);
+			if (!equals(str, "N/A")) {
+				strcat(finalStr, " ");
+				strcat(finalStr, str);
+			}
+		}
+
+		strcpy(this->options->selectedToSet->text->text, finalStr);
+		setColor(this->options->selectedToSet->text->baseColor,
+				0.992156863f, 0.909803922f, 0.529411765f,
+				this->options->selectedToSet->text->baseColor[A]);
+		this->options->selectedToSet = NULL;
+		return GL_TRUE;
+	}
+	return GL_FALSE;
 }

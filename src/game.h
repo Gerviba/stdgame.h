@@ -60,6 +60,8 @@ struct Options {
 	GLboolean fullscreen;
 	GLuint height;
 	GLuint width;
+	GLuint windowedHeight;
+	GLuint windowedWidth;
 	GLboolean shadow;
 	GLboolean cameraMovement;
 	GLfloat tanFov;
@@ -70,13 +72,14 @@ struct Options {
 	InputActionWrapper jump;
 	InputActionWrapper sneek;
 	InputActionWrapper attack;
+	InputActionWrapper use;
 	InputActionWrapper spell1;
 	InputActionWrapper spell2;
 	InputActionWrapper spell3;
-	InputActionWrapper spell4;
 	InputActionWrapper menu;
 
 	Component *selectedToSet;
+	GLboolean reloadProgram;
 };
 
 struct ShaderInfo {
@@ -144,7 +147,7 @@ union Color {
 };
 
 /** Color value setter */
-#define setColor(__color, r, g, b, a) {__color[0] = r; __color[1] = g; __color[2] = b; __color[3] = a;}
+#define setColor(color, r, g, b, a) {color[0] = r; color[1] = g; color[2] = b; color[3] = a;}
 
 /** Position value setter */
 #define setPosition(position, x, y, z) {position[0] = x; position[1] = y; position[2] = z;}

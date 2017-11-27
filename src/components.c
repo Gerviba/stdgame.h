@@ -178,6 +178,97 @@ void calcTextButton(Component *comp, GameInstance *this) {
 	}
 }
 
+void calcOptionsGraphicsButton(Component *comp, GameInstance *this) {
+	Iterator it;
+	foreach (it, this->map->menu->components->first) {
+		Component *temp = it->data;
+		if (temp->type == CT_TEXT && temp->id == 11) { /**< NO MSAA */
+			if (this->options->msaa == 0) {
+				setColor(temp->text->baseColor, 0.992156863f, 0.909803922f, 0.529411765f,
+						temp->text->baseColor[A]);
+			} else {
+				setColor(temp->text->baseColor, 1.0f, 1.0f, 1.0f,
+						temp->text->baseColor[A]);
+			}
+		} else if (temp->type == CT_TEXT && temp->id == 12) { /**< x4 MSAA */
+			if (this->options->msaa == 4) {
+				setColor(temp->text->baseColor, 0.992156863f, 0.909803922f, 0.529411765f,
+						temp->text->baseColor[A]);
+			} else {
+				setColor(temp->text->baseColor, 1.0f, 1.0f, 1.0f,
+						temp->text->baseColor[A]);
+			}
+		} else if (temp->type == CT_TEXT && temp->id == 13) { /**< x8 MSAA */
+			if (this->options->msaa == 8) {
+				setColor(temp->text->baseColor, 0.992156863f, 0.909803922f, 0.529411765f,
+						temp->text->baseColor[A]);
+			} else {
+				setColor(temp->text->baseColor, 1.0f, 1.0f, 1.0f,
+						temp->text->baseColor[A]);
+			}
+		} else if (temp->type == CT_TEXT && temp->id == 14) { /**< x16 MSAA */
+			if (this->options->msaa == 16) {
+				setColor(temp->text->baseColor, 0.992156863f, 0.909803922f, 0.529411765f,
+						temp->text->baseColor[A]);
+			} else {
+				setColor(temp->text->baseColor, 1.0f, 1.0f, 1.0f,
+						temp->text->baseColor[A]);
+			}
+		} else if (temp->type == CT_TEXT && temp->id == 21) { /**< NO FULLSCREEN */
+			if (this->options->fullscreen) {
+				setColor(temp->text->baseColor, 1.0f, 1.0f, 1.0f,
+						temp->text->baseColor[A]);
+			} else {
+				setColor(temp->text->baseColor, 0.992156863f, 0.909803922f, 0.529411765f,
+						temp->text->baseColor[A]);
+			}
+		} else if (temp->type == CT_TEXT && temp->id == 22) { /**< FULLSCREEN */
+			if (!this->options->fullscreen) {
+				setColor(temp->text->baseColor, 1.0f, 1.0f, 1.0f,
+						temp->text->baseColor[A]);
+			} else {
+				setColor(temp->text->baseColor, 0.992156863f, 0.909803922f, 0.529411765f,
+						temp->text->baseColor[A]);
+			}
+		} else if (temp->type == CT_TEXT && temp->id == 31) { /**< NO CAMERA MOVEMENT */
+			if (this->options->cameraMovement) {
+				setColor(temp->text->baseColor, 1.0f, 1.0f, 1.0f,
+						temp->text->baseColor[A]);
+			} else {
+				setColor(temp->text->baseColor, 0.992156863f, 0.909803922f, 0.529411765f,
+						temp->text->baseColor[A]);
+			}
+		} else if (temp->type == CT_TEXT && temp->id == 32) { /**< CAMERA MOVEMENT */
+			if (!this->options->cameraMovement) {
+				setColor(temp->text->baseColor, 1.0f, 1.0f, 1.0f,
+						temp->text->baseColor[A]);
+			} else {
+				setColor(temp->text->baseColor, 0.992156863f, 0.909803922f, 0.529411765f,
+						temp->text->baseColor[A]);
+			}
+		} else if (temp->type == CT_TEXT && temp->id == 41) { /**< RESOLUTION */
+			if (this->options->windowedWidth == 0) {
+				setColor(temp->text->baseColor, 1.0f, 1.0f, 1.0f,
+						temp->text->baseColor[A]);
+			} else {
+				setColor(temp->text->baseColor, 0.992156863f, 0.909803922f, 0.529411765f,
+						temp->text->baseColor[A]);
+			}
+		} else if (temp->type == CT_TEXT && temp->id == 42) { /**< RESOLUTION */
+			if (this->options->windowedWidth != 0) {
+				setColor(temp->text->baseColor, 1.0f, 1.0f, 1.0f,
+						temp->text->baseColor[A]);
+			} else {
+				setColor(temp->text->baseColor, 0.992156863f, 0.909803922f, 0.529411765f,
+						temp->text->baseColor[A]);
+			}
+		}
+
+	}
+
+	calcTextButton(comp, this);
+}
+
 void clickStartButton(Component *comp, GameInstance *this) {
 	freeMap(this->map);
 	this->map = loadMap(this, "assets/maps/test2.map");
@@ -202,6 +293,10 @@ void clickExit(Component *comp, GameInstance *this) {
 }
 
 void clickBack(Component *comp, GameInstance *this) {
+	if (this->options->reloadProgram) {
+		glfwSetWindowShouldClose(this->window, GL_TRUE);
+		return;
+	}
 	freeMap(this->map);
 	this->map = loadMap(this, "assets/maps/main.menu");
 	updateCamera(this);
@@ -220,6 +315,7 @@ void clickControllsSet(Component *comp, GameInstance *this) {
 		return;
 
 	strcpy(comp->text->text, "[-]");
+	setColor(comp->text->baseColor, 1.0f, 0.0f, 0.0f, comp->text->baseColor[A]);
 
 	if (equals(this->options->selectedToSet->value->value, "moveLeft"))
 		array3(this->options->moveLeft.id, -1.0f, -1.0f, -1.0f);
@@ -231,16 +327,53 @@ void clickControllsSet(Component *comp, GameInstance *this) {
 		array3(this->options->sneek.id, -1.0f, -1.0f, -1.0f);
 	else if (equals(this->options->selectedToSet->value->value, "attack"))
 		array3(this->options->attack.id, -1.0f, -1.0f, -1.0f);
+	else if (equals(this->options->selectedToSet->value->value, "use"))
+		array3(this->options->use.id, -1.0f, -1.0f, -1.0f);
 	else if (equals(this->options->selectedToSet->value->value, "spell1"))
 		array3(this->options->spell1.id, -1.0f, -1.0f, -1.0f);
 	else if (equals(this->options->selectedToSet->value->value, "spell2"))
 		array3(this->options->spell2.id, -1.0f, -1.0f, -1.0f);
 	else if (equals(this->options->selectedToSet->value->value, "spell3"))
 		array3(this->options->spell3.id, -1.0f, -1.0f, -1.0f);
-	else if (equals(this->options->selectedToSet->value->value, "spell4"))
-		array3(this->options->spell4.id, -1.0f, -1.0f, -1.0f);
 	else if (equals(this->options->selectedToSet->value->value, "menu"))
 		array3(this->options->menu.id, -1.0f, -1.0f, -1.0f);
+}
+
+void clickGraphicsSet(Component *comp, GameInstance *this) {
+	if (comp->id == 11) {
+		this->options->msaa = 0;
+		this->options->reloadProgram = GL_TRUE;
+	} else if (comp->id == 12) {
+		this->options->msaa = 4;
+		this->options->reloadProgram = GL_TRUE;
+	} else if (comp->id == 13) {
+		this->options->msaa = 8;
+		this->options->reloadProgram = GL_TRUE;
+	} else if (comp->id == 14) {
+		this->options->msaa = 16;
+		this->options->reloadProgram = GL_TRUE;
+	} else if (comp->id == 21) {
+		this->options->fullscreen = GL_FALSE;
+		this->options->reloadProgram = GL_TRUE;
+	} else if (comp->id == 22) {
+		this->options->windowedWidth = 0;
+		this->options->windowedHeight = 0;
+		this->options->fullscreen = GL_TRUE;
+		this->options->reloadProgram = GL_TRUE;
+	} else if (comp->id == 31) {
+		this->options->cameraMovement = GL_FALSE;
+	} else if (comp->id == 32) {
+		this->options->cameraMovement = GL_TRUE;
+	} else if (comp->id == 41) {
+		this->options->windowedWidth = 1280;
+		this->options->windowedHeight = 720;
+		this->options->fullscreen = GL_FALSE;
+		this->options->reloadProgram = GL_TRUE;
+	} else if (comp->id == 42) {
+		this->options->windowedWidth = 0;
+		this->options->windowedHeight = 0;
+		this->options->reloadProgram = GL_TRUE;
+	}
 }
 
 void clickOpenGithub() {

@@ -5,8 +5,8 @@ void initPlayer(GameInstance *this) {
 	this->player = new(Player);
 
 	this->player->id = 0;
-	setPosition(this->player->position, this->map->spawn[X], this->map->spawn[Y], 0);
-	this->player->height = 1.3f;
+	setPosition(this->player->position, this->map->spawn[X], this->map->spawn[Y], 0.3);
+	this->player->height = 1.25f;
 	this->player->width = 0.5f;
 	this->player->jump = 0;
 	this->player->lastJump = glfwGetTime();

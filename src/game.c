@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 #include "stdgame.h"
 
 void loadTileVAO(const GameInstance *this) {
@@ -186,21 +187,32 @@ GLboolean isActionPerformed(GameInstance *this, InputActionWrapper* iaw) {
 }
 
 void onLogicIngame(GameInstance *this, GLfloat delta) {
-	DynamicObjectInstance *obj = this->map->objects->dynamicInstances->first->data;
+	static const int PLAYER_ANIMATION[4] = {1, 0, 2, 0};
+
+	ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
 
 	float deltaMoveX = 0;
 	if (isActionPerformed(this, &this->options->moveLeft)) {
 		deltaMoveX += -delta * 2;
-		obj->rotation[Y] = 0;
+		playerObj->rotation[Y] = 0;
 		if (this->options->cameraMovement)
 			this->camera->destinationRotation[Y] = 2;
 	}
 
 	if (isActionPerformed(this, &this->options->moveRight)) {
 		deltaMoveX += delta * 2;
-		obj->rotation[Y] = 180;
+		playerObj->rotation[Y] = 180;
 		if (this->options->cameraMovement)
 			this->camera->destinationRotation[Y] = -2;
+	}
+
+	if (isActionPerformed(this, &this->options->sneek)) {
+		playerObj->activePart = 3;
+	} else if (isActionPerformed(this, &this->options->moveLeft)
+			|| isActionPerformed(this, &this->options->moveRight)) {
+		playerObj->activePart = PLAYER_ANIMATION[((int) clock() / 20000) % 4];
+	} else {
+		playerObj->activePart = 0;
 	}
 
 	if (this->options->cameraMovement &&
@@ -232,6 +244,7 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 		++this->player->jump;
 		this->player->velocity[Y] = 8 + (this->player->jump * 2);
 		this->player->lastJump = glfwGetTime();
+		playerObj->activePart = 0;
 	}
 
 	float deltaMoveY = this->player->velocity[Y] * 0.00981;
@@ -269,11 +282,9 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	this->camera->position[Z] = 5.2; //4.8
 #endif
 
-	// DEBUG
-	obj->position[X] = this->player->position[X];
-	obj->position[Y] = this->player->position[Y];
-	// END DEBUG
-
+	playerObj->position[X] = this->player->position[X];
+	playerObj->position[Y] = this->player->position[Y];
+	playerObj->position[Z] = this->player->position[Z];
 }
 
 void onLogicMenu(GameInstance *this, GLfloat delta) {

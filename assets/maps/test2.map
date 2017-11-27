@@ -1032,10 +1032,7 @@ S 15.5 7.5 1 1 880088 0.9 0.3 0
 S 10 7.5 0.5 0.9 FFFF00 0.95 0.3 1
 
 # Object Bank
-# O id STATIC lock_little.sobj
-# O id DYNAMIC lock_little.dobj
-# O id ACTIVE lock_little.aobj
-O 0 DYNAMIC gnome.sobj
+O 0 ACTIVE player.aobj
 O 1 STATIC lock_little.sobj
 O 2 DYNAMIC key_little.sobj
 O 3 STATIC door.dobj
@@ -1043,12 +1040,13 @@ O 4 STATIC ghost.aobj
 #O 5 STATIC stdgame.sobj
 O 6 STATIC cursor.aobj
 O 7 DYNAMIC crystal1.dobj
+O 8 DYNAMIC lavatop.sobj
 
 # Object Instances
 # I id O.id STATIC x y z alpha beta gamma SizeX SizeY SizeZ visible
 # I id O.id DYNAMIC x y z alpha beta gamma SizeX SizeY SizeZ visible reference
 # I id O.id ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible
-I 0 0 DYNAMIC 0 0 0 0 0 0 1 1 1 1 0
+I 0 0 ACTIVE 0 0 0 0 0 0 1 1 1 1 0
 I 1 1 STATIC 10.75 7.5 0.8 0 90 0 0.5 0.5 0.5 1
 I 2 2 DYNAMIC 10 7.5 0 90 0 90 0.5 0.5 0.5 1 1
 I 3 3 STATIC 11 7 0 0 180 0 1 1 1 1
@@ -1056,6 +1054,13 @@ I 4 4 STATIC 14 7.3 0 0 180 0 1 1 1 1
 #I 5 5 STATIC 7 7.3 -1.5 0 270 0 0.5 0.5 0.5 1
 #I 6 6 STATIC 0 0 0 0 0 0 1 1 1 1
 I 7 7 DYNAMIC 15 7 0 0 180 0 1 1 1 1 0
+
+I 8 8 DYNAMIC 24 3 0 0 0 0 1 1 1 1 0
+I 8 9 DYNAMIC 25 3 0 0 0 0 1 1 1 1 0
+I 8 10 DYNAMIC 26 3 0 0 0 0 1 1 1 1 0
+I 8 11 DYNAMIC 27 3 0 0 0 0 1 1 1 1 0
+I 8 12 DYNAMIC 28 3 0 0 0 0 1 1 1 1 0
+I 8 13 DYNAMIC 29 3 0 0 0 0 1 1 1 1 0
 
 C 0 SPAWN 4 4
 C 1 END 1 10

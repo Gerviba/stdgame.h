@@ -213,6 +213,7 @@ void onClickEvent(GLFWwindow* window, int button, int action, int mods) {
 	if (action == GLFW_RELEASE) {
 		GameInstance *this = NULL;
 		getGameInstance(&this);
+
 		if (updateControlsMouse(this, button))
 			return;
 	}
@@ -223,6 +224,7 @@ void onClickEvent(GLFWwindow* window, int button, int action, int mods) {
 		if (this->map->menu->onClick != NULL)
 			this->map->menu->onClick(this);
     }
+
 }
 
 void onScrollEvent(GLFWwindow* window, double xOffset, double yOffset) {
@@ -249,7 +251,7 @@ void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods)
 
 #ifdef DEBUG_MOVEMENT
 	if (key == GLFW_KEY_H && action == GLFW_PRESS) {
-		printf("%g %g\n", gi->player->position[X], gi->player->position[Y]);
+		printf("%g %g\n", this->player->position[X], this->player->position[Y]);
 	}
 	onDebugKeyPress(key, 0, 0);
 #endif

@@ -116,6 +116,7 @@
   + `SIZE` stateCount (It must be under the POSITION, ROTATION and the SCALE meta line.)
 - Instance:
   + ActiveObject -> ActiveObjectInstance
+- The first active object will be the player.
 
 ### Char
 

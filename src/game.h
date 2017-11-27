@@ -48,6 +48,13 @@ struct GameInstance {
 	LinkedList /*ReferencePoint*/ *referencePoints;
 };
 
+/**
+ * @todo Add gamepad support
+ */
+struct InputActionWrapper {
+	GLint id[3];
+};
+
 struct Options {
 	GLuint msaa;
 	GLboolean fullscreen;
@@ -58,22 +65,18 @@ struct Options {
 	GLfloat tanFov;
 	GLfloat aspectRatio;
 
-	int moveLeft[2];
-	int moveRight[2];
-	int jump[2];
-	int sneek[3];
-	int attack[2];
-	int speell1[2];
-	int speell2[2];
-	int speell3[2];
-	int speell4[2];
-	int menu;
+	InputActionWrapper moveLeft;
+	InputActionWrapper moveRight;
+	InputActionWrapper jump;
+	InputActionWrapper sneek;
+	InputActionWrapper attack;
+	InputActionWrapper spell1;
+	InputActionWrapper spell2;
+	InputActionWrapper spell3;
+	InputActionWrapper spell4;
+	InputActionWrapper menu;
 
-};
-
-struct InputActionWrapper {
-	enum {KEYBOARD, MOUSE, GAMEPAD} type;
-	int identifier;
+	Component *selectedToSet;
 };
 
 struct ShaderInfo {

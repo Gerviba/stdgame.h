@@ -3,18 +3,6 @@
 #include <math.h>
 #include "stdgame.h"
 
-static void loadDefaultOptions(GameInstance *this) {
-	this->options->moveLeft[0] = GLFW_KEY_A;
-	this->options->moveLeft[1] = GLFW_KEY_LEFT;
-	this->options->moveRight[0] = GLFW_KEY_D;
-	this->options->moveRight[1] = GLFW_KEY_RIGHT;
-	this->options->jump[0] = GLFW_KEY_W;
-	this->options->jump[1] = GLFW_KEY_SPACE;
-	this->options->sneek[0] = GLFW_KEY_S;
-	this->options->sneek[1] = GLFW_KEY_DOWN;
-	this->options->attack[0] = GLFW_KEY_RIGHT_CONTROL;
-}
-
 void loadTileVAO(const GameInstance *this) {
 	glGenVertexArrays(1, &this->tileVAO);
 	glBindVertexArray(this->tileVAO);
@@ -41,8 +29,6 @@ void loadTileVAO(const GameInstance *this) {
 }
 
 void gameInit(GameInstance *this) {
-	loadDefaultOptions(this);
-
 	this->shader->shaderId = glCreateProgram();
 	shaderAttachFromFile(this->shader->shaderId, GL_VERTEX_SHADER, "assets/shaders/shader.vertex");
 	shaderAttachFromFile(this->shader->shaderId, GL_FRAGMENT_SHADER, "assets/shaders/shader.fragment");
@@ -184,28 +170,40 @@ GLfloat getDistSquared2D(GLfloat a[3], GLfloat b[3]) {
 	return (a[X] - b[X]) * (a[X] - b[X]) + (a[Y] - b[Y]) * (a[Y] - b[Y]);
 }
 
+GLboolean isActionPerformed(GameInstance *this, InputActionWrapper* iaw) {
+	int i;
+	for (i = 0; i < 3; ++i) {
+		if (iaw->id[i] != -1) {
+			if (iaw->id[i] <= GLFW_MOUSE_BUTTON_LAST) {
+				if (glfwGetMouseButton(this->window, iaw->id[i]) == GLFW_PRESS)
+					return GL_TRUE;
+			} else {
+				if (glfwGetKey(this->window, iaw->id[i]) == GLFW_PRESS)
+					return GL_TRUE;
+			}
+		}
+	}
+	return GL_FALSE;
+}
+
 void onLogicIngame(GameInstance *this, GLfloat delta) {
-	DynamicObjectInstance *obj = ((DynamicObjectInstance *) this->map->objects->dynamicInstances->first->data);
+	DynamicObjectInstance *obj = this->map->objects->dynamicInstances->first->data;
 
 	float deltaMoveX = 0;
-	if (glfwGetKey(this->window, this->options->moveLeft[0]) == GLFW_PRESS
-			|| glfwGetKey(this->window, this->options->moveLeft[1]) == GLFW_PRESS) {
+	if (isActionPerformed(this, &this->options->moveLeft)) {
 		deltaMoveX += -delta * 2;
 		obj->rotation[Y] = 0;
 		this->camera->destinationRotation[Y] = 2;
 	}
 
-	if (glfwGetKey(this->window, this->options->moveRight[0]) == GLFW_PRESS
-			|| glfwGetKey(this->window, this->options->moveRight[1]) == GLFW_PRESS) {
+	if (isActionPerformed(this, &this->options->moveRight)) {
 		deltaMoveX += delta * 2;
 		obj->rotation[Y] = 180;
 		this->camera->destinationRotation[Y] = -2;
 	}
 
-	if (!(glfwGetKey(this->window, this->options->moveLeft[0]) == GLFW_PRESS
-			|| glfwGetKey(this->window, this->options->moveLeft[1]) == GLFW_PRESS) &&
-			!(glfwGetKey(this->window, this->options->moveRight[0]) == GLFW_PRESS
-			|| glfwGetKey(this->window, this->options->moveRight[1]) == GLFW_PRESS)) {
+	if (!isActionPerformed(this, &this->options->moveLeft) &&
+			!isActionPerformed(this, &this->options->moveRight)) {
 		this->camera->destinationRotation[Y] = 0;
 	}
 
@@ -228,8 +226,7 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	this->player->position[X] += deltaMoveX;
 
 	if (this->player->jump < 2 && this->player->lastJump + 0.3 < glfwGetTime()
-			&& (glfwGetKey(this->window, GLFW_KEY_SPACE) == GLFW_PRESS
-			|| glfwGetKey(this->window, GLFW_KEY_W) == GLFW_PRESS)) {
+			&& isActionPerformed(this, &this->options->jump)) {
 		++this->player->jump;
 		this->player->velocity[Y] = 8 + (this->player->jump * 2);
 		this->player->lastJump = glfwGetTime();
@@ -337,9 +334,9 @@ void onLogic(GameInstance *this) {
 		this->lighting->lightPosition[i * 3 + X] = light->position[X] + light->reference->position[X];
 		this->lighting->lightPosition[i * 3 + Y] = light->position[Y] + light->reference->position[Y];
 		this->lighting->lightPosition[i * 3 + Z] = light->position[Z] + light->reference->position[Z];
-		this->lighting->lightInfo[i * 3 + R] = light->specular;
-		this->lighting->lightInfo[i * 3 + G] = light->strength;
-		this->lighting->lightInfo[i * 3 + B] = light->intensity;
+		this->lighting->lightInfo[i * 3 + 0] = light->specular;
+		this->lighting->lightInfo[i * 3 + 1] = light->strength;
+		this->lighting->lightInfo[i * 3 + 2] = light->intensity;
 		++i;
 	}
 	this->lighting->numLights = i;

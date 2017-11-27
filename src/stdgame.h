@@ -136,15 +136,19 @@ static const float PI = 3.14159265358979323846;
 #include "game.h"
 
 /** Minimum of numeric type */
-#define min(a, b) a < b ? a : b
+#define min(a, b) (a < b ? a : b)
 /** Maximum of numeric type */
-#define max(a, b) a > b ? a : b
+#define max(a, b) (a > b ? a : b)
 /** Sign of numeric type */
-#define sig(a) a == 0 ? 0 : a > 0 ? 1 : -1
+#define sig(a) (a == 0 ? 0 : a > 0 ? 1 : -1)
 /** String equals */
-#define equals(a, b) strcmp(a, b) == 0
+#define equals(a, b) (strcmp(a, b) == 0)
 /** Allocate space for new of generic type */
 #define new(x) malloc(sizeof(x))
+/** Set 3D array */
+#define array3(array, a, b, c) ({array[0] = a; array[1] = b; array[2] = c;})
+/** Set 3D array */
+#define array4(array, a, b, c, d) ({array[0] = a; array[1] = b; array[2] = c; array[3] = d;})
 
 void initGLFW();
 void createWindow(GameInstance* this, const GLFWvidmode* mode);
@@ -160,6 +164,7 @@ void onClickEvent(GLFWwindow* window, int button, int action, int mods);
 void onScrollEvent(GLFWwindow* window, double xoffset, double yoffset);
 void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);
 void onErrorEvent(int error, const char* description);
+void onCharModEvent(GLFWwindow* window, unsigned int codepoint, int mods);
 
 #ifdef DEBUG_MOVEMENT
 void onDebugKeyPress(const char key, int x, int y);

@@ -1,4 +1,4 @@
-# User menual
+# User manual
 
 ### Menu
 

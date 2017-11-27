@@ -294,7 +294,6 @@ void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 					part.position[X] + 1, part.position[Y], part.position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
-
 	}
 }
 

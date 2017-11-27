@@ -207,6 +207,42 @@ void clickBack(Component *comp, GameInstance *this) {
 	updateCamera(this);
 }
 
+void clickControllsSet(Component *comp, GameInstance *this) {
+	this->options->selectedToSet = comp;
+	int id = 0, i = 0;
+	while (comp->text->text[i] != '\0') {
+		if (comp->text->text[i] == ' ')
+			++id;
+		++i;
+	}
+
+	if (id != 2)
+		return;
+
+	strcpy(comp->text->text, "[-]");
+
+	if (equals(this->options->selectedToSet->value->value, "moveLeft"))
+		array3(this->options->moveLeft.id, -1.0f, -1.0f, -1.0f);
+	else if (equals(this->options->selectedToSet->value->value, "moveRight"))
+		array3(this->options->moveRight.id, -1.0f, -1.0f, -1.0f);
+	else if (equals(this->options->selectedToSet->value->value, "jump"))
+		array3(this->options->jump.id, -1.0f, -1.0f, -1.0f);
+	else if (equals(this->options->selectedToSet->value->value, "sneek"))
+		array3(this->options->sneek.id, -1.0f, -1.0f, -1.0f);
+	else if (equals(this->options->selectedToSet->value->value, "attack"))
+		array3(this->options->attack.id, -1.0f, -1.0f, -1.0f);
+	else if (equals(this->options->selectedToSet->value->value, "spell1"))
+		array3(this->options->spell1.id, -1.0f, -1.0f, -1.0f);
+	else if (equals(this->options->selectedToSet->value->value, "spell2"))
+		array3(this->options->spell2.id, -1.0f, -1.0f, -1.0f);
+	else if (equals(this->options->selectedToSet->value->value, "spell3"))
+		array3(this->options->spell3.id, -1.0f, -1.0f, -1.0f);
+	else if (equals(this->options->selectedToSet->value->value, "spell4"))
+		array3(this->options->spell4.id, -1.0f, -1.0f, -1.0f);
+	else if (equals(this->options->selectedToSet->value->value, "menu"))
+		array3(this->options->menu.id, -1.0f, -1.0f, -1.0f);
+}
+
 void clickOpenGithub() {
 
 #ifdef  __WIN32

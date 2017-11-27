@@ -119,4 +119,7 @@ struct Map {
 	Menu *menu;
 };
 
+void getKeyName(GameInstance *this, char *str, int key);
+void getOptionCaption(GameInstance *this, char *name, char *str, int id);
+
 #endif /* MAP_H_ */

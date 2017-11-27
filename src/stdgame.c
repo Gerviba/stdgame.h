@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <ctype.h>
 #include "stdgame.h"
 
 int main(int argc, char *argv[]) {
@@ -13,7 +14,10 @@ int main(int argc, char *argv[]) {
 	this->camera = new(CameraInfo);
 	setRotation(this->camera->rotation, 0.0f, 0.0f, 0.0f);
 	this->options = new(Options);
+	this->options->selectedToSet = NULL;
 
+	loadDefaultOptions(this);
+	loadOptions(this);
 	initGLFW();
 	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	createWindow(this, mode);
@@ -26,6 +30,7 @@ int main(int argc, char *argv[]) {
 	doGameLoop(this);
 
 	DEBUG("Info", "Closing game");
+	saveOptions(this);
 	glfwDestroyWindow(this->window);
 	glfwTerminate();
 	printCount();
@@ -68,6 +73,7 @@ void createWindow(GameInstance* this, const GLFWvidmode* mode) {
 	glfwSetMouseButtonCallback(this->window, onClickEvent);
 	glfwSetKeyCallback(this->window, onKeyEvent);
 	glfwSetScrollCallback(this->window, onScrollEvent);
+	glfwSetCharModsCallback(this->window, onCharModEvent);
 	glfwMakeContextCurrent(this->window);
 	glfwSwapInterval(1);
 }
@@ -185,14 +191,22 @@ void onScrollEvent(GLFWwindow* window, double xOffset, double yOffset) {
 		this->map->menu->onScroll(this, yOffset / 10);
 }
 
+void onCharModEvent(GLFWwindow* window, unsigned int key, int mods) {
+	GameInstance *this = NULL;
+	getGameInstance(&this);
+	updateControlsKey(key, this);
+}
+
 void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
+	GameInstance *this = NULL;
+	getGameInstance(&this);
+	updateControlsMods(this, mods, key);
+
 #ifdef DEBUG_MOVEMENT
 	if (key == GLFW_KEY_H && action == GLFW_PRESS) {
-		GameInstance *gi = NULL;
-		getGameInstance(&gi);
 		printf("%g %g\n", gi->player->position[X], gi->player->position[Y]);
 	}
 	onDebugKeyPress(key, 0, 0);

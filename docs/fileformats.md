@@ -57,6 +57,8 @@
 |0|(Nothing)|
 |1|Open map selector|
 |2|Open options|
+|21|Set graphics setting|
+|22|Set controls setting|
 |3|Open credits|
 |31|Open GitHub|
 |4|Open main menu|

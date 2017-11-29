@@ -83,7 +83,10 @@
 |:---:|----|
 |0|(Nothing)|
 |1|Floating item|
-|2|Player position|
+|2|Left hand|
+|3|Entity floating|
+|4|Left weapon light|
+
 
 ### StaticObject and DynamicObject
 

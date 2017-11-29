@@ -10,16 +10,6 @@
 #include "stdgame.h"
 
 /**
- * Player movement sate
- */
-typedef enum {
-	MS_STAY,
-	MS_WALK,
-	MS_JUMP,
-	MS_SNEEK
-} MovementState;
-
-/**
  * Player type
  */
 struct Player {
@@ -31,6 +21,8 @@ struct Player {
 	GLuint jump;
 	double lastJump;
 	ActiveObjectInstance *model;
+	GLboolean sneek;
+	GLboolean leftSide;
 };
 
 /**

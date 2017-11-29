@@ -101,6 +101,8 @@ void initFont(GameInstance *this) {
 	if (this->font->unknown == NULL) {
 		ERROR("Failed to load char object from '%s'", "assets/fonts/_unknown.char");
 	}
+
+	fclose(file);
 }
 
 //TODO: Call

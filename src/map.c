@@ -1,3 +1,8 @@
+/**
+ * @file map.c
+ * @author Gerviba (Szabo Gergely)
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -34,7 +39,10 @@ void loadTexture(GLuint *textureId, char path[]) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
-void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align,
+/**
+ * Documented header
+ */
+static void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align,
 		GLfloat x, GLfloat y, FontSize size) {
 	Component comp;
 	comp.id = id;

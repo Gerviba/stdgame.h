@@ -1,7 +1,10 @@
 /**
  * @file game.h
  * @author Gerviba (Szabo Gergely)
- * @brief Game initialisation and game loop
+ * @brief Game initialisation and game loop (header)
+ *
+ * @par Definition:
+ * 		game.c
  */
 
 #ifndef GAME_H_

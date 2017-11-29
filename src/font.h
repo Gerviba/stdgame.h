@@ -2,8 +2,6 @@
  * @file font.h
  * @author Gerviba (Szabo Gergely)
  * @brief Font family loader and renderer
- *
- * TODO: Longer description
  */
 
 #ifndef FONT_H_

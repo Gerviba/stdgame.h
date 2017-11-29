@@ -238,60 +238,60 @@ void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
 	Iterator it;
 	foreach (it, obj->parts->first) {
-		StaticObjectPart part = *(StaticObjectPart *) it->data;
-		glUniform4fv(this->shader->baseColor, 1, part.color);
+		StaticObjectPart *part = it->data;
+		glUniform4fv(this->shader->baseColor, 1, part->color);
 
-		if ((part.type & PTMASK_RENDER_UP) > 0) {
+		if ((part->type & PTMASK_RENDER_UP) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, -1, 0.0f,
 					0.0f, 1, 0.0f, 0.0f,
-					part.position[X], part.position[Y] + 1, part.position[Z], 1.0f});
+					part->position[X], part->position[Y] + 1, part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_DOWN) > 0) {
+		if ((part->type & PTMASK_RENDER_DOWN) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, cosf(PI + PI / 2), -sinf(PI + PI / 2), 0.0f,
 					0.0f, sinf(PI + PI / 2), cosf(PI + PI / 2), 0.0f,
-					part.position[X], part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_TOP) > 0) {
+		if ((part->type & PTMASK_RENDER_TOP) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI), 0.0f, sinf(PI), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI), 0.0f, cosf(PI), 0.0f,
-					part.position[X] + 1, part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X] + 1, part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_LEFT) > 0) {
+		if ((part->type & PTMASK_RENDER_LEFT) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI / 2), 0.0f, sinf(PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI / 2), 0.0f, cosf(PI / 2), 0.0f,
-					part.position[X], part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_BOTTOM) > 0) {
+		if ((part->type & PTMASK_RENDER_BOTTOM) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 1.0f, 0.0f,
-					part.position[X], part.position[Y], part.position[Z], 1.0f});
+					part->position[X], part->position[Y], part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_RIGHT) > 0) {
+		if ((part->type & PTMASK_RENDER_RIGHT) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI + PI / 2), 0.0f, sinf(PI + PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI + PI / 2), 0.0f, cosf(PI + PI / 2), 0.0f,
-					part.position[X] + 1, part.position[Y], part.position[Z], 1.0f});
+					part->position[X] + 1, part->position[Y], part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 	}
@@ -319,60 +319,60 @@ void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
 	Iterator it;
 	foreach (it, obj->parts->first) {
-		StaticObjectPart part = *(StaticObjectPart *) it->data;
-		glUniform4fv(this->shader->baseColor, 1, part.color);
+		StaticObjectPart *part = it->data;
+		glUniform4fv(this->shader->baseColor, 1, part->color);
 
-		if ((part.type & PTMASK_RENDER_UP) > 0) {
+		if ((part->type & PTMASK_RENDER_UP) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, -1, 0.0f,
 					0.0f, 1, 0.0f, 0.0f,
-					part.position[X], part.position[Y] + 1, part.position[Z], 1.0f});
+					part->position[X], part->position[Y] + 1, part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_DOWN) > 0) {
+		if ((part->type & PTMASK_RENDER_DOWN) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, cosf(PI + PI / 2), -sinf(PI + PI / 2), 0.0f,
 					0.0f, sinf(PI + PI / 2), cosf(PI + PI / 2), 0.0f,
-					part.position[X], part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_TOP) > 0) {
+		if ((part->type & PTMASK_RENDER_TOP) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI), 0.0f, sinf(PI), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI), 0.0f, cosf(PI), 0.0f,
-					part.position[X] + 1, part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X] + 1, part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_LEFT) > 0) {
+		if ((part->type & PTMASK_RENDER_LEFT) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI / 2), 0.0f, sinf(PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI / 2), 0.0f, cosf(PI / 2), 0.0f,
-					part.position[X], part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_BOTTOM) > 0) {
+		if ((part->type & PTMASK_RENDER_BOTTOM) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 1.0f, 0.0f,
-					part.position[X], part.position[Y], part.position[Z], 1.0f});
+					part->position[X], part->position[Y], part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_RIGHT) > 0) {
+		if ((part->type & PTMASK_RENDER_RIGHT) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI + PI / 2), 0.0f, sinf(PI + PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI + PI / 2), 0.0f, cosf(PI + PI / 2), 0.0f,
-					part.position[X] + 1, part.position[Y], part.position[Z], 1.0f});
+					part->position[X] + 1, part->position[Y], part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -380,7 +380,7 @@ void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 }
 
 void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
-	DynamicObject *obj = &instance->object->parts[instance->activePart];
+	DynamicObject *obj = (DynamicObject *) (instance->object->parts + instance->activePart);
 	glPushMatrix();
 	glLoadIdentity();
 
@@ -401,60 +401,60 @@ void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
 	Iterator it;
 	foreach (it, obj->parts->first) {
-		StaticObjectPart part = *(StaticObjectPart *) it->data; // TODO: . to ->
-		glUniform4fv(this->shader->baseColor, 1, part.color);
+		StaticObjectPart *part = it->data;
+		glUniform4fv(this->shader->baseColor, 1, part->color);
 
-		if ((part.type & PTMASK_RENDER_UP) > 0) {
+		if ((part->type & PTMASK_RENDER_UP) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, -1, 0.0f,
 					0.0f, 1, 0.0f, 0.0f,
-					part.position[X], part.position[Y] + 1, part.position[Z], 1.0f});
+					part->position[X], part->position[Y] + 1, part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_DOWN) > 0) {
+		if ((part->type & PTMASK_RENDER_DOWN) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, cosf(PI + PI / 2), -sinf(PI + PI / 2), 0.0f,
 					0.0f, sinf(PI + PI / 2), cosf(PI + PI / 2), 0.0f,
-					part.position[X], part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_TOP) > 0) {
+		if ((part->type & PTMASK_RENDER_TOP) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI), 0.0f, sinf(PI), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI), 0.0f, cosf(PI), 0.0f,
-					part.position[X] + 1, part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X] + 1, part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_LEFT) > 0) {
+		if ((part->type & PTMASK_RENDER_LEFT) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI / 2), 0.0f, sinf(PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI / 2), 0.0f, cosf(PI / 2), 0.0f,
-					part.position[X], part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_BOTTOM) > 0) {
+		if ((part->type & PTMASK_RENDER_BOTTOM) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 1.0f, 0.0f,
-					part.position[X], part.position[Y], part.position[Z], 1.0f});
+					part->position[X], part->position[Y], part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_RIGHT) > 0) {
+		if ((part->type & PTMASK_RENDER_RIGHT) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI + PI / 2), 0.0f, sinf(PI + PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI + PI / 2), 0.0f, cosf(PI + PI / 2), 0.0f,
-					part.position[X] + 1, part.position[Y], part.position[Z], 1.0f});
+					part->position[X] + 1, part->position[Y], part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -535,7 +535,7 @@ void initStraticInstance(GameInstance *this, StaticObjectInstance *instance) {
 void initReferencePoints(GameInstance *this) {
 	this->referencePoints = newList(ReferencePoint);
 	GLint i;
-	for (i = 0; i < 3; ++i) {
+	for (i = 0; i < 5; ++i) {
 		ReferencePoint rp;
 		rp.id = i;
 		rp.timing = 0;
@@ -557,6 +557,8 @@ void updateReferencePoint(GameInstance *this, GLfloat delta) {
 
 			rp->position[Y] = sinf(rp->timing * 2) / 6;
 			rp->rotation[Z] = rp->timing * 180.0;
+		} else if (rp->id == 3) {
+			rp->position[Y] = sinf(rp->timing * 2) / 2;
 		}
 	}
 }

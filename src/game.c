@@ -1,3 +1,12 @@
+/**
+ * @file game.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief Game initialisation and game loop definition (header)
+ *
+ * @par Header:
+ * 		game.h
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -166,8 +175,9 @@ void onRender(GameInstance *this) {
 	updateCamera(this);
 }
 
-GLfloat getDistSquared2D(GLfloat a[3], GLfloat b[3]) {
-	return (a[X] - b[X]) * (a[X] - b[X]) + (a[Y] - b[Y]) * (a[Y] - b[Y]);
+GLfloat getDistSquared2D(GLfloat a[3], GLfloat deltaA[3], GLfloat b[3]) {
+	return (a[X] + deltaA[X] - b[X]) * (a[X] + deltaA[X] - b[X])
+			+ (a[Y] + deltaA[Y] - b[Y]) * (a[Y] + deltaA[Y] - b[Y]);
 }
 
 GLboolean isActionPerformed(GameInstance *this, InputActionWrapper* iaw) {
@@ -191,20 +201,42 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 
 	ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
 
+	Iterator it;
+	foreach (it, this->referencePoints->first) {
+		ReferencePoint *rp = it->data;
+		if (rp->id == 2) {
+			rp->position[X] = this->player->leftSide ?
+					(this->player->position[X] - 0.1) : (this->player->position[X] + 0.25);
+			rp->position[Y] = this->player->position[Y] - 0.2;
+			rp->position[Z] = this->player->leftSide ?
+					(this->player->position[Z] + 0.8) : (this->player->position[Z] + 0.4);
+			rp->rotation[Y] = this->player->leftSide ? 180 : 0;
+		} else if (rp->id == 4) {
+			rp->position[X] = this->player->leftSide ?
+					(this->player->position[X]) : (this->player->position[X] + 0.25);
+			rp->position[Y] = this->player->position[Y] + 1.3;
+			rp->position[Z] = this->player->leftSide ?
+					(this->player->position[Z] + 0.7) : (this->player->position[Z] + 0.3);
+			rp->rotation[Y] = this->player->leftSide ? 180 : 0;
+		}
+	}
+
 	float deltaMoveX = 0;
 	if (isActionPerformed(this, &this->options->moveLeft)) {
 		deltaMoveX += -delta * 2;
-		playerObj->rotation[Y] = 0;
+		this->player->leftSide = GL_TRUE;
 		if (this->options->cameraMovement)
 			this->camera->destinationRotation[Y] = 2;
 	}
 
 	if (isActionPerformed(this, &this->options->moveRight)) {
 		deltaMoveX += delta * 2;
-		playerObj->rotation[Y] = 180;
+		this->player->leftSide = GL_FALSE;
 		if (this->options->cameraMovement)
 			this->camera->destinationRotation[Y] = -2;
 	}
+
+	playerObj->rotation[Y] = this->player->leftSide ? 0 : 180;
 
 	if (isActionPerformed(this, &this->options->sneek)) {
 		playerObj->activePart = 3;
@@ -221,7 +253,6 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 		this->camera->destinationRotation[Y] = 0;
 	}
 
-	Iterator it;
 	foreach (it, this->map->tiles->first) {
 		Tile *tile = it->data;
 		if ((tile->type & MOVE_BLOCK_X) != 0 &&
@@ -279,7 +310,7 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 #ifndef DEBUG_MOVEMENT
 	this->camera->position[X] = this->player->position[X] + 2;
 	this->camera->position[Y] = this->player->position[Y] + 1;
-	this->camera->position[Z] = 5.2; //4.8
+	this->camera->position[Z] = 5.2;
 #endif
 
 	playerObj->position[X] = this->player->position[X];
@@ -338,7 +369,7 @@ void onLogic(GameInstance *this) {
 	Iterator it;
 	foreach (it, this->map->lights->first) {
 		Light *light = it->data;
-		if (getDistSquared2D(light->position, this->camera->position) > 100)
+		if (getDistSquared2D(light->position, light->reference->position, this->camera->position) > 100)
 			continue;
 
 		this->lighting->lightColor[i * 3 + R] = light->color[R];

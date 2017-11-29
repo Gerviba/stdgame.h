@@ -11,5 +11,7 @@ void initPlayer(GameInstance *this) {
 	this->player->jump = 0;
 	this->player->lastJump = glfwGetTime();
 	setVelocity(this->player->velocity, 0.0f, 0.0f, 0.0f);
+	this->player->sneek = GL_FALSE;
+	this->player->leftSide = GL_FALSE;
 	//TODO: Player model
 }

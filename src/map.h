@@ -1,3 +1,9 @@
+/**
+ * @file map.h
+ * @author Gerviba (Szabo Gergely)
+ * @brief Map and menu loader and utilities
+ */
+
 #ifndef MAP_H_
 #define MAP_H_
 
@@ -6,24 +12,26 @@
 #include "menu.h"
 
 /**
- * 0bRLTBF
- * T = TOP
- * R = RIGHT
- * B = BOTTOM
- * L = LEFT
- * F = FOREGROUND/BACKGROUND
+ * Format: 0bRLTBF
  *
- * Olyan mint a css box-modellben.
+ * |Char|Meaning                |
+ * |----|-----------------------|
+ * | T  | TOP                   |
+ * | R  | RIGHT                 |
+ * | B  | BOTTOM                |
+ * | L  | LEFT                  |
+ * | F  | FOREGROUND/BACKGROUND |
  *
- * NOTE: Az itt feltüntetett irányok a néző és a block alapján van.
- * A rendereléshez lásd:
- * - TTMASK_RENDER_BOTTOM
- * - TTMASK_RENDER_TOP
- * - TTMASK_RENDER_LEFT
- * - TTMASK_RENDER_RIGHT
- * - TTMASK_RENDER_FRONT
+ * It's like in the CSS box model
  *
- * Lehet rajta járni ha: (TileType & 0b11110) != 0
+ * @note The viewport is same as in the camera.
+ * @see TTMASK_RENDER_BOTTOM
+ * @see TTMASK_RENDER_TOP
+ * @see TTMASK_RENDER_LEFT
+ * @see TTMASK_RENDER_RIGHT
+ * @see TTMASK_RENDER_FRONT
+ *
+ * Physics on when: (TileType & 0b11110) != 0
  */
 typedef enum {
 	TT_BACKGROUND					= 0b00000,	// 0

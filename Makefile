@@ -6,3 +6,8 @@ install:
 
 gendocs:
 	doxygen doxygen.cfg
+	
+countlines:
+	find src -name '*.*' | xargs wc -l
+
+	

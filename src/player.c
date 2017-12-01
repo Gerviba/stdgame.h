@@ -13,5 +13,4 @@ void initPlayer(GameInstance *this) {
 	setVelocity(this->player->velocity, 0.0f, 0.0f, 0.0f);
 	this->player->sneek = GL_FALSE;
 	this->player->leftSide = GL_FALSE;
-	//TODO: Player model
 }

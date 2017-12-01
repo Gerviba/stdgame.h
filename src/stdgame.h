@@ -123,7 +123,6 @@ static const float PI = 3.14159265358979323846;
 #include <string.h>
 #include <gl.h>
 #include <glext.h>
-#include <glu.h> //TODO: Ez feltétlen kell?
 #include <glfw3.h>
 #include "SOIL.h"
 

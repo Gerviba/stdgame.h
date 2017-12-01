@@ -235,6 +235,9 @@ void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 	StaticObject *obj = instance->object;
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
 
+	if (getDistSquared2DDelta(instance->position, obj->position, this->camera->position) > 100)
+		return;
+
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
 	Iterator it;
 	foreach (it, obj->parts->first) {
@@ -299,6 +302,10 @@ void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 
 void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 	DynamicObject *obj = instance->object;
+
+	if (getDistSquared2DDelta(instance->position, instance->reference->position, this->camera->position) > 100)
+		return;
+
 	glPushMatrix();
 	glLoadIdentity();
 
@@ -381,6 +388,10 @@ void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 
 void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
 	DynamicObject *obj = (DynamicObject *) (instance->object->parts + instance->activePart);
+
+	if (getDistSquared2DDelta(instance->position, obj->position, this->camera->position) > 100)
+		return;
+
 	glPushMatrix();
 	glLoadIdentity();
 
@@ -462,6 +473,9 @@ void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
 }
 
 void renderTile(GameInstance *this, Tile *tile) {
+	if (getDistSquaredXY(tile->x, tile->y, this->camera->position) > 100)
+		return;
+
 	glBindTexture(GL_TEXTURE_2D, tile->texture->base->textureId);
 	glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 			1.0f, 0.0f, 0.0f, 0.0f,

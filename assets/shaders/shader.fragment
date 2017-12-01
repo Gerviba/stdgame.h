@@ -1,6 +1,6 @@
-#version 150 core
+#version 130
 
-const vec3 AMBIENT = vec3(0.3, 0.3, 0.3); //vec3(0.4, 0.4, 0.4);//vec3(0.1, 0.1, 0.1);
+const vec3 AMBIENT = vec3(0.25, 0.25, 0.25); //vec3(0.4, 0.4, 0.4);//vec3(0.1, 0.1, 0.1);
 const float MAX_DIST = 3; //2.5;
 const float MAX_DIST_SQUARED = MAX_DIST * MAX_DIST;
 
@@ -44,4 +44,15 @@ void main() {
 
 	vec4 color = texture2D(tex, passTexCoord) * baseColor;
 	outColor = vec4(clamp(color.rgb * (diffuse + AMBIENT) + specular, 0.0, 1.0), color.a);
+	
+	//vec4 result = vec4(clamp(color.rgb * (diffuse + AMBIENT) + specular, 0.0, 1.0), color.a);
+	// Inverse
+	//outColor = vec4(1 - result.r, 1 - result.g, 1 - result.b, result.a);
+	
+	// Hight lum
+	//outColor = vec4(result.r * 1.5, result.g * 1.5, result.b * 1.5, result.a);
+	
+	// Gray
+	//outColor = vec4(result.r, result.r, result.r, result.a);
+		
 }

@@ -77,6 +77,5 @@ void* listGetValue(ListItem* it);
  */
 void listFree(LinkedList* list);
 
-void printCount();
 
 #endif /* LINKEDLIST_H_ */

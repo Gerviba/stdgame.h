@@ -271,7 +271,7 @@ void calcOptionsGraphicsButton(Component *comp, GameInstance *this) {
 
 void clickStartButton(Component *comp, GameInstance *this) {
 	freeMap(this->map);
-	this->map = loadMap(this, "assets/maps/test2.map");
+	this->map = loadMap(this, "assets/maps/tutorial.map");
 	initPlayer(this);
 	updateCamera(this);
 }

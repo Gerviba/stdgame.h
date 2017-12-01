@@ -172,4 +172,8 @@ void onRender(GameInstance* this);
 void updateCamera(GameInstance* this);
 void onLogic(GameInstance* this);
 
+GLfloat getDistSquared2D(GLfloat a[3], GLfloat b[3]);
+GLfloat getDistSquared2DDelta(GLfloat a[3], GLfloat deltaA[3], GLfloat b[3]);
+GLfloat getDistSquaredXY(GLfloat x, GLfloat y, GLfloat b[3]);
+
 #endif /* GAME_H_ */

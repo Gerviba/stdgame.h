@@ -103,6 +103,25 @@ void updateCamera(GameInstance* this) {
 			-this->camera->position[Z]);
 }
 
+void debugLight(GameInstance *this) {
+	Iterator it;
+	int i = 0;
+	for (it = this->map->lights->first; it != NULL; it = it->next, ++i) {
+		Light light = *(Light *)it->data;
+
+		glPushMatrix();
+		glTranslatef(this->lighting->lightPosition[i * 3 + 0],
+				this->lighting->lightPosition[i * 3 + 1],
+				this->lighting->lightPosition[i * 3 + 2]);
+		glColor3fv(this->lighting->lightColor + (i * 3));
+		renderFontTo(this, ",", this->lighting->lightPosition + (i * 3), (GLfloat[]) {
+			*(this->lighting->lightColor + (i * 3)),
+			*(this->lighting->lightColor + (i * 3) + 1),
+			*(this->lighting->lightColor + (i * 3) + 2), 1.0 }, FS_LOW_DPI);
+		glPopMatrix();
+	}
+}
+
 void onRender(GameInstance *this) {
 	static const GLfloat TILE_MOVE_MAT[16] = {
 			1.0f, 0.0f, 0.0f, 0.0f,
@@ -119,6 +138,7 @@ void onRender(GameInstance *this) {
 	glUniform1i(this->shader->numLights, this->lighting->numLights);
 	glUniform4fv(this->shader->baseColor, 1, BASE_COLOR);
 	glUniformMatrix4fv(this->shader->projMat, 1, GL_FALSE, this->camera->projMat);
+	updateCamera(this);
 	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
 	glUniformMatrix4fv(this->shader->viewMat, 1, GL_FALSE, this->camera->viewMat);
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, TILE_MOVE_MAT);
@@ -129,37 +149,20 @@ void onRender(GameInstance *this) {
 
 	Iterator it;
 	foreach (it, this->map->tiles->first)
-		renderTile(this, (Tile *) it->data);
+		renderTile(this, it->data);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 #ifdef DEBUG_LIGHT
-	{
-		Iterator it;
-		int i = 0;
-		for (it = this->map->lights->first; it != NULL; it = it->next, ++i) {
-			Light light = *(Light *)it->data;
-
-			glPushMatrix();
-			glTranslatef(this->lighting->lightPosition[i * 3 + 0],
-					this->lighting->lightPosition[i * 3 + 1],
-					this->lighting->lightPosition[i * 3 + 2]);
-			glColor3fv(this->lighting->lightColor + (i * 3));
-			renderFontTo(this, ",", this->lighting->lightPosition + (i * 3), (GLfloat[]) {
-				*(this->lighting->lightColor + (i * 3)),
-				*(this->lighting->lightColor + (i * 3) + 1),
-				*(this->lighting->lightColor + (i * 3) + 2), 1.0 }, FS_LOW_DPI);
-			glPopMatrix();
-		}
-	}
+	debugLight(this);
 #endif
 
 	foreach (it, this->map->objects->staticInstances->first)
-		renderStaticObject(this, (StaticObjectInstance *) it->data);
+		renderStaticObject(this, it->data);
 	foreach (it, this->map->objects->dynamicInstances->first)
-		renderDynamicObject(this, (DynamicObjectInstance *) it->data);
+		renderDynamicObject(this, it->data);
 	foreach (it, this->map->objects->activeInstances->first)
-		renderActiveObject(this, (ActiveObjectInstance *) it->data);
+		renderActiveObject(this, it->data);
 
 	foreach (it, this->map->menu->components->first) {
 		Component* comp = it->data;
@@ -170,14 +173,35 @@ void onRender(GameInstance *this) {
 	if (this->map->menu->useCursor)
 		renderActiveObject(this, this->cursor->pointer);
 
+	if (this->state == INGAME) {
+		renderFontTo(this, "Grab the key", (GLfloat[]) {9, 6.6875, 1.1},
+				(GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_NORMAL_DPI);
+
+		renderFontTo(this, "Test double jump", (GLfloat[]) {17.5, 6.6875, 1.1},
+				(GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_NORMAL_DPI);
+
+		renderFontTo(this, "Kill monsters ", (GLfloat[]) {67.5, 15.6875, 1.1},
+				(GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_NORMAL_DPI);
+
+		renderFontTo(this, "Finish", (GLfloat[]) {96, 12.6875, 1.1},
+				(GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_NORMAL_DPI);
+	}
+
     glUseProgram(0);
 
-	updateCamera(this);
 }
 
-GLfloat getDistSquared2D(GLfloat a[3], GLfloat deltaA[3], GLfloat b[3]) {
+GLfloat getDistSquared2D(GLfloat a[3], GLfloat b[3]) {
+	return (a[X] - b[X]) * (a[X] - b[X]) + (a[Y] - b[Y]) * (a[Y] - b[Y]);
+}
+
+GLfloat getDistSquared2DDelta(GLfloat a[3], GLfloat deltaA[3], GLfloat b[3]) {
 	return (a[X] + deltaA[X] - b[X]) * (a[X] + deltaA[X] - b[X])
 			+ (a[Y] + deltaA[Y] - b[Y]) * (a[Y] + deltaA[Y] - b[Y]);
+}
+
+GLfloat getDistSquaredXY(GLfloat x, GLfloat y, GLfloat b[3]) {
+	return (x - b[X]) * (x - b[X]) + (y - b[Y]) * (y - b[Y]);
 }
 
 GLboolean isActionPerformed(GameInstance *this, InputActionWrapper* iaw) {
@@ -198,39 +222,20 @@ GLboolean isActionPerformed(GameInstance *this, InputActionWrapper* iaw) {
 
 void onLogicIngame(GameInstance *this, GLfloat delta) {
 	static const int PLAYER_ANIMATION[4] = {1, 0, 2, 0};
+	static float PLAYER_ANIMATION_TIMING = 0;
 
 	ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
 
-	Iterator it;
-	foreach (it, this->referencePoints->first) {
-		ReferencePoint *rp = it->data;
-		if (rp->id == 2) {
-			rp->position[X] = this->player->leftSide ?
-					(this->player->position[X] - 0.1) : (this->player->position[X] + 0.25);
-			rp->position[Y] = this->player->position[Y] - 0.2;
-			rp->position[Z] = this->player->leftSide ?
-					(this->player->position[Z] + 0.8) : (this->player->position[Z] + 0.4);
-			rp->rotation[Y] = this->player->leftSide ? 180 : 0;
-		} else if (rp->id == 4) {
-			rp->position[X] = this->player->leftSide ?
-					(this->player->position[X]) : (this->player->position[X] + 0.25);
-			rp->position[Y] = this->player->position[Y] + 1.3;
-			rp->position[Z] = this->player->leftSide ?
-					(this->player->position[Z] + 0.7) : (this->player->position[Z] + 0.3);
-			rp->rotation[Y] = this->player->leftSide ? 180 : 0;
-		}
-	}
-
 	float deltaMoveX = 0;
 	if (isActionPerformed(this, &this->options->moveLeft)) {
-		deltaMoveX += -delta * 2;
+		deltaMoveX += -delta * PLAYER_SPEED;
 		this->player->leftSide = GL_TRUE;
 		if (this->options->cameraMovement)
 			this->camera->destinationRotation[Y] = 2;
 	}
 
 	if (isActionPerformed(this, &this->options->moveRight)) {
-		deltaMoveX += delta * 2;
+		deltaMoveX += delta * PLAYER_SPEED;
 		this->player->leftSide = GL_FALSE;
 		if (this->options->cameraMovement)
 			this->camera->destinationRotation[Y] = -2;
@@ -240,11 +245,18 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 
 	if (isActionPerformed(this, &this->options->sneek)) {
 		playerObj->activePart = 3;
+		this->player->sneek = GL_TRUE;
 	} else if (isActionPerformed(this, &this->options->moveLeft)
 			|| isActionPerformed(this, &this->options->moveRight)) {
-		playerObj->activePart = PLAYER_ANIMATION[((int) clock() / 20000) % 4];
+
+		PLAYER_ANIMATION_TIMING += delta * 5;
+		if (PLAYER_ANIMATION_TIMING >= 4)
+			PLAYER_ANIMATION_TIMING = 0;
+		playerObj->activePart = PLAYER_ANIMATION[((int) PLAYER_ANIMATION_TIMING) % 4];
+		this->player->sneek = GL_FALSE;
 	} else {
 		playerObj->activePart = 0;
+		this->player->sneek = GL_FALSE;
 	}
 
 	if (this->options->cameraMovement &&
@@ -253,6 +265,7 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 		this->camera->destinationRotation[Y] = 0;
 	}
 
+	Iterator it;
 	foreach (it, this->map->tiles->first) {
 		Tile *tile = it->data;
 		if ((tile->type & MOVE_BLOCK_X) != 0 &&
@@ -271,14 +284,15 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	this->player->position[X] += deltaMoveX;
 
 	if (this->player->jump < 2 && this->player->lastJump + 0.3 < glfwGetTime()
-			&& isActionPerformed(this, &this->options->jump)) {
+			&& isActionPerformed(this, &this->options->jump)
+			&& !isActionPerformed(this, &this->options->sneek)) {
 		++this->player->jump;
 		this->player->velocity[Y] = 8 + (this->player->jump * 2);
 		this->player->lastJump = glfwGetTime();
 		playerObj->activePart = 0;
 	}
 
-	float deltaMoveY = this->player->velocity[Y] * 0.00981;
+	float deltaMoveY = this->player->velocity[Y] * PLAYER_JUMP * delta;
 	this->player->velocity[Y] -= 0.5;
 	if (this->player->velocity[Y] < -15)
 		this->player->velocity[Y] = -15;
@@ -316,6 +330,25 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	playerObj->position[X] = this->player->position[X];
 	playerObj->position[Y] = this->player->position[Y];
 	playerObj->position[Z] = this->player->position[Z];
+
+	foreach (it, this->referencePoints->first) {
+		ReferencePoint *rp = it->data;
+		if (rp->id == 2) {
+			rp->position[X] = this->player->leftSide ?
+					(this->player->position[X] - 0.1) : (this->player->position[X] + 0.25);
+			rp->position[Y] = this->player->position[Y] - 0.2;
+			rp->position[Z] = this->player->leftSide ?
+					(this->player->position[Z] + 0.8) : (this->player->position[Z] + 0.4);
+			rp->rotation[Y] = this->player->leftSide ? 180 : 0;
+		} else if (rp->id == 4) {
+			rp->position[X] = this->player->leftSide ?
+					(this->player->position[X]) : (this->player->position[X] + 0.25);
+			rp->position[Y] = this->player->position[Y] + 1.3;
+			rp->position[Z] = this->player->leftSide ?
+					(this->player->position[Z] + 0.7) : (this->player->position[Z] + 0.3);
+			rp->rotation[Y] = this->player->leftSide ? 180 : 0;
+		}
+	}
 }
 
 void onLogicMenu(GameInstance *this, GLfloat delta) {
@@ -365,11 +398,17 @@ void onLogic(GameInstance *this) {
 	}
 #endif
 
-	int i;
+	if (this->state == INGAME)
+		onLogicIngame(this, delta);
+	else
+		onLogicMenu(this, delta);
+
+	int i = 0;
 	Iterator it;
 	foreach (it, this->map->lights->first) {
 		Light *light = it->data;
-		if (getDistSquared2D(light->position, light->reference->position, this->camera->position) > 100)
+
+		if (getDistSquared2DDelta(light->position, light->reference->position, this->camera->position) > 100)
 			continue;
 
 		this->lighting->lightColor[i * 3 + R] = light->color[R];
@@ -384,10 +423,5 @@ void onLogic(GameInstance *this) {
 		++i;
 	}
 	this->lighting->numLights = i;
-
-	if (this->state == INGAME)
-		onLogicIngame(this, delta);
-	else
-		onLogicMenu(this, delta);
 
 }

@@ -254,11 +254,11 @@ Map* loadMap(GameInstance *this, char path[]) {
 					sscanf(buff, "$ %*s %d", (int*) &this->state);
 					if (this->state == INGAME) {
 						addTextComponent(map, "$$$", 100, X_LEFT, Y_TOP, ALIGN_LEFT,
-								(1.0 / 16) * 8, -(1.0 / 16) * 9, FS_NORMAL_DPI);
+								(1.0 / 16) * 26, -(1.0 / 16) * 18, FS_NORMAL_DPI);
 						addTextComponent(map, "300 *", 101, X_RIGHT, Y_TOP, ALIGN_RIGHT,
-								-(1.0 / 16) * 8, -(1.0 / 16) * 9, FS_NORMAL_DPI);
-						addTextComponent(map, "Press F to open", 102, X_CENTER, Y_CENTER, ALIGN_CENTER,
-								0, 0, FS_LOW_DPI);
+								-(1.0 / 16) * 26, -(1.0 / 16) * 18, FS_NORMAL_DPI);
+//						addTextComponent(map, "Press F to open", 102, X_CENTER, Y_CENTER, ALIGN_CENTER,
+//								0, 0, FS_LOW_DPI);
 					}
 					map->menu->onClick = this->state == INGAME ? NULL : onClickMenu;
 				} else if (equals(type, "CURSOR")) {

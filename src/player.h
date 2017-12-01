@@ -9,6 +9,9 @@
 
 #include "stdgame.h"
 
+#define PLAYER_SPEED 2.3
+#define PLAYER_JUMP 0.6
+
 /**
  * Player type
  */

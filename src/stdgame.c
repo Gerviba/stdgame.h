@@ -39,7 +39,6 @@ int main(int argc, char *argv[]) {
 
 	DEBUG("Info", "Closing game");
 
-	printCount();
 	exit(EXIT_SUCCESS);
 }
 
@@ -82,12 +81,6 @@ void createWindow(GameInstance* this, const GLFWvidmode* mode) {
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
-
-	// TODO: Icon
-	//	GLFWimage images[2];
-	//	images[0] = load_icon("my_icon.png");
-	//	images[1] = load_icon("my_icon_small.png");
-	//	glfwSetWindowIcon(window, 2, images);
 
 	glfwSetInputMode(this->window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	glfwSetMouseButtonCallback(this->window, onClickEvent);
@@ -189,11 +182,11 @@ void fixViewport(GameInstance* this) {
 
 void doGameLoop(GameInstance* this) {
 	while (!glfwWindowShouldClose(this->window)) {
+		glfwPollEvents();
 		onLogic(this);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		onRender(this);
 		glfwSwapBuffers(this->window);
-		glfwPollEvents();
 	}
 }
 

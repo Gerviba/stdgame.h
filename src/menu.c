@@ -4,12 +4,6 @@
 #include <unistd.h>
 #include "stdgame.h"
 
-void renderIngameGUI(GameInstance *this) {
-	GLfloat color[] = {1.0f, 1.0f, 1.0f, 1.0f};
-	renderFontTo(this, "Test message, $ *", (GLfloat[]) {6.0f, 7.0625f, 1.0f}, color, FS_NORMAL_DPI);
-
-}
-
 void onClickMenu(GameInstance *this) {
 	Iterator it;
 	foreach (it, this->map->menu->components->first) {

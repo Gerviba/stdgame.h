@@ -90,7 +90,7 @@ void gameInit(GameInstance *this) {
 	DEBUG("Logic", "First logic done");
 
 	updateCamera(this);
-	glGetFloatv(GL_MODELVIEW_MATRIX, &this->camera->viewMat);
+	glGetFloatv(GL_MODELVIEW_MATRIX, this->camera->viewMat);
 }
 
 void updateCamera(GameInstance* this) {
@@ -107,8 +107,6 @@ void debugLight(GameInstance *this) {
 	Iterator it;
 	int i = 0;
 	for (it = this->map->lights->first; it != NULL; it = it->next, ++i) {
-		Light light = *(Light *)it->data;
-
 		glPushMatrix();
 		glTranslatef(this->lighting->lightPosition[i * 3 + 0],
 				this->lighting->lightPosition[i * 3 + 1],
@@ -327,9 +325,7 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	this->camera->position[Z] = 5.2;
 #endif
 
-	playerObj->position[X] = this->player->position[X];
-	playerObj->position[Y] = this->player->position[Y];
-	playerObj->position[Z] = this->player->position[Z];
+	setPositionArray(playerObj->position, this->player->position);
 
 	foreach (it, this->referencePoints->first) {
 		ReferencePoint *rp = it->data;

@@ -72,6 +72,7 @@ typedef struct Texture Texture;
 typedef struct TextureBlock TextureBlock;
 typedef struct Tile Tile;
 typedef struct EventRegion EventRegion;
+//typedef struct Action Action;
 typedef struct MessageRegion MessageRegion;
 typedef struct Map Map;
 
@@ -130,8 +131,8 @@ static const float PI = 3.14159265358979323846;
 #include "font.h"
 #include "object.h"
 #include "player.h"
-#include "map.h"
 #include "components.h"
+#include "map.h"
 #include "game.h"
 
 /** Minimum of numeric type */

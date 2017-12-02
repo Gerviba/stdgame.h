@@ -190,7 +190,7 @@ void renderStaticObject(GameInstance*, StaticObjectInstance*);
 void renderDynamicObject(GameInstance*, DynamicObjectInstance*);
 void renderActiveObject(GameInstance*, ActiveObjectInstance*);
 void renderTile(GameInstance*, Tile*);
-void initStraticInstance(GameInstance*, StaticObjectInstance*);
+void initStraticInstance(StaticObjectInstance*);
 void initReferencePoints(GameInstance *this);
 void updateReferencePoint(GameInstance *this, GLfloat delta);
 

@@ -79,32 +79,32 @@ void freeGenericValue(GenericType *value) {
 
 GLfloat getAbsoluteX(GameInstance *this, RelativeX relX) {
 	if (relX == X_LEFT)
-		return this->camera->position[X] - (this->options->tanFov * (this->camera->position[Z] - 1));
+		return this->camera->position[X] -
+				(this->options->tanFov / 2 * (this->camera->position[Z] - 1) * this->options->aspectRatio);
 	else if (relX == X_RIGHT)
-		return this->options->tanFov * (this->camera->position[Z] - 1) + this->camera->position[X];
+		return this->camera->position[X] +
+				(this->options->tanFov / 2 * (this->camera->position[Z] - 1) * this->options->aspectRatio);
 	else
 		return this->camera->position[X];
 }
 
 GLfloat getAbsoluteY(GameInstance *this, RelativeY relY) {
 	if (relY == Y_BOTTOM)
-		return this->camera->position[Y] - ((this->options->tanFov * (this->camera->position[Z] - 1))
-				* this->options->aspectRatio);
+		return this->camera->position[Y] - (this->options->tanFov / 2 * (this->camera->position[Z] - 1));
 	else if (relY == Y_TOP)
-		return ((this->options->tanFov * (this->camera->position[Z] - 1) * this->options->aspectRatio)
-				+ this->camera->position[Y]);
+		return this->camera->position[Y] + (this->options->tanFov / 2 * (this->camera->position[Z] - 1));
 	else
 		return this->camera->position[Y];
 }
 
 GLfloat getCursorProjectedX(GameInstance *this, double x) {
-	return this->camera->position[X] + ((this->options->tanFov * (this->camera->position[Z] - 1)) *
-			-((this->options->width / 2 - x) / this->options->width)) * 2;
+	return this->camera->position[X] + ((this->options->tanFov / 2 * (this->camera->position[Z] - 1))
+			* (this->options->width / 2 - x) / this->options->width) * -2 * this->options->aspectRatio;
 }
 
 GLfloat getCursorProjectedY(GameInstance *this, double y) {
-	return this->camera->position[Y] + ((this->options->tanFov * (this->camera->position[Z] - 1)) *
-			((this->options->height / 2 - y) / this->options->height)) * 2 * this->options->aspectRatio;
+	return this->camera->position[Y] + ((this->options->tanFov / 2 * (this->camera->position[Z] - 1))
+			* (this->options->height / 2 - y) / this->options->height) * 2;
 }
 
 GLfloat getFontAlign(GameInstance *this, char str[], FontSize fontSize, Align align) {
@@ -377,7 +377,6 @@ void clickGraphicsSet(Component *comp, GameInstance *this) {
 }
 
 void clickOpenGithub() {
-
 #ifdef  __WIN32
 	system("start /c https://github.com/Gerviba/stdgame.h");
 #elif defined APPLE

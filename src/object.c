@@ -54,7 +54,7 @@ StaticObject *loadStaticObject(char path[]) {
 				int colorId;
 
 				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
-						&part.position[Z], &part.type, &colorId);
+						&part.position[Z], (int *) &part.type, &colorId);
 
 				Iterator it;
 				for (it = obj->colors->first; it != NULL; it = it->next) {
@@ -527,7 +527,7 @@ void renderTile(GameInstance *this, Tile *tile) {
 	}
 }
 
-void initStraticInstance(GameInstance *this, StaticObjectInstance *instance) {
+void initStraticInstance(StaticObjectInstance *instance) {
 	StaticObject *obj = instance->object;
 	glPushMatrix();
 	glLoadIdentity();

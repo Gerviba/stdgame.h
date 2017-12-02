@@ -12,7 +12,7 @@ struct Menu {
 	GLfloat scrollOffset;
 
 	void (*onClick)(GameInstance*);
-	void (*onScroll)(GameInstance*, double);
+	void (*onScroll)(GameInstance*, GLfloat);
 };
 
 /**
@@ -22,7 +22,7 @@ void renderIngameGUI(GameInstance* this);
 
 void onClickMenu(GameInstance* this);
 
-void onScrollMenu(GameInstance*, double);
+void onScrollMenu(GameInstance*, GLfloat);
 
 void loadDefaultOptions(GameInstance* this);
 

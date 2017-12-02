@@ -28,8 +28,8 @@
 |X|Texture|X id filename (1) |
 |Y|TextureBlock|Y id base top right bottom left (1) |
 |T|Tile|T x y Y.id TileType (1) |
-|S|Static Light|S x y strength rrggbb specular intensity reference (2)|
-|L|Ligthing|L x y strength1 color1 strength2 color2 time|
+|S|Static Light|S x y strength rrggbb specular intensity reference (2) |
+|L|Ligthing|L x y strength1 color1 strength2 color2 time (4) |
 |O|Object Active|O id STATIC/DYNAMIC/ACTIVE filename|
 |I|Object Instance|I O.id STATIC/DYNAMIC/ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference (2) |
 |C|Coords|C id type x y|
@@ -65,6 +65,7 @@
 |5|Start game|
 |-1|Quit game|
 
+- (4) Unimplemented
 - RelativeX, RelativeY and Align enums:
 |Enum|Name|Value|Description|
 |----|----|-----:|-----------|

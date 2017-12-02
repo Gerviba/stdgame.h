@@ -95,12 +95,47 @@ struct Tile {
 	TileType type;
 };
 
+/**
+ *
+ * @see Action
+ */
+typedef enum {
+	/** Teleport to: x y */
+	TELEPORT,
+	/** Damage: count */
+	DAMAGE,
+	/**
+	 * Set dynamic object:
+	 * x y z alpha beta gamma SizeX SizeY SizeZ visible
+	 * (-10000 = don't care)
+	 * @see DynamicObject
+	 * @see DynamicObjectInstance
+	 */
+	SET_DOBJ,
+	/**
+	 * Set active object:
+	 * x y z alpha beta gamma SizeX SizeY SizeZ visible
+	 * (-10000 = don't care)
+	 * @see ActiveObject
+	 * @see ActiveObjectInstance
+	 */
+	SET_AOBJ,
+	/** Set grabbed item to the selectem: dobj.id */
+	SET_ITEM,
+	/** Set light object */
+	SET_LIGHT
+} ActionType;
+
+struct Action {
+	GLint id;
+	ActionType type;
+	GenericType value;
+};
+
 struct EventRegion {
-	float x1, y1;
-	float x2, y2;
-	int modHP;
-	int modMana;
-	float modG;
+	GLfloat x1, y1;
+	GLfloat x2, y2;
+	GLint actionId;
 };
 
 struct MessageRegion {

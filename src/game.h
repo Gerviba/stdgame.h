@@ -59,12 +59,12 @@ struct InputActionWrapper {
 };
 
 struct Options {
-	GLuint msaa;
+	GLint msaa;
 	GLboolean fullscreen;
-	GLuint height;
-	GLuint width;
-	GLuint windowedHeight;
-	GLuint windowedWidth;
+	GLint height;
+	GLint width;
+	GLint windowedHeight;
+	GLint windowedWidth;
 	GLboolean shadow;
 	GLboolean cameraMovement;
 	GLfloat tanFov;

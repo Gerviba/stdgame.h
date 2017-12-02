@@ -128,7 +128,7 @@ void setupWindowSize(const GLFWvidmode* mode, GameInstance* this) {
 
 void setPerspective(GameInstance *this, float fov, float aspect, float near, float far) {
 	this->options->tanFov = tanf(fov);
-	this->options->aspectRatio = 1.0 / aspect;
+	this->options->aspectRatio = aspect;
 	float temp = 1.0f / tanf(fov / 2.0f);
 
 	this->camera->projMat[0x0] = temp / aspect;
@@ -199,7 +199,7 @@ void getGameInstance(GameInstance **this) {
 }
 
 void onErrorEvent(int error, const char* description) {
-	ERROR(description);
+	ERROR("[Error] [%d] %s", error, description);
 }
 
 void onClickEvent(GLFWwindow* window, int button, int action, int mods) {

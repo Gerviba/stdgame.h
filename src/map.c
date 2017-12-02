@@ -44,6 +44,7 @@ void loadTexture(GLuint *textureId, char path[]) {
  */
 static void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align,
 		GLfloat x, GLfloat y, FontSize size) {
+
 	Component comp;
 	comp.id = id;
 	comp.text = new(TextComponent);
@@ -254,9 +255,9 @@ Map* loadMap(GameInstance *this, char path[]) {
 					sscanf(buff, "$ %*s %d", (int*) &this->state);
 					if (this->state == INGAME) {
 						addTextComponent(map, "$$$", 100, X_LEFT, Y_TOP, ALIGN_LEFT,
-								(1.0 / 16) * 26, -(1.0 / 16) * 18, FS_NORMAL_DPI);
+								(1.0 / 16) * 21, -(1.0 / 16) * 14, FS_NORMAL_DPI);
 						addTextComponent(map, "300 *", 101, X_RIGHT, Y_TOP, ALIGN_RIGHT,
-								-(1.0 / 16) * 26, -(1.0 / 16) * 18, FS_NORMAL_DPI);
+								-(1.0 / 16) * 21, -(1.0 / 16) * 14, FS_NORMAL_DPI);
 //						addTextComponent(map, "Press F to open", 102, X_CENTER, Y_CENTER, ALIGN_CENTER,
 //								0, 0, FS_LOW_DPI);
 					}
@@ -410,7 +411,7 @@ Map* loadMap(GameInstance *this, char path[]) {
 							break;
 						}
 					}
-					initStraticInstance(this, &soi);
+					initStraticInstance(&soi);
 					listPush(map->objects->staticInstances, &soi);
 
 				} else if (equals(type, "DYNAMIC")) {

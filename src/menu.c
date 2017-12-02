@@ -18,7 +18,7 @@ void onClickMenu(GameInstance *this) {
 	}
 }
 
-void onScrollMenu(GameInstance *this, double offset) {
+void onScrollMenu(GameInstance *this, GLfloat offset) {
 	if (this->map->menu->scrollOffset - offset > this->map->menu->scrollMax ||
 			this->map->menu->scrollOffset - offset < this->map->menu->scrollMin)
 		return;

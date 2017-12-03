@@ -411,19 +411,38 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	}
 
 	Iterator it;
-	foreach (it, this->map->tiles->first) {
-		Tile *tile = it->data;
-		if ((tile->type & MOVE_BLOCK_X) != 0 &&
-				((int) tile->y == (int) this->player->position[Y] ||
-					(int) tile->y == (int) (this->player->position[Y] + 1.0f) ||
-					(int) tile->y == (int) (this->player->position[Y] + this->player->height)) &&
-				((tile->x + 1 < this->player->position[X]
-					&& tile->x + 1 >= this->player->position[X] + deltaMoveX) ||
-				(tile->x >= this->player->position[X] + this->player->width
-					&& tile->x < this->player->position[X] + deltaMoveX + this->player->width))) {
+	if (deltaMoveX != 0) {
+		foreach (it, this->map->tiles->first) {
+			Tile *tile = it->data;
+			if ((tile->type & MOVE_BLOCK_X) != 0 &&
+					((int) tile->y == (int) this->player->position[Y] ||
+						(int) tile->y == (int) (this->player->position[Y] + 1.0f) ||
+						(int) tile->y == (int) (this->player->position[Y] + this->player->height)) &&
+					((tile->x + 1 < this->player->position[X]
+						&& tile->x + 1 >= this->player->position[X] + deltaMoveX) ||
+					(tile->x >= this->player->position[X] + this->player->width
+						&& tile->x < this->player->position[X] + deltaMoveX + this->player->width))) {
 
-			deltaMoveX = 0;
-			break;
+				deltaMoveX = 0;
+				break;
+			}
+		}
+	}
+	if (deltaMoveX != 0) {
+		foreach (it, this->map->physics->first) {
+			PhysicsArea *pa = it->data;
+			if (pa->enabled &&
+					((int) pa->y == (int) this->player->position[Y] ||
+						(int) pa->y == (int) (this->player->position[Y] + 1.0f) ||
+						(int) pa->y == (int) (this->player->position[Y] + this->player->height)) &&
+					((pa->x + 1 < this->player->position[X]
+						&& pa->x + 1 >= this->player->position[X] + deltaMoveX) ||
+					(pa->x >= this->player->position[X] + this->player->width
+						&& pa->x < this->player->position[X] + deltaMoveX + this->player->width))) {
+
+				deltaMoveX = 0;
+				break;
+			}
 		}
 	}
 	this->player->position[X] += deltaMoveX;
@@ -442,24 +461,49 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	if (this->player->velocity[Y] < -15)
 		this->player->velocity[Y] = -15;
 
-	foreach (it, this->map->tiles->first) {
-		Tile *tile = it->data;
-		if ((tile->type & MOVE_BLOCK_Y) != 0 &&
-				((int) tile->x == (int) (this->player->position[X]) ||
-				(int) tile->x == (int) (this->player->position[X] + this->player->width))) {
+	if (deltaMoveY != 0) {
+		foreach (it, this->map->tiles->first) {
+			Tile *tile = it->data;
+			if ((tile->type & MOVE_BLOCK_Y) != 0 &&
+					((int) tile->x == (int) (this->player->position[X]) ||
+					(int) tile->x == (int) (this->player->position[X] + this->player->width))) {
 
-			if (tile->y + 1 > deltaMoveY + this->player->position[Y]
-					&& tile->y + 1 <= this->player->position[Y]) {
-				this->player->position[Y] = tile->y + 1;
-				this->player->velocity[Y] = -0.00001;
-				deltaMoveY = 0;
-				this->player->jump = 0;
-				this->player->lastJump = 0;
-			} else if (tile->y <= deltaMoveY + this->player->position[Y] + this->player->height
-					&& tile->y > this->player->position[Y] + this->player->height) {
-				this->player->velocity[Y] = -0.00001;
-				deltaMoveY = 0;
-				this->player->jump = 2;
+				if (tile->y + 1 > deltaMoveY + this->player->position[Y]
+						&& tile->y + 1 <= this->player->position[Y]) {
+					this->player->position[Y] = tile->y + 1;
+					this->player->velocity[Y] = -0.00001;
+					deltaMoveY = 0;
+					this->player->jump = 0;
+					this->player->lastJump = 0;
+				} else if (tile->y <= deltaMoveY + this->player->position[Y] + this->player->height
+						&& tile->y > this->player->position[Y] + this->player->height) {
+					this->player->velocity[Y] = -0.00001;
+					deltaMoveY = 0;
+					this->player->jump = 2;
+				}
+			}
+		}
+	}
+	if (deltaMoveY != 0) {
+		foreach (it, this->map->physics->first) {
+			PhysicsArea *pa = it->data;
+			if (pa->enabled &&
+					((int) pa->x == (int) (this->player->position[X]) ||
+					(int) pa->x == (int) (this->player->position[X] + this->player->width))) {
+
+				if (pa->y + 1 > deltaMoveY + this->player->position[Y]
+						&& pa->y + 1 <= this->player->position[Y]) {
+					this->player->position[Y] = pa->y + 1;
+					this->player->velocity[Y] = -0.00001;
+					deltaMoveY = 0;
+					this->player->jump = 0;
+					this->player->lastJump = 0;
+				} else if (pa->y <= deltaMoveY + this->player->position[Y] + this->player->height
+						&& pa->y > this->player->position[Y] + this->player->height) {
+					this->player->velocity[Y] = -0.00001;
+					deltaMoveY = 0;
+					this->player->jump = 2;
+				}
 			}
 		}
 	}
@@ -467,9 +511,15 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	this->player->position[Y] += deltaMoveY;
 
 #ifndef DEBUG_MOVEMENT
-	this->camera->position[X] = this->player->position[X] + 2;
-	this->camera->position[Y] = this->player->position[Y] + 1;
-	this->camera->position[Z] = CAMERA_DISTANCE;
+	if (this->map->allowMovement) {
+		this->camera->position[X] = this->player->position[X] + 2;
+		this->camera->position[Y] = this->player->position[Y] + 1;
+		this->camera->position[Z] = CAMERA_DISTANCE;
+	} else {
+		this->camera->position[X] = this->player->position[X];
+		this->camera->position[Y] = this->player->position[Y];
+		this->camera->position[Z] = CAMERA_DISTANCE;
+	}
 #endif
 
 	setPositionArray(playerObj->position, this->player->position);

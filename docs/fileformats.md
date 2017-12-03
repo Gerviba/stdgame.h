@@ -35,8 +35,8 @@
 |C|Coords|C id type x y|
 |M|Message|M x y z rrggbb alpha FontSize message|
 |R|Region|R xMin yMin xMax yMax Action.id maxUse itemRequired noSneek (5) (6) |
-|A|TextComponent|A id x y relativeX relativeY align message rrggbb alpha fontsize action (3) |
-|B|ObjectComponent|A id x y relativeX relativeY alignX I(ACTIVE).id action (3) |
+|A|TextComponent|A id x y z relativeX relativeY align message rrggbb alpha fontsize action (3) |
+|B|ObjectComponent|A id x y z relativeX relativeY alignX I(ACTIVE).id action (3) |
 |D|ImageComponent|D id path x y z height width action (3) |
 |N|Action|N id ActionType value |
 |P|PhysicsArea|P id x y|

@@ -196,7 +196,6 @@ struct Map {
 	char description[242];
 	float ambient[3];
 	float spawn[3];
-	float end[3];
 
 	LinkedList /*Tile*/ *tiles;
 	LinkedList /*Light*/ *lights;

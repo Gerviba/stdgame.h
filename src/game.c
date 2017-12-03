@@ -164,6 +164,8 @@ void onRender(GameInstance *this) {
 
 	foreach (it, this->map->menu->components->first) {
 		Component* comp = it->data;
+		if (!this->map->allowMovement && (comp->id == HEALT_COMPONENT_ID || comp->id == SCORE_COMPONENT_ID))
+			continue;
 		if (comp->onRender != NULL)
 			comp->onRender(comp, this);
 	}
@@ -361,6 +363,44 @@ void activateAction(GameInstance *this, GLint id) {
 						psx->enabled = data[3] != 0;
 				}
 			}
+		} else if (action->type == ACTION_WIN) {
+			addTextComponentColor(this->map, "VICTORY", 20001, X_CENTER, Y_CENTER, ALIGN_CENTER,
+					(GLfloat[]) {0.0f, 0.8f, 0.0f}, (GLfloat[]) {0.992156863f, 0.909803922f, 0.529411765f, 1.0f},
+					FS_HIGH_DPI);
+			addTextComponent(this->map, "Score", 20002, X_CENTER, Y_CENTER, ALIGN_LEFT, -1.5f, 0.2f, FS_NORMAL_DPI);
+			addTextComponent(this->map, "Time", 20002, X_CENTER, Y_CENTER, ALIGN_LEFT, -1.5f, -0.3f, FS_NORMAL_DPI);
+			char str[255];
+			sprintf(str, "%d *", this->map->score);
+			addTextComponent(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_RIGHT, 1.5f, 0.2f, FS_NORMAL_DPI);
+
+			time_t deltaT = time(NULL) - this->map->startTime;
+			sprintf(str, "%02d:%02d", ((int) deltaT) / 60, ((int) deltaT) % 60);
+			addTextComponent(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_RIGHT, 1.5f, -0.3f, FS_NORMAL_DPI);
+
+			char key[20];
+			getOptionCaption(this, "menu", key, 0);
+			sprintf(str, "Press '%s' to continue", key);
+			addTextComponentColor(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_CENTER,
+					(GLfloat[]) {0.0f, -0.85f, 0.0f}, (GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_LOW_DPI);
+
+			this->map->allowMovement = GL_FALSE;
+			ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
+			playerObj->visible = GL_FALSE;
+
+		} else if (action->type == ACTION_LOSE) {
+			addTextComponentColor(this->map, "YOU LOSE", 20001, X_CENTER, Y_CENTER, ALIGN_CENTER,
+					(GLfloat[]) {0.0f, 0.2f, 0.0f}, (GLfloat[]) {1.0f, 0.1, 0.1, 1.0f},
+					FS_HIGH_DPI);
+
+			char str[255], key[20];
+			getOptionCaption(this, "menu", key, 0);
+			sprintf(str, "Press '%s' to continue", key);
+			addTextComponentColor(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_CENTER,
+					(GLfloat[]) {0.0f, -0.85f, 0.0f}, (GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_LOW_DPI);
+
+			this->map->allowMovement = GL_FALSE;
+			ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
+			playerObj->visible = GL_FALSE;
 		}
 	}
 }
@@ -411,41 +451,43 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	}
 
 	Iterator it;
-	if (deltaMoveX != 0) {
-		foreach (it, this->map->tiles->first) {
-			Tile *tile = it->data;
-			if ((tile->type & MOVE_BLOCK_X) != 0 &&
-					((int) tile->y == (int) this->player->position[Y] ||
-						(int) tile->y == (int) (this->player->position[Y] + 1.0f) ||
-						(int) tile->y == (int) (this->player->position[Y] + this->player->height)) &&
-					((tile->x + 1 < this->player->position[X]
-						&& tile->x + 1 >= this->player->position[X] + deltaMoveX) ||
-					(tile->x >= this->player->position[X] + this->player->width
-						&& tile->x < this->player->position[X] + deltaMoveX + this->player->width))) {
+	if (this->map->allowMovement) {
+		if (deltaMoveX != 0) {
+			foreach (it, this->map->tiles->first) {
+				Tile *tile = it->data;
+				if ((tile->type & MOVE_BLOCK_X) != 0 &&
+						((int) tile->y == (int) this->player->position[Y] ||
+							(int) tile->y == (int) (this->player->position[Y] + 1.0f) ||
+							(int) tile->y == (int) (this->player->position[Y] + this->player->height)) &&
+						((tile->x + 1 < this->player->position[X]
+							&& tile->x + 1 >= this->player->position[X] + deltaMoveX) ||
+						(tile->x >= this->player->position[X] + this->player->width
+							&& tile->x < this->player->position[X] + deltaMoveX + this->player->width))) {
 
-				deltaMoveX = 0;
-				break;
+					deltaMoveX = 0;
+					break;
+				}
 			}
 		}
-	}
-	if (deltaMoveX != 0) {
-		foreach (it, this->map->physics->first) {
-			PhysicsArea *pa = it->data;
-			if (pa->enabled &&
-					((int) pa->y == (int) this->player->position[Y] ||
-						(int) pa->y == (int) (this->player->position[Y] + 1.0f) ||
-						(int) pa->y == (int) (this->player->position[Y] + this->player->height)) &&
-					((pa->x + 1 < this->player->position[X]
-						&& pa->x + 1 >= this->player->position[X] + deltaMoveX) ||
-					(pa->x >= this->player->position[X] + this->player->width
-						&& pa->x < this->player->position[X] + deltaMoveX + this->player->width))) {
+		if (deltaMoveX != 0) {
+			foreach (it, this->map->physics->first) {
+				PhysicsArea *pa = it->data;
+				if (pa->enabled &&
+						((int) pa->y == (int) this->player->position[Y] ||
+							(int) pa->y == (int) (this->player->position[Y] + 1.0f) ||
+							(int) pa->y == (int) (this->player->position[Y] + this->player->height)) &&
+						((pa->x + 1 < this->player->position[X]
+							&& pa->x + 1 >= this->player->position[X] + deltaMoveX) ||
+						(pa->x >= this->player->position[X] + this->player->width
+							&& pa->x < this->player->position[X] + deltaMoveX + this->player->width))) {
 
-				deltaMoveX = 0;
-				break;
+					deltaMoveX = 0;
+					break;
+				}
 			}
 		}
-	}
 	this->player->position[X] += deltaMoveX;
+	}
 
 	if (this->player->jump < 2 && this->player->lastJump + 0.3 < glfwGetTime()
 			&& isActionPerformed(this, &this->options->jump)
@@ -461,54 +503,56 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	if (this->player->velocity[Y] < -15)
 		this->player->velocity[Y] = -15;
 
-	if (deltaMoveY != 0) {
-		foreach (it, this->map->tiles->first) {
-			Tile *tile = it->data;
-			if ((tile->type & MOVE_BLOCK_Y) != 0 &&
-					((int) tile->x == (int) (this->player->position[X]) ||
-					(int) tile->x == (int) (this->player->position[X] + this->player->width))) {
+	if (this->map->allowMovement) {
+		if (deltaMoveY != 0) {
+			foreach (it, this->map->tiles->first) {
+				Tile *tile = it->data;
+				if ((tile->type & MOVE_BLOCK_Y) != 0 &&
+						((int) tile->x == (int) (this->player->position[X]) ||
+						(int) tile->x == (int) (this->player->position[X] + this->player->width))) {
 
-				if (tile->y + 1 > deltaMoveY + this->player->position[Y]
-						&& tile->y + 1 <= this->player->position[Y]) {
-					this->player->position[Y] = tile->y + 1;
-					this->player->velocity[Y] = -0.00001;
-					deltaMoveY = 0;
-					this->player->jump = 0;
-					this->player->lastJump = 0;
-				} else if (tile->y <= deltaMoveY + this->player->position[Y] + this->player->height
-						&& tile->y > this->player->position[Y] + this->player->height) {
-					this->player->velocity[Y] = -0.00001;
-					deltaMoveY = 0;
-					this->player->jump = 2;
+					if (tile->y + 1 > deltaMoveY + this->player->position[Y]
+							&& tile->y + 1 <= this->player->position[Y]) {
+						this->player->position[Y] = tile->y + 1;
+						this->player->velocity[Y] = -0.00001;
+						deltaMoveY = 0;
+						this->player->jump = 0;
+						this->player->lastJump = 0;
+					} else if (tile->y <= deltaMoveY + this->player->position[Y] + this->player->height
+							&& tile->y > this->player->position[Y] + this->player->height) {
+						this->player->velocity[Y] = -0.00001;
+						deltaMoveY = 0;
+						this->player->jump = 2;
+					}
 				}
 			}
 		}
-	}
-	if (deltaMoveY != 0) {
-		foreach (it, this->map->physics->first) {
-			PhysicsArea *pa = it->data;
-			if (pa->enabled &&
-					((int) pa->x == (int) (this->player->position[X]) ||
-					(int) pa->x == (int) (this->player->position[X] + this->player->width))) {
+		if (deltaMoveY != 0) {
+			foreach (it, this->map->physics->first) {
+				PhysicsArea *pa = it->data;
+				if (pa->enabled &&
+						((int) pa->x == (int) (this->player->position[X]) ||
+						(int) pa->x == (int) (this->player->position[X] + this->player->width))) {
 
-				if (pa->y + 1 > deltaMoveY + this->player->position[Y]
-						&& pa->y + 1 <= this->player->position[Y]) {
-					this->player->position[Y] = pa->y + 1;
-					this->player->velocity[Y] = -0.00001;
-					deltaMoveY = 0;
-					this->player->jump = 0;
-					this->player->lastJump = 0;
-				} else if (pa->y <= deltaMoveY + this->player->position[Y] + this->player->height
-						&& pa->y > this->player->position[Y] + this->player->height) {
-					this->player->velocity[Y] = -0.00001;
-					deltaMoveY = 0;
-					this->player->jump = 2;
+					if (pa->y + 1 > deltaMoveY + this->player->position[Y]
+							&& pa->y + 1 <= this->player->position[Y]) {
+						this->player->position[Y] = pa->y + 1;
+						this->player->velocity[Y] = -0.00001;
+						deltaMoveY = 0;
+						this->player->jump = 0;
+						this->player->lastJump = 0;
+					} else if (pa->y <= deltaMoveY + this->player->position[Y] + this->player->height
+							&& pa->y > this->player->position[Y] + this->player->height) {
+						this->player->velocity[Y] = -0.00001;
+						deltaMoveY = 0;
+						this->player->jump = 2;
+					}
 				}
 			}
 		}
-	}
-
 	this->player->position[Y] += deltaMoveY;
+	}
+
 
 #ifndef DEBUG_MOVEMENT
 	if (this->map->allowMovement) {
@@ -517,7 +561,7 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 		this->camera->position[Z] = CAMERA_DISTANCE;
 	} else {
 		this->camera->position[X] = this->player->position[X];
-		this->camera->position[Y] = this->player->position[Y];
+		this->camera->position[Y] = this->player->position[Y] + 1;
 		this->camera->position[Z] = CAMERA_DISTANCE;
 	}
 #endif
@@ -526,29 +570,37 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 
 	foreach (it, this->map->regions->first) {
 		Region *region = it->data;
-		if (region->maxUse != 0 && isPlayerInRegion(this, region) && (region->itemReq == -1
-				|| (this->player->item == region->itemReq && isActionPerformed(this, &this->options->use)))) {
+		if (region->maxUse != 0 && isPlayerInRegion(this, region)
+			&& (region->itemReq == -1 || (this->player->item == region->itemReq
+					&& isActionPerformed(this, &this->options->use)))
+			&& (region->notSneek == GL_FALSE || (region->notSneek == GL_TRUE
+					&& !isActionPerformed(this, &this->options->sneek)))) {
 
-			if (region->notSneek == GL_FALSE || (region->notSneek == GL_TRUE && !isActionPerformed(this, &this->options->sneek))) {
-				activateAction(this, region->actionId);
-				if (region->maxUse > 0)
-					--region->maxUse;
-			}
+			activateAction(this, region->actionId);
+			if (region->maxUse > 0)
+				--region->maxUse;
+
 		}
 	}
 
-	foreach (it, this->map->menu->components->first) {
-		Component *comp = it->data;
-		if (comp->id == HEALT_COMPONENT_ID) {
-			char str[6] = "\0";
-			int i;
-			for (i = 0; i < this->map->healt; ++i)
-				strcat(str, "$");
-			strcpy(comp->text->text, str);
-		} else if (comp->id == SCORE_COMPONENT_ID) {
-			char str[14] = "\0";
-			sprintf(str, "%d *", this->map->score);
-			strcpy(comp->text->text, str);
+	if (this->map->allowMovement) {
+		foreach (it, this->map->menu->components->first) {
+			Component *comp = it->data;
+			if (comp->id == HEALT_COMPONENT_ID) {
+				char str[6] = "\0";
+				int i;
+				for (i = 0; i < this->map->healt; ++i)
+					strcat(str, "$");
+				strcpy(comp->text->text, str);
+
+				if (this->map->healt <= 0)
+					activateAction(this, ACTION_LOSE_ID);
+
+			} else if (comp->id == SCORE_COMPONENT_ID) {
+				char str[14] = "\0";
+				sprintf(str, "%d *", this->map->score);
+				strcpy(comp->text->text, str);
+			}
 		}
 	}
 
@@ -576,6 +628,10 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 					(this->player->position[Z] - 0.4) : (this->player->position[Z] + 0.4);
 			rp->rotation[Y] = this->player->leftSide ? 315 : 135;
 			rp->rotation[X] = this->player->leftSide ? 180 : 0;
+		} else if (rp->id == 7) {
+			rp->position[X] = this->player->position[X];
+			rp->position[Y] = this->player->position[Y];
+			rp->position[Z] = this->player->position[Z];
 		}
 	}
 }

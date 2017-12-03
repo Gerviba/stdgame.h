@@ -68,6 +68,7 @@ typedef enum {
 #define MOVE_BLOCK_X			(TT_BORDER_RIGHT | TT_BORDER_LEFT) & 0b11110
 
 #define ACTION_VALUE_DONT_CARE -65536
+#define ACTION_LOSE_ID -10000
 #define HEALT_COMPONENT_ID -1000
 #define SCORE_COMPONENT_ID -1001
 
@@ -215,7 +216,13 @@ struct Map {
 	time_t startTime;
 };
 
+Map* loadMap(GameInstance *this, char path[]);
+void freeMap(Map *map);
 void getKeyName(GameInstance *this, char *str, int key);
 void getOptionCaption(GameInstance *this, char *name, char *str, int id);
+void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY,
+		Align align, GLfloat x, GLfloat y, FontSize size);
+void addTextComponentColor(Map* map, char text[], int id, RelativeX relX, RelativeY relY,
+		Align align, GLfloat pos[3], GLfloat color[4], FontSize size);
 
 #endif /* MAP_H_ */

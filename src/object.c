@@ -552,7 +552,7 @@ void initStraticInstance(StaticObjectInstance *instance) {
 void initReferencePoints(GameInstance *this) {
 	this->referencePoints = newList(ReferencePoint);
 	GLint i;
-	for (i = 0; i < 7; ++i) {
+	for (i = 0; i < 8; ++i) {
 		ReferencePoint rp;
 		rp.id = i;
 		rp.timing = 0;

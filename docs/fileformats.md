@@ -38,7 +38,7 @@
 |A|TextComponent|A id x y z relativeX relativeY align message rrggbb alpha fontsize action (3) |
 |B|ObjectComponent|A id x y z relativeX relativeY alignX I(ACTIVE).id action (3) |
 |D|ImageComponent|D id path x y z height width action (3) |
-|N|Action|N id ActionType value |
+|N|Action|N id ActionType value (7) |
 |P|PhysicsArea|P id x y|
 |E|Entity|E id aobj.id ligth.id spellSpeed damage hp score floatFi0 hitboxRadius|
 
@@ -71,6 +71,7 @@
 - (4) Unimplemented
 - (5) Maximum use: n > 0 for n, -1 for infinity
 - (6) Item reuired: item id or -1 for noting
+- (7) Action lose id: -10000
 - RelativeX, RelativeY and Align enums:
 |Enum|Name|Value|Description|
 |----|----|-----:|-----------|
@@ -94,6 +95,7 @@
 |4|Left weapon light|
 |5|Right hand|
 |6|Top spikes|
+|7|Player center|
 
 - ActionType values:
 |ActionType|Id|Arguments|

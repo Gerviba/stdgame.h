@@ -269,11 +269,24 @@ void calcOptionsGraphicsButton(Component *comp, GameInstance *this) {
 	calcTextButton(comp, this);
 }
 
-void clickStartButton(Component *comp, GameInstance *this) {
+void clickGameSelector(Component *comp, GameInstance *this) {
 	freeMap(this->map);
-	this->map = loadMap(this, "assets/maps/tutorial.map");
-	initPlayer(this);
+	this->map = loadMap(this, "assets/maps/select.menu");
 	updateCamera(this);
+}
+
+void clickStartButton(Component *comp, GameInstance *this) {
+	if (comp->id == 10) {
+		freeMap(this->map);
+		this->map = loadMap(this, "assets/maps/tutorial.map");
+		initPlayer(this);
+		updateCamera(this);
+	} else if (comp->id == 20) {
+		freeMap(this->map);
+		this->map = loadMap(this, "assets/maps/pyramid.map");
+		initPlayer(this);
+		updateCamera(this);
+	}
 }
 
 void clickOptions(Component *comp, GameInstance *this) {

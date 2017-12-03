@@ -37,11 +37,23 @@ void onCharModEvent(GLFWwindow* window, unsigned int key, int mods) {
 }
 
 void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
-
 	GameInstance *this = NULL;
 	getGameInstance(&this);
+
+	if (isActionPerformed(this, &this->options->menu)) {
+		if (this->state == INGAME) {
+			freeMap(this->map);
+			this->map = loadMap(this, "assets/maps/main.menu");
+			initPlayer(this);
+			updateCamera(this);
+		} else {
+			glfwSetWindowShouldClose(window, GL_TRUE);
+		}
+	}
+
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS && (mods & GLFW_MOD_SHIFT) != 0)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+
 	updateControlsMods(this, mods, key);
 
 	if (key == GLFW_KEY_H && action == GLFW_PRESS) {

@@ -145,4 +145,6 @@ GLfloat getDistSquared2D(GLfloat a[3], GLfloat b[3]);
 GLfloat getDistSquared2DDelta(GLfloat a[3], GLfloat deltaA[3], GLfloat b[3]);
 GLfloat getDistSquaredXY(GLfloat x, GLfloat y, GLfloat b[3]);
 
+GLboolean isActionPerformed(GameInstance *this, InputActionWrapper* iaw);
+
 #endif /* GAME_H_ */

@@ -10,6 +10,7 @@
 #include "stdgame.h"
 
 //TODO: Remove them from here:
+extern void clickGameSelector(Component*, GameInstance*);
 extern void clickExit(Component*, GameInstance*);
 extern void clickCredits(Component*, GameInstance*);
 extern void clickBack(Component*, GameInstance*);
@@ -42,7 +43,7 @@ void loadTexture(GLuint *textureId, char path[]) {
 /**
  * Documented header
  */
-static void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align,
+void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align,
 		GLfloat x, GLfloat y, FontSize size) {
 
 	Component comp;
@@ -67,9 +68,35 @@ static void addTextComponent(Map* map, char text[], int id, RelativeX relX, Rela
 	listPush(map->menu->components, &comp);
 }
 
+void addTextComponentColor(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align,
+		GLfloat pos[3], GLfloat color[4], FontSize size) {
+
+	Component comp;
+	comp.id = id;
+	comp.text = new(TextComponent);
+	comp.type = CT_TEXT;
+	comp.relativeX = relX;
+	comp.relativeY = relY;
+	comp.text->fontSize = size;
+	setPosition(comp.position, pos[X], pos[Y], pos[Z]);
+	comp.text->align = align;
+	setColor(comp.text->color, color[R], color[G], color[B], color[A]);
+
+	comp.text->text = malloc(sizeof(char) * (strlen(text) + 1));
+	strcpy(comp.text->text, text);
+	int i, length;
+	for (i = 0, length = strlen(comp.text->text); i < length; ++i)
+		if (comp.text->text[i] == '_')
+			comp.text->text[i] = ' ';
+
+	comp.onRender = renderTextComponent;
+	listPush(map->menu->components, &comp);
+}
+
 void (*getAction(int id)) (Component*, GameInstance*) {
 	switch (id) {
 	case 0: return NULL;
+	case 1: return clickGameSelector;
 	case 2: return clickOptions;
 	case 21: return clickGraphicsSet;
 	case 22: return clickControllsSet;
@@ -229,6 +256,11 @@ Map* loadMap(GameInstance *this, char path[]) {
 	map->menu->scrollMin = 0;
 	map->menu->scrollMax = 0;
 	map->menu->scrollOffset = 0;
+
+	Action lose;
+	lose.id = ACTION_LOSE_ID;
+	lose.type = ACTION_LOSE;
+	listPush(map->actions, &lose);
 
 	this->state = MENU;
 	FILE *file;
@@ -581,15 +613,15 @@ Map* loadMap(GameInstance *this, char path[]) {
 					sscanf(buff, "N %*d %*d %d", &itemId);
 					action.value = newGenericValue(&itemId, sizeof(GLint));
 				} else if (action.type == ACTION_SET_LIGHT) {
-					float data[11];
-					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f",
+					float data[12];
+					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f %f",
 							&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
-							&data[7], &data[8], &data[9], &data[10]);
-					action.value = newGenericValue(data, sizeof(float) * 11);
+							&data[7], &data[8], &data[9], &data[10], &data[11]);
+					action.value = newGenericValue(data, sizeof(float) * 12);
 				} else if (action.type == ACTION_OBJECT_PSX) {
 					float data[4];
 					sscanf(buff, "N %*d %*d %f %f %f %f", &data[0], &data[1], &data[2], &data[3]);
-					action.value = newGenericValue(data, sizeof(int) * 4);
+					action.value = newGenericValue(data, sizeof(float) * 4);
 				}
 
 				listPush(map->actions, &action);
@@ -640,6 +672,7 @@ Map* loadMap(GameInstance *this, char path[]) {
 	}
 
 	fclose(file);
+	setPosition(this->camera->position, 0.0f, 0.0f, 0.0f);
 	fixViewport(this);
 
 	DEBUG("Map", "Successfully loaded");
@@ -649,7 +682,7 @@ Map* loadMap(GameInstance *this, char path[]) {
 /**
  * @todo Implement
  */
-void freeMap(Map map) {
+void freeMap(Map *map) {
 
 }
 

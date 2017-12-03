@@ -552,7 +552,7 @@ void initStraticInstance(StaticObjectInstance *instance) {
 void initReferencePoints(GameInstance *this) {
 	this->referencePoints = newList(ReferencePoint);
 	GLint i;
-	for (i = 0; i < 6; ++i) {
+	for (i = 0; i < 7; ++i) {
 		ReferencePoint rp;
 		rp.id = i;
 		rp.timing = 0;
@@ -576,6 +576,10 @@ void updateReferencePoint(GameInstance *this, GLfloat delta) {
 			rp->timing += delta * 4;
 
 			rp->position[Y] = sinf(rp->timing) / 6;
+		} else if (rp->id == 6) {
+			rp->timing += delta * 4;
+
+			rp->position[Y] = sinf(rp->timing) / 16;
 		}
 	}
 }

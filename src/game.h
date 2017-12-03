@@ -18,6 +18,8 @@
 
 /** Maximum allowed lights to render */
 #define MAX_NUM_LIGHTS 28
+/** Ingame camera distance */
+#define CAMERA_DISTANCE 5.2
 
 /** Game state */
 typedef enum {

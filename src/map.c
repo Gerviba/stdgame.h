@@ -210,6 +210,8 @@ Map* loadMap(GameInstance *this, char path[]) {
 	map->textureBlocks = newList(TextureBlock);
 	map->actions = newList(Action);
 	map->regions = newList(Region);
+	map->messages = newList(Message);
+	map->physics = newList(PhysicsArea);
 
 	map->objects = new(ObjectInfo);
 	map->objects->staticObjects = newList(StaticObject);
@@ -567,23 +569,27 @@ Map* loadMap(GameInstance *this, char path[]) {
 					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f %f",
 							&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
 							&data[7], &data[8], &data[9], &data[10], &data[11]);
-					action.value = newGenericValue(data, sizeof(int) * 12);
+					action.value = newGenericValue(data, sizeof(float) * 12);
 				} else if (action.type == ACTION_SET_AOBJ) {
 					float data[11];
 					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f",
 							&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
 							&data[7], &data[8], &data[9], &data[10]);
-					action.value = newGenericValue(data, sizeof(int) * 11);
+					action.value = newGenericValue(data, sizeof(float) * 11);
 				} else if (action.type == ACTION_SET_ITEM) {
 					GLint itemId;
 					sscanf(buff, "N %*d %*d %d", &itemId);
 					action.value = newGenericValue(&itemId, sizeof(GLint));
 				} else if (action.type == ACTION_SET_LIGHT) {
-					float data[9];
-					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f",
+					float data[11];
+					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f",
 							&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
-							&data[7], &data[8]);
-					action.value = newGenericValue(data, sizeof(int) * 9);
+							&data[7], &data[8], &data[9], &data[10]);
+					action.value = newGenericValue(data, sizeof(float) * 11);
+				} else if (action.type == ACTION_OBJECT_PSX) {
+					float data[4];
+					sscanf(buff, "N %*d %*d %f %f %f %f", &data[0], &data[1], &data[2], &data[3]);
+					action.value = newGenericValue(data, sizeof(int) * 4);
 				}
 
 				listPush(map->actions, &action);
@@ -591,10 +597,43 @@ Map* loadMap(GameInstance *this, char path[]) {
 			}
 			case 'R': { // Region
 				Region region;
-				sscanf(buff, "R %f %f %f %f %d %d %d", &region.xMin, &region.yMin, &region.xMax, &region.yMax,
-						&region.actionId, &region.maxUse, &region.itemReq);
+				sscanf(buff, "R %f %f %f %f %d %d %d %d", &region.xMin, &region.yMin, &region.xMax, &region.yMax,
+						&region.actionId, &region.maxUse, &region.itemReq, (int*) &region.notSneek);
 
 				listPush(map->regions, &region);
+				break;
+			}
+			case 'M': { // Message
+				Message msg;
+				unsigned int r, g, b;
+				sscanf(buff, "M %f %f %f %02x%02x%02x %f %d %s",
+						&msg.position.x, &msg.position.y, &msg.position.z, &r, &g, &b,
+						&msg.color.a, (int*) &msg.size, msg.message);
+				msg.color.r = (float) r / 255;
+				msg.color.g = (float) g / 255;
+				msg.color.b = (float) b / 255;
+
+				int i = 0;
+				while (msg.message[i] != '\0') {
+					if (msg.message[i] == '_')
+						msg.message[i] = ' ';
+					++i;
+				}
+
+				listPush(map->messages, &msg);
+				break;
+			}
+			case 'E': { // Entity
+				Entity e;
+				//TODO:
+
+				break;
+			}
+			case 'P': { // Physics
+				PhysicsArea pa;
+				sscanf(buff, "P %d %f %f %d", &pa.id, &pa.x, &pa.y, (int *) &pa.enabled);
+
+				listPush(map->physics, &pa);
 				break;
 			}
 		}

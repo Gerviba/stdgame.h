@@ -112,7 +112,8 @@ typedef struct Tile Tile;
 typedef struct Region Region;
 typedef struct Action Action;
 typedef struct PhysicsArea PhysicsArea;
-typedef struct MessageRegion MessageRegion;
+typedef struct Entity Entity;
+typedef struct Message Message;
 typedef struct Map Map;
 
 // menu.h

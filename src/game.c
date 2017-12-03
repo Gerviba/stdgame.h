@@ -171,18 +171,9 @@ void onRender(GameInstance *this) {
 	if (this->map->menu->useCursor)
 		renderActiveObject(this, this->cursor->pointer);
 
-	if (this->state == INGAME) {
-		renderFontTo(this, "Grab the key", (GLfloat[]) {9, 6.6875, 1.1},
-				(GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_NORMAL_DPI);
-
-		renderFontTo(this, "Test double jump", (GLfloat[]) {17.5, 6.6875, 1.1},
-				(GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_NORMAL_DPI);
-
-		renderFontTo(this, "Kill monsters ", (GLfloat[]) {67.5, 15.6875, 1.1},
-				(GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_NORMAL_DPI);
-
-		renderFontTo(this, "Finish", (GLfloat[]) {96, 12.6875, 1.1},
-				(GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_NORMAL_DPI);
+	foreach (it, this->map->messages->first) {
+		Message *m = it->data;
+		renderFontTo(this, m->message, m->position.xyz, m->color.rgba, m->size);
 	}
 
     glUseProgram(0);
@@ -356,6 +347,20 @@ void activateAction(GameInstance *this, GLint id) {
 					}
 				}
 			}
+		} else if (action->type == ACTION_OBJECT_PSX) {
+			float *data = action->value->value;
+			Iterator psxIt;
+			foreach (psxIt, this->map->physics->first) {
+				PhysicsArea *psx = psxIt->data;
+				if (psx->id == (int) data[0]) {
+					if (data[1] != ACTION_VALUE_DONT_CARE)
+						psx->x = data[1];
+					if (data[2] != ACTION_VALUE_DONT_CARE)
+						psx->y = data[2];
+					if (data[3] != ACTION_VALUE_DONT_CARE)
+						psx->enabled = data[3] != 0;
+				}
+			}
 		}
 	}
 }
@@ -464,7 +469,7 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 #ifndef DEBUG_MOVEMENT
 	this->camera->position[X] = this->player->position[X] + 2;
 	this->camera->position[Y] = this->player->position[Y] + 1;
-	this->camera->position[Z] = 5.2;
+	this->camera->position[Z] = CAMERA_DISTANCE;
 #endif
 
 	setPositionArray(playerObj->position, this->player->position);
@@ -473,9 +478,12 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 		Region *region = it->data;
 		if (region->maxUse != 0 && isPlayerInRegion(this, region) && (region->itemReq == -1
 				|| (this->player->item == region->itemReq && isActionPerformed(this, &this->options->use)))) {
-			activateAction(this, region->actionId);
-			if (region->maxUse > 0)
-				--region->maxUse;
+
+			if (region->notSneek == GL_FALSE || (region->notSneek == GL_TRUE && !isActionPerformed(this, &this->options->sneek))) {
+				activateAction(this, region->actionId);
+				if (region->maxUse > 0)
+					--region->maxUse;
+			}
 		}
 	}
 
@@ -579,6 +587,8 @@ void onLogic(GameInstance *this) {
 	foreach (it, this->map->lights->first) {
 		Light *light = it->data;
 
+		if (!light->visible)
+			continue;
 		if (getDistSquared2DDelta(light->position, light->reference->position, this->camera->position) > 100)
 			continue;
 

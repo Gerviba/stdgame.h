@@ -33,13 +33,14 @@
 |O|Object Active|O id STATIC/DYNAMIC/ACTIVE filename|
 |I|Object Instance|I O.id STATIC/DYNAMIC/ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference (2) |
 |C|Coords|C id type x y|
-|M|Message|M x1 y1 x2 y2 line1 (line2)|
-|R|Region|R xMin yMin xMax yMax Action.id maxUse itemRequired (5) (6) |
+|M|Message|M x y z rrggbb alpha FontSize message|
+|R|Region|R xMin yMin xMax yMax Action.id maxUse itemRequired noSneek (5) (6) |
 |A|TextComponent|A id x y relativeX relativeY align message rrggbb alpha fontsize action (3) |
 |B|ObjectComponent|A id x y relativeX relativeY alignX I(ACTIVE).id action (3) |
 |D|ImageComponent|D id path x y z height width action (3) |
 |N|Action|N id ActionType value |
-|P|Phisics|P id x y|
+|P|PhysicsArea|P id x y|
+|E|Entity|E id aobj.id ligth.id spellSpeed damage hp score floatFi0 hitboxRadius|
 
 - (1) Texture, TextureBlock and Tile lines are only processed in maps and the first loaded menu file.
 - (2) Reference: required and available only for dynamic objects.
@@ -91,6 +92,8 @@
 |2|Left hand|
 |3|Coin floating|
 |4|Left weapon light|
+|5|Right hand|
+|6|Top spikes|
 
 - ActionType values:
 |ActionType|Id|Arguments|
@@ -102,7 +105,7 @@
 |SET_AOBJ|4|aobj.id x y z alpha beta gamma SizeX SizeY SizeZ visible|
 |SET_ITEM|5|itemId|
 |SET_LIGHT|6|light.id x y z strength rrggbb specular intensity visible reference|
-|OBJECT_PSX|7|id xMin yMIn xMax yMax|
+|OBJECT_PSX|7|id x y enabled|
 |FINISH|8|Finish (Win)|
 |LOSE|9|Lose|
 

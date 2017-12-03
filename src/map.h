@@ -138,8 +138,9 @@ typedef enum {
 	 */
 	ACTION_SET_LIGHT,
 	/**
-	 * Object psysics setter
+	 * Object psysics setter:
 	 * id allowed
+	 * @see PhysicsArea
 	 */
 	ACTION_OBJECT_PSX,
 	/** Win the game */
@@ -167,12 +168,26 @@ struct Region {
 	GLint actionId;
 	GLint maxUse;
 	GLint itemReq;
+	GLboolean notSneek;
 };
 
-struct MessageRegion {
+struct Message {
 	Position position;
-	char message1[100];
-	char message2[100];
+	Color color;
+	FontSize size;
+	char message[100];
+};
+
+struct Entity {
+	GLint id;
+	ActiveObjectInstance *spellId;
+	GLint lightId;
+	GLfloat spellSpeed;
+	GLfloat damage;
+	GLfloat hp;
+	GLint score;
+	GLfloat fi0;
+	GLfloat radius;
 };
 
 struct Map {
@@ -189,6 +204,8 @@ struct Map {
 	LinkedList /*TextureBlock*/ *textureBlocks;
 	LinkedList /*Action*/ *actions;
 	LinkedList /*Region*/ *regions;
+	LinkedList /*Message*/ *messages;
+	LinkedList /*PhysicsArea*/ *physics;
 
 	ObjectInfo *objects;
 	Menu *menu;

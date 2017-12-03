@@ -149,7 +149,6 @@ DynamicObject *loadDynamicObject(char path[]) {
 ActiveObject *loadActiveObject(char path[]) {
 	ActiveObject *aobj = new(ActiveObject);
 
-	//TODO: Use coord union
 	GLfloat position[3] = {0.0f, 0.0f, 0.0f};
 	GLfloat rotation[3] = {0.0f, 0.0f, 0.0f};
 	GLfloat scale[3] = {0.0f, 0.0f, 0.0f};
@@ -303,6 +302,8 @@ void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 	DynamicObject *obj = instance->object;
 
+	if (!instance->visible)
+		return;
 	if (getDistSquared2DDelta(instance->position, instance->reference->position, this->camera->position) > 100)
 		return;
 
@@ -389,6 +390,8 @@ void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
 	DynamicObject *obj = (DynamicObject *) (instance->object->parts + instance->activePart);
 
+	if (!instance->visible)
+		return;
 	if (getDistSquared2DDelta(instance->position, obj->position, this->camera->position) > 100)
 		return;
 
@@ -549,7 +552,7 @@ void initStraticInstance(StaticObjectInstance *instance) {
 void initReferencePoints(GameInstance *this) {
 	this->referencePoints = newList(ReferencePoint);
 	GLint i;
-	for (i = 0; i < 5; ++i) {
+	for (i = 0; i < 6; ++i) {
 		ReferencePoint rp;
 		rp.id = i;
 		rp.timing = 0;
@@ -566,13 +569,13 @@ void updateReferencePoint(GameInstance *this, GLfloat delta) {
 		ReferencePoint *rp = it->data;
 		if (rp->id == 1) {
 			rp->timing += delta;
-			if (rp->timing > PI)
-				rp->timing -= 2 * PI;
 
 			rp->position[Y] = sinf(rp->timing * 2) / 6;
 			rp->rotation[Z] = rp->timing * 180.0;
 		} else if (rp->id == 3) {
-			rp->position[Y] = sinf(rp->timing * 2) / 2;
+			rp->timing += delta * 4;
+
+			rp->position[Y] = sinf(rp->timing) / 6;
 		}
 	}
 }

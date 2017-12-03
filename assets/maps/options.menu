@@ -6,9 +6,9 @@ $ STATE 0
 $ CURSOR true
 $ SCROLL true -1 2
 
-S 0 0 3.3 1 fdf8da 0 1 0
-S -3 0 3.3 1 fdf8da 0 1 0
-S 3 0 3.3 1 fdf8da 0 1 0
+S 0 0 0 3.3 1 fdf8da 0 1 0 1
+S 0 -3 0 3.3 1 fdf8da 0 1 0 1
+S 0 3 0 3.3 1 fdf8da 0 1 0 1
 
 A 0 0 1 0 0 0 0 GRAPHICS FFFFFF 1.0 32 0
 

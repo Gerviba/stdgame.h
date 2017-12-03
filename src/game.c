@@ -218,6 +218,148 @@ GLboolean isActionPerformed(GameInstance *this, InputActionWrapper* iaw) {
 	return GL_FALSE;
 }
 
+GLboolean isPlayerInRegion(GameInstance *this, Region *region) {
+	return this->player->position[X] >= region->xMin && this->player->position[Y] >= region->yMin
+			&& this->player->position[X] <= region->xMax && this->player->position[Y] <= region->yMax;
+}
+
+void activateAction(GameInstance *this, GLint id) {
+	Iterator it;
+	foreach (it, this->map->actions->first) {
+		Action *action = it->data;
+		if (action->id != id)
+			continue;
+
+		if (action->type == ACTION_TELEPORT) {
+			float *pos = action->value->value;
+			if (pos[X] != ACTION_VALUE_DONT_CARE)
+				this->player->position[X] = pos[X];
+			if (pos[Y] != ACTION_VALUE_DONT_CARE)
+				this->player->position[Y] = pos[Y];
+		} else if (action->type == ACTION_DAMAGE) {
+			this->map->healt -= *((int *) action->value->value);
+		} else if (action->type == ACTION_ADD_SCORE) {
+			this->map->score += *((int *) action->value->value);
+		} else if (action->type == ACTION_SET_DOBJ) {
+			float *data = action->value->value;
+			Iterator dobjIt;
+			foreach (dobjIt, this->map->objects->dynamicInstances->first) {
+				DynamicObjectInstance *dobj = dobjIt->data;
+				if ((int) data[0] == dobj->id) {
+					if (data[1] != ACTION_VALUE_DONT_CARE)
+						dobj->position[X] = data[1];
+					if (data[2] != ACTION_VALUE_DONT_CARE)
+						dobj->position[Y] = data[2];
+					if (data[3] != ACTION_VALUE_DONT_CARE)
+						dobj->position[Z] = data[3];
+
+					if (data[4] != ACTION_VALUE_DONT_CARE)
+						dobj->rotation[X] = data[4];
+					if (data[5] != ACTION_VALUE_DONT_CARE)
+						dobj->rotation[Y] = data[5];
+					if (data[6] != ACTION_VALUE_DONT_CARE)
+						dobj->rotation[Z] = data[6];
+
+					if (data[7] != ACTION_VALUE_DONT_CARE)
+						dobj->scale[X] = data[7];
+					if (data[8] != ACTION_VALUE_DONT_CARE)
+						dobj->scale[Y] = data[8];
+					if (data[9] != ACTION_VALUE_DONT_CARE)
+						dobj->scale[Z] = data[9];
+
+					if (data[10] != ACTION_VALUE_DONT_CARE)
+						dobj->visible = data[10] != 0;
+
+					if (data[11] != ACTION_VALUE_DONT_CARE) {
+						Iterator refIt;
+						foreach (refIt, this->referencePoints->first) {
+							if (((ReferencePoint *) refIt->data)->id == (GLint) data[11]) {
+								dobj->reference = refIt->data;
+								break;
+							}
+						}
+					}
+				}
+			}
+		} else if (action->type == ACTION_SET_AOBJ) {
+			float *data = action->value->value;
+			Iterator aobjIt;
+			foreach (aobjIt, this->map->objects->dynamicInstances->first) {
+				ActiveObjectInstance *aobj = aobjIt->data;
+				if ((int) data[0] == aobj->id) {
+					if (data[1] != ACTION_VALUE_DONT_CARE)
+						aobj->position[X] = data[1];
+					if (data[2] != ACTION_VALUE_DONT_CARE)
+						aobj->position[Y] = data[2];
+					if (data[3] != ACTION_VALUE_DONT_CARE)
+						aobj->position[Z] = data[3];
+
+					if (data[4] != ACTION_VALUE_DONT_CARE)
+						aobj->rotation[X] = data[4];
+					if (data[5] != ACTION_VALUE_DONT_CARE)
+						aobj->rotation[Y] = data[5];
+					if (data[6] != ACTION_VALUE_DONT_CARE)
+						aobj->rotation[Z] = data[6];
+
+					if (data[7] != ACTION_VALUE_DONT_CARE)
+						aobj->scale[X] = data[7];
+					if (data[8] != ACTION_VALUE_DONT_CARE)
+						aobj->scale[Y] = data[8];
+					if (data[9] != ACTION_VALUE_DONT_CARE)
+						aobj->scale[Z] = data[9];
+
+					if (data[10] != ACTION_VALUE_DONT_CARE)
+						aobj->visible = data[10] != 0;
+				}
+			}
+		} else if (action->type == ACTION_SET_ITEM) {
+			this->player->item = *((int *) action->value->value);
+		} else if (action->type == ACTION_SET_LIGHT) {
+			float *data = action->value->value;
+			Iterator lightIt;
+			foreach (lightIt, this->map->lights->first) {
+				Light *light = lightIt->data;
+				if ((int) data[0] == light->id) {
+					if (data[1] != ACTION_VALUE_DONT_CARE)
+						light->position[X] = data[1];
+					if (data[2] != ACTION_VALUE_DONT_CARE)
+						light->position[Y] = data[2];
+					if (data[3] != ACTION_VALUE_DONT_CARE)
+						light->position[Z] = data[3];
+
+
+					if (data[4] != ACTION_VALUE_DONT_CARE)
+						light->strength = data[4];
+					if (data[5] != ACTION_VALUE_DONT_CARE)
+						light->color[R] = data[5];
+					if (data[6] != ACTION_VALUE_DONT_CARE)
+						light->color[G] = data[6];
+					if (data[7] != ACTION_VALUE_DONT_CARE)
+						light->color[B] = data[7];
+
+					if (data[8] != ACTION_VALUE_DONT_CARE)
+						light->specular = data[8];
+					if (data[9] != ACTION_VALUE_DONT_CARE)
+						light->intensity = data[9];
+
+					if (data[10] != ACTION_VALUE_DONT_CARE)
+						light->visible = data[10] != 0;
+
+					if (data[11] != ACTION_VALUE_DONT_CARE) {
+						Iterator refIt;
+						foreach (refIt, this->referencePoints->first) {
+							if (((ReferencePoint *) refIt->data)->id == (GLint) data[11]) {
+								light->reference = refIt->data;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 void onLogicIngame(GameInstance *this, GLfloat delta) {
 	static const int PLAYER_ANIMATION[4] = {1, 0, 2, 0};
 	static float PLAYER_ANIMATION_TIMING = 0;
@@ -327,6 +469,31 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 
 	setPositionArray(playerObj->position, this->player->position);
 
+	foreach (it, this->map->regions->first) {
+		Region *region = it->data;
+		if (region->maxUse != 0 && isPlayerInRegion(this, region) && (region->itemReq == -1
+				|| (this->player->item == region->itemReq && isActionPerformed(this, &this->options->use)))) {
+			activateAction(this, region->actionId);
+			if (region->maxUse > 0)
+				--region->maxUse;
+		}
+	}
+
+	foreach (it, this->map->menu->components->first) {
+		Component *comp = it->data;
+		if (comp->id == HEALT_COMPONENT_ID) {
+			char str[6] = "\0";
+			int i;
+			for (i = 0; i < this->map->healt; ++i)
+				strcat(str, "$");
+			strcpy(comp->text->text, str);
+		} else if (comp->id == SCORE_COMPONENT_ID) {
+			char str[14] = "\0";
+			sprintf(str, "%d *", this->map->score);
+			strcpy(comp->text->text, str);
+		}
+	}
+
 	foreach (it, this->referencePoints->first) {
 		ReferencePoint *rp = it->data;
 		if (rp->id == 2) {
@@ -338,11 +505,19 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 			rp->rotation[Y] = this->player->leftSide ? 180 : 0;
 		} else if (rp->id == 4) {
 			rp->position[X] = this->player->leftSide ?
-					(this->player->position[X]) : (this->player->position[X] + 0.25);
+					(this->player->position[X] + 0.2) : (this->player->position[X] + 0.25);
 			rp->position[Y] = this->player->position[Y] + 1.3;
 			rp->position[Z] = this->player->leftSide ?
 					(this->player->position[Z] + 0.7) : (this->player->position[Z] + 0.3);
 			rp->rotation[Y] = this->player->leftSide ? 180 : 0;
+		} else if (rp->id == 5) {
+			rp->position[X] = this->player->leftSide ?
+					(this->player->position[X]) : (this->player->position[X] + 0.5);
+			rp->position[Y] = this->player->position[Y] + 0.6;
+			rp->position[Z] = this->player->leftSide ?
+					(this->player->position[Z] - 0.4) : (this->player->position[Z] + 0.4);
+			rp->rotation[Y] = this->player->leftSide ? 315 : 135;
+			rp->rotation[X] = this->player->leftSide ? 180 : 0;
 		}
 	}
 }

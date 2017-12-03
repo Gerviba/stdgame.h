@@ -45,7 +45,6 @@ struct GameInstance {
 	GLuint tileVAO;
 	GLuint blankTextureId;
 	GLFWwindow *window;
-	int score;
 	GameState state;
 
 	LinkedList /*ReferencePoint*/ *referencePoints;
@@ -115,38 +114,6 @@ struct LigingInfo {
 	GLfloat lightPosition[MAX_NUM_LIGHTS * 3];
 	GLfloat lightColor[MAX_NUM_LIGHTS * 3];
 	GLfloat lightInfo[MAX_NUM_LIGHTS * 3];
-};
-
-/**
- * 3D position type
- *
- * The `position.xyz` returns a 3-dimensional GLfloat array, and `position.x`, `position.y` and
- * `position.z` returns a component of the selected dimension.
- */
-union Position {
-	GLfloat xyz[3];
-	struct {
-		GLfloat x;
-		GLfloat y;
-		GLfloat z;
-	};
-};
-
-/**
- * RGBA color type
- *
- * The `color.rgba` returns a 4-dimensional GLfloat array, the `color.r` returns the red, the `color.g`
- * returns green, the `color.b` return the blue and the `color.a `returns the alpha component of the
- * RGBA color.
- */
-union Color {
-	GLfloat rgba[4];
-	struct {
-		GLfloat r;
-		GLfloat g;
-		GLfloat b;
-		GLfloat a;
-	};
 };
 
 /** Color value setter */

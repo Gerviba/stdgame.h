@@ -7,6 +7,7 @@
 #ifndef MAP_H_
 #define MAP_H_
 
+#include <time.h>
 #include "object.h"
 #include "linkedlist.h"
 #include "menu.h"
@@ -66,13 +67,19 @@ typedef enum {
 #define MOVE_BLOCK_Y			(TT_BORDER_TOP | TT_BORDER_BOTTOM) & 0b11110
 #define MOVE_BLOCK_X			(TT_BORDER_RIGHT | TT_BORDER_LEFT) & 0b11110
 
+#define ACTION_VALUE_DONT_CARE -65536
+#define HEALT_COMPONENT_ID -1000
+#define SCORE_COMPONENT_ID -1001
+
 struct Light {
+	GLint id;
 	GLfloat position[3];
 	GLfloat strength;
 	GLfloat color[3];
 	GLfloat specular;
 	GLfloat intensity;
 	ReferencePoint *reference;
+	GLboolean visible;
 };
 
 struct Texture {
@@ -101,46 +108,69 @@ struct Tile {
  */
 typedef enum {
 	/** Teleport to: x y */
-	TELEPORT,
+	ACTION_TELEPORT,
 	/** Damage: count */
-	DAMAGE,
+	ACTION_DAMAGE,
+	/** Score: count */
+	ACTION_ADD_SCORE,
 	/**
 	 * Set dynamic object:
-	 * x y z alpha beta gamma SizeX SizeY SizeZ visible
+	 * dobj.id x y z alpha beta gamma SizeX SizeY SizeZ visible visible
 	 * (-10000 = don't care)
 	 * @see DynamicObject
 	 * @see DynamicObjectInstance
 	 */
-	SET_DOBJ,
+	ACTION_SET_DOBJ,
 	/**
 	 * Set active object:
-	 * x y z alpha beta gamma SizeX SizeY SizeZ visible
+	 * aobj.id x y z alpha beta gamma SizeX SizeY SizeZ visible
 	 * (-10000 = don't care)
 	 * @see ActiveObject
 	 * @see ActiveObjectInstance
 	 */
-	SET_AOBJ,
-	/** Set grabbed item to the selectem: dobj.id */
-	SET_ITEM,
-	/** Set light object */
-	SET_LIGHT
+	ACTION_SET_AOBJ,
+	/** Set grabbed item to the selectem: itemId */
+	ACTION_SET_ITEM,
+	/**
+	 * Set light object:
+	 * light.id x y z strength rrggbb specular intensity reference
+	 * @see Light
+	 */
+	ACTION_SET_LIGHT,
+	/**
+	 * Object psysics setter
+	 * id allowed
+	 */
+	ACTION_OBJECT_PSX,
+	/** Win the game */
+	ACTION_WIN,
+	/** Loose the game  */
+	ACTION_LOSE
 } ActionType;
 
 struct Action {
 	GLint id;
 	ActionType type;
-	GenericType value;
+	GenericType *value;
 };
 
-struct EventRegion {
-	GLfloat x1, y1;
-	GLfloat x2, y2;
+struct PhysicsArea {
+	GLint id;
+	GLfloat x;
+	GLfloat y;
+	GLboolean enabled;
+};
+
+struct Region {
+	GLfloat xMin, yMin;
+	GLfloat xMax, yMax;
 	GLint actionId;
+	GLint maxUse;
+	GLint itemReq;
 };
 
 struct MessageRegion {
-	float x1, y1;
-	float x2, y2;
+	Position position;
 	char message1[100];
 	char message2[100];
 };
@@ -157,9 +187,16 @@ struct Map {
 	LinkedList /*Light*/ *lights;
 	LinkedList /*Texture*/ *textures;
 	LinkedList /*TextureBlock*/ *textureBlocks;
+	LinkedList /*Action*/ *actions;
+	LinkedList /*Region*/ *regions;
 
 	ObjectInfo *objects;
 	Menu *menu;
+
+	int score;
+	float healt;
+	GLboolean allowMovement;
+	time_t startTime;
 };
 
 void getKeyName(GameInstance *this, char *str, int key);

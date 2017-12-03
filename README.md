@@ -20,9 +20,9 @@ See: `docs/fileformats.md` or in doxygen `Related Pages -> Assets - File formats
 
 ##### Linux and others:
 
-Compile the sources using Eclipse C/C++.
+Compile the sources using Eclipse C/C++ Makefile project (Cross GCC)
 
-OR use make:
+**OR** use make:
 
 Compile:
 ```bash
@@ -36,7 +36,7 @@ $ make run
 
 ##### Windows:
 
-Compile the sources using Eclipse C/C++.
+Compile the sources using Eclipse C/C++ Makefile project (Cross GCC).
 
 ### Docs:
 

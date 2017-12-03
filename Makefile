@@ -1,7 +1,7 @@
 all:
-	echo "Make arguments: install, gendocs"
+	echo "Make arguments: build, gendocs, countlines"
 	
-install:
+build:
 	gcc --help
 
 gendocs:

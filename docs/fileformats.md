@@ -28,16 +28,18 @@
 |X|Texture|X id filename (1) |
 |Y|TextureBlock|Y id base top right bottom left (1) |
 |T|Tile|T x y Y.id TileType (1) |
-|S|Static Light|S x y strength rrggbb specular intensity reference (2) |
+|S|Static Light|S id x y z strength rrggbb specular intensity reference visible (2) |
 |L|Ligthing|L x y strength1 color1 strength2 color2 time (4) |
 |O|Object Active|O id STATIC/DYNAMIC/ACTIVE filename|
 |I|Object Instance|I O.id STATIC/DYNAMIC/ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference (2) |
 |C|Coords|C id type x y|
 |M|Message|M x1 y1 x2 y2 line1 (line2)|
-|R|Region|R x1 y1 x2 y2 delatHP gravity velocity soundActivation activateAction|
+|R|Region|R xMin yMin xMax yMax Action.id maxUse itemRequired (5) (6) |
 |A|TextComponent|A id x y relativeX relativeY align message rrggbb alpha fontsize action (3) |
 |B|ObjectComponent|A id x y relativeX relativeY alignX I(ACTIVE).id action (3) |
 |D|ImageComponent|D id path x y z height width action (3) |
+|N|Action|N id ActionType value |
+|P|Phisics|P id x y|
 
 - (1) Texture, TextureBlock and Tile lines are only processed in maps and the first loaded menu file.
 - (2) Reference: required and available only for dynamic objects.
@@ -53,7 +55,7 @@
 
 - (3) Action types:
 |Action|Effect|
-|----|------|
+|------|------|
 |0|(Nothing)|
 |1|Open map selector|
 |2|Open options|
@@ -66,6 +68,8 @@
 |-1|Quit game|
 
 - (4) Unimplemented
+- (5) Maximum use: n > 0 for n, -1 for infinity
+- (6) Item reuired: item id or -1 for noting
 - RelativeX, RelativeY and Align enums:
 |Enum|Name|Value|Description|
 |----|----|-----:|-----------|
@@ -85,9 +89,22 @@
 |0|(Nothing)|
 |1|Floating item|
 |2|Left hand|
-|3|Entity floating|
+|3|Coin floating|
 |4|Left weapon light|
 
+- ActionType values:
+|ActionType|Id|Arguments|
+|:--------:|:---:|---------|
+|TELEPORT|0|x y|
+|DAMAGE|1|count|
+|ADD_SCORE|2|count|
+|SET_DOBJ|3|dobj.id x y z alpha beta gamma SizeX SizeY SizeZ visible reference|
+|SET_AOBJ|4|aobj.id x y z alpha beta gamma SizeX SizeY SizeZ visible|
+|SET_ITEM|5|itemId|
+|SET_LIGHT|6|light.id x y z strength rrggbb specular intensity visible reference|
+|OBJECT_PSX|7|id xMin yMIn xMax yMax|
+|FINISH|8|Finish (Win)|
+|LOSE|9|Lose|
 
 ### StaticObject and DynamicObject
 

@@ -51,6 +51,44 @@
 	#define WARNING(...) ;
 #endif
 
+#include <string.h>
+#include <gl.h>
+#include <glext.h>
+#include <glfw3.h>
+#include "SOIL.h"
+
+/**
+ * 3D position type
+ *
+ * The `position.xyz` returns a 3-dimensional GLfloat array, and `position.x`, `position.y` and
+ * `position.z` returns a component of the selected dimension.
+ */
+typedef union Position {
+	GLfloat xyz[3];
+	struct {
+		GLfloat x;
+		GLfloat y;
+		GLfloat z;
+	};
+} Position, Rotation, Velocity, Scale;
+
+/**
+ * RGBA color type
+ *
+ * The `color.rgba` returns a 4-dimensional GLfloat array, the `color.r` returns the red, the `color.g`
+ * returns green, the `color.b` return the blue and the `color.a `returns the alpha component of the
+ * RGBA color.
+ */
+typedef union Color {
+	GLfloat rgba[4];
+	struct {
+		GLfloat r;
+		GLfloat g;
+		GLfloat b;
+		GLfloat a;
+	};
+} Color;
+
 // character.h
 typedef struct Player Player;
 
@@ -71,8 +109,9 @@ typedef struct Light Light;
 typedef struct Texture Texture;
 typedef struct TextureBlock TextureBlock;
 typedef struct Tile Tile;
-typedef struct EventRegion EventRegion;
-//typedef struct Action Action;
+typedef struct Region Region;
+typedef struct Action Action;
+typedef struct PhysicsArea PhysicsArea;
 typedef struct MessageRegion MessageRegion;
 typedef struct Map Map;
 
@@ -99,11 +138,9 @@ typedef struct InputActionWrapper InputActionWrapper;
 typedef struct ShaderInfo ShaderInfo;
 typedef struct CameraInfo CameraInfo;
 typedef struct LigingInfo LigingInfo;
-typedef union Position Position, Rotation, Velocity, Scale;
-typedef union Color Color;
 
 /** PI constant */
-static const float PI = 3.14159265358979323846;
+static const float PI = 3.14159265358979323846f;
 
 /** X constant for coordinate arrays */
 #define X 0
@@ -121,12 +158,6 @@ static const float PI = 3.14159265358979323846;
 /** Alpha constant for color arrays */
 #define A 3
 
-#include <string.h>
-#include <gl.h>
-#include <glext.h>
-#include <glfw3.h>
-#include "SOIL.h"
-
 #include "linkedlist.h"
 #include "font.h"
 #include "object.h"
@@ -134,6 +165,7 @@ static const float PI = 3.14159265358979323846;
 #include "components.h"
 #include "map.h"
 #include "game.h"
+#include "events.h"
 
 /** Minimum of numeric type */
 #define min(a, b) (a < b ? a : b)
@@ -160,15 +192,5 @@ void initCursor(GameInstance* this);
 void fixViewport(GameInstance* this);
 void doGameLoop(GameInstance* this);
 void getGameInstance(GameInstance **this);
-
-void onClickEvent(GLFWwindow* window, int button, int action, int mods);
-void onScrollEvent(GLFWwindow* window, double xoffset, double yoffset);
-void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);
-void onErrorEvent(int error, const char* description);
-void onCharModEvent(GLFWwindow* window, unsigned int codepoint, int mods);
-
-#ifdef DEBUG_MOVEMENT
-void onDebugKeyPress(const char key, int x, int y);
-#endif
 
 #endif /* STDGAME_H__ */

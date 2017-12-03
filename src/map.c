@@ -199,10 +199,17 @@ void getOptionCaption(GameInstance *this, char *name, char *str, int id) {
 
 Map* loadMap(GameInstance *this, char path[]) {
 	Map *map = new(Map);
+	map->score = 0;
+	map->healt = 3.0f;
+	map->allowMovement = GL_TRUE;
+	map->startTime = time(NULL);
+
 	map->tiles = newList(Tile);
 	map->lights = newList(Light);
 	map->textures = newList(Texture);
 	map->textureBlocks = newList(TextureBlock);
+	map->actions = newList(Action);
+	map->regions = newList(Region);
 
 	map->objects = new(ObjectInfo);
 	map->objects->staticObjects = newList(StaticObject);
@@ -254,12 +261,10 @@ Map* loadMap(GameInstance *this, char path[]) {
 				} else if (equals(type, "STATE")) {
 					sscanf(buff, "$ %*s %d", (int*) &this->state);
 					if (this->state == INGAME) {
-						addTextComponent(map, "$$$", 100, X_LEFT, Y_TOP, ALIGN_LEFT,
+						addTextComponent(map, "$$$", HEALT_COMPONENT_ID, X_LEFT, Y_TOP, ALIGN_LEFT,
 								(1.0 / 16) * 21, -(1.0 / 16) * 14, FS_NORMAL_DPI);
-						addTextComponent(map, "300 *", 101, X_RIGHT, Y_TOP, ALIGN_RIGHT,
+						addTextComponent(map, "0 *", SCORE_COMPONENT_ID, X_RIGHT, Y_TOP, ALIGN_RIGHT,
 								-(1.0 / 16) * 21, -(1.0 / 16) * 14, FS_NORMAL_DPI);
-//						addTextComponent(map, "Press F to open", 102, X_CENTER, Y_CENTER, ALIGN_CENTER,
-//								0, 0, FS_LOW_DPI);
 					}
 					map->menu->onClick = this->state == INGAME ? NULL : onClickMenu;
 				} else if (equals(type, "CURSOR")) {
@@ -330,14 +335,15 @@ Map* loadMap(GameInstance *this, char path[]) {
 			case 'S': { // Static Light
 				Light light;
 				unsigned int r, g, b;
-				int referencePoint;
-				sscanf(buff, "S %f %f %f %f %02x%02x%02x %f %f %d",
+				int referencePoint, visible;
+				sscanf(buff, "S %d %f %f %f %f %02x%02x%02x %f %f %d %d", &light.id,
 						&light.position[X], &light.position[Y], &light.position[Z],
 						&light.strength, &r, &g, &b, &light.specular, &light.intensity,
-						&referencePoint);
+						&referencePoint, &visible);
 				light.color[R] = (float) r / 255;
 				light.color[G] = (float) g / 255;
 				light.color[B] = (float) b / 255;
+				light.visible = visible == 1;
 
 				Iterator it;
 				foreach (it, this->referencePoints->first) {
@@ -544,10 +550,58 @@ Map* loadMap(GameInstance *this, char path[]) {
 				listPush(map->menu->components, &comp);
 				break;
 			}
+			case 'N': { // Action
+				Action action;
+				sscanf(buff, "N %d %d", &action.id, (int*) &action.type);
+
+				if (action.type == ACTION_TELEPORT) {
+					float coord[2];
+					sscanf(buff, "N %*d %*d %f %f", &coord[X], &coord[Y]);
+					action.value = newGenericValue(coord, sizeof(float) * 2);
+				} else if (action.type == ACTION_DAMAGE || action.type == ACTION_ADD_SCORE) {
+					int count;
+					sscanf(buff, "N %*d %*d %d", &count);
+					action.value = newGenericValue(&count, sizeof(int));
+				} else if (action.type == ACTION_SET_DOBJ) {
+					float data[12];
+					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f %f",
+							&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
+							&data[7], &data[8], &data[9], &data[10], &data[11]);
+					action.value = newGenericValue(data, sizeof(int) * 12);
+				} else if (action.type == ACTION_SET_AOBJ) {
+					float data[11];
+					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f",
+							&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
+							&data[7], &data[8], &data[9], &data[10]);
+					action.value = newGenericValue(data, sizeof(int) * 11);
+				} else if (action.type == ACTION_SET_ITEM) {
+					GLint itemId;
+					sscanf(buff, "N %*d %*d %d", &itemId);
+					action.value = newGenericValue(&itemId, sizeof(GLint));
+				} else if (action.type == ACTION_SET_LIGHT) {
+					float data[9];
+					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f",
+							&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
+							&data[7], &data[8]);
+					action.value = newGenericValue(data, sizeof(int) * 9);
+				}
+
+				listPush(map->actions, &action);
+				break;
+			}
+			case 'R': { // Region
+				Region region;
+				sscanf(buff, "R %f %f %f %f %d %d %d", &region.xMin, &region.yMin, &region.xMax, &region.yMax,
+						&region.actionId, &region.maxUse, &region.itemReq);
+
+				listPush(map->regions, &region);
+				break;
+			}
 		}
 	}
 
 	fclose(file);
+	fixViewport(this);
 
 	DEBUG("Map", "Successfully loaded");
 	return map;

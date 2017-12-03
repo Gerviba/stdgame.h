@@ -5,13 +5,17 @@
 
 /**
  * Object part type
- * Format: 0bUDTRBL
- * U = UP
- * D = DOWN
- * T = TOP
- * R = RIGHT
- * B = BOTTOM
- * L = LEFT
+ *
+ * **Format**: 0bUDTRBL
+ *
+ * |Key| Meaning |
+ * |:-:|---------|
+ * | U | UP      |
+ * | D | DOWN    |
+ * | T | TOP     |
+ * | R | RIGHT   |
+ * | B | BOTTOM  |
+ * | L | LEFT    |
  *
  * Similar to the CSS box model.
  */

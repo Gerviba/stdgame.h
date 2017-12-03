@@ -26,6 +26,7 @@ struct Player {
 	ActiveObjectInstance *model;
 	GLboolean sneek;
 	GLboolean leftSide;
+	GLint item;
 };
 
 /**

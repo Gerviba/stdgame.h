@@ -168,6 +168,7 @@ struct ActiveObjectInstance {
 	GLboolean visible;
 	ActiveObject *object;
 	GLfloat moveMat[16];
+	ReferencePoint *reference;
 };
 
 struct ObjectInfo {

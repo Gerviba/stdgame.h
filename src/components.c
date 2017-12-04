@@ -269,10 +269,65 @@ void calcOptionsGraphicsButton(Component *comp, GameInstance *this) {
 	calcTextButton(comp, this);
 }
 
+static Component* getTextComponentById(GameInstance *this, GLint id) {
+	Iterator it;
+	foreach (it, this->map->menu->components->first) {
+		Component *comp = it->data;
+		if (comp->type == CT_TEXT && comp->id == id)
+			return comp;
+	}
+	return NULL;
+}
+
 void clickGameSelector(Component *comp, GameInstance *this) {
 	freeMap(this->map);
 	this->map = loadMap(this, "assets/maps/select.menu");
 	updateCamera(this);
+
+	FILE *file = fopen("data/records.dat", "r");
+	if (file == NULL)
+		return;
+
+	char temp[255];
+	int type, value;
+	while (fscanf(file, "%s %d %d", temp, &type, &value) == 3) {
+		if (equals(temp, "Tutorial")) {
+			if (type == 0) {
+				Component *comp = getTextComponentById(this, 11);
+				if (comp != NULL) {
+					char str[17];
+					sprintf(str, "BEST TIME: %02d:%02d", value / 60, value % 60);
+					strcpy(comp->text->text, str);
+				}
+			} else if (type == 1) {
+				Component *comp = getTextComponentById(this, 12);
+				if (comp != NULL) {
+					char str[27];
+					sprintf(str, "BEST SCORE: %d *", value);
+					strcpy(comp->text->text, str);
+				}
+			}
+		} else if (equals(temp, "Pyramid")) {
+			if (type == 0) {
+				Component *comp = getTextComponentById(this, 21);
+				if (comp != NULL) {
+					char str[17];
+					sprintf(str, "BEST TIME: %02d:%02d", value / 60, value % 60);
+					strcpy(comp->text->text, str);
+				}
+			} else if (type == 1) {
+				Component *comp = getTextComponentById(this, 22);
+				if (comp != NULL) {
+					char str[27];
+					sprintf(str, "BEST SCORE: %d *", value);
+					strcpy(comp->text->text, str);
+				}
+			}
+		}
+
+	}
+
+	fclose(file);
 }
 
 void clickStartButton(Component *comp, GameInstance *this) {

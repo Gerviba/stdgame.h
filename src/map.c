@@ -239,6 +239,7 @@ Map* loadMap(GameInstance *this, char path[]) {
 	map->regions = newList(Region);
 	map->messages = newList(Message);
 	map->physics = newList(PhysicsArea);
+	map->entities = newList(Entity);
 
 	map->objects = new(ObjectInfo);
 	map->objects->staticObjects = newList(StaticObject);
@@ -489,6 +490,7 @@ Map* loadMap(GameInstance *this, char path[]) {
 							&aoi.scale[X], &aoi.scale[Y], &aoi.scale[Z], &visible);
 					aoi.visible = visible ? GL_TRUE : GL_FALSE;
 					aoi.activePart = 0;
+					aoi.reference = (ReferencePoint *) this->referencePoints->first->data;
 
 					Iterator it;
 					foreach (it, map->objects->activeObjects->first) {
@@ -657,7 +659,26 @@ Map* loadMap(GameInstance *this, char path[]) {
 			}
 			case 'E': { // Entity
 				Entity e;
-				//TODO:
+				int objectId;
+				sscanf(buff, "E %d %d %d %f %f %f %d %f %f", &e.id, &objectId, &e.lightId,
+						&e.spellSpeed, &e.damage, &e.hp, &e.score, &e.fi0, &e.radius);
+
+				Iterator it;
+				foreach (it, map->objects->activeInstances->first) {
+					if (((ActiveObjectInstance *) it->data)->id == objectId) {
+						e.obj = it->data;
+						break;
+					}
+				}
+
+				foreach (it, this->referencePoints->first) {
+					if (((ReferencePoint *) it->data)->id == ENTITY_FLOATING_REFERENCEPOINT_ID) {
+						e.obj->reference = it->data;
+						break;
+					}
+				}
+
+				listPush(map->entities, &e);
 
 				break;
 			}
@@ -686,4 +707,47 @@ void freeMap(Map *map) {
 
 }
 
+void saveHightScore(GameInstance *this, time_t deltaT) {
+	LinkedList /*HighScoreValue*/ *lines = newList(HighScoreValue);
+
+	FILE *file = fopen("data/records.dat", "r");
+	if (file == NULL) {
+		file = fopen("data/records.dat", "w");
+		fprintf(file, "%s 0 %d\n", this->map->name, (int) deltaT);
+		fprintf(file, "%s 1 %d\n", this->map->name, this->map->score);
+		fclose(file);
+		listFree(lines);
+		return;
+	}
+
+	char temp[100];
+	int type, value;
+	while (fscanf(file, "%s %d %d", temp, &type, &value) == 3) {
+		HighScoreValue hsv;
+		strcpy(hsv.name, temp);
+		hsv.type = type;
+		hsv.value = value;
+
+		if (equals(hsv.name, this->map->name)) {
+			if (type == 0 && value > deltaT)
+				hsv.value = deltaT;
+			else if (type == 1 && value < this->map->score)
+				hsv.value = this->map->score;
+		}
+
+		listPush(lines, &hsv);
+	}
+	fclose(file);
+
+	file = fopen("data/records.dat", "w");
+	Iterator it;
+	foreach (it, lines->first) {
+		HighScoreValue *hsv = it->data;
+		fprintf(file, "%s %d %d\n", hsv->name, hsv->type, hsv->value);
+	}
+	fclose(file);
+
+	listFree(lines);
+	DEBUG("Hightscore", "Highscore saved");
+}
 

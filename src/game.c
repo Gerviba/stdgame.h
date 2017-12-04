@@ -387,6 +387,8 @@ void activateAction(GameInstance *this, GLint id) {
 			ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
 			playerObj->visible = GL_FALSE;
 
+			saveHightScore(this, deltaT);
+
 		} else if (action->type == ACTION_LOSE) {
 			addTextComponentColor(this->map, "YOU LOSE", 20001, X_CENTER, Y_CENTER, ALIGN_CENTER,
 					(GLfloat[]) {0.0f, 0.2f, 0.0f}, (GLfloat[]) {1.0f, 0.1, 0.1, 1.0f},

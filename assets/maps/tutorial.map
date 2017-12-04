@@ -1212,10 +1212,8 @@ O 0 ACTIVE player.aobj
 O 1 DYNAMIC lock_little.sobj
 O 2 DYNAMIC key_little.sobj
 O 3 DYNAMIC door.dobj
-O 4 STATIC ghost.aobj
 O 7 DYNAMIC crystal1.dobj
 O 8 DYNAMIC lavatop.sobj
-O 9 ACTIVE spaceinvaders.aobj
 O 10 DYNAMIC staff.dobj
 O 11 DYNAMIC coin.dobj
 O 12 STATIC trap1.sobj
@@ -1274,15 +1272,11 @@ P 4 57 12 0
 N 530 7 4 -65536 -65536 1
 N 530 3 603 -65536 -65536 -65536 -65536 -65536 -65536 -65536 -65536 -65536 1 -65536
 
-I 4 4 STATIC 16 7 0 0 180 0 1 1 1
 
 #I 5 5 STATIC 9 7.3 -1.5 0 270 0 0.5 0.5 0.5 1
 #I 6 6 STATIC 2 0 0 0 0 0 1 1 1 1
 # Crystal
 #I 7 7 DYNAMIC 17 7 0 0 180 0 1 1 1 1 0
-
-I 140 9 ACTIVE 68 14 0 0 0 0 1 1 1 1 0
-I 140 9 ACTIVE 70 13 0 0 0 0 1 1 1 1 0
 
 # Traps:
 N 0 1 1
@@ -1365,7 +1359,7 @@ I 204 11 DYNAMIC 19 9 0 0 0 0 1 1 1 1 3
 
 N 105 2 5
 N 105 3 205 -65536 -65536 -65536 -65536 -65536 -65536 -65536 -65536 -65536 0 0 
-R 42 7 42.5 8.5 105 1 -1 0
+R 42 7 42.5 7.5 105 1 -1 0
 I 205 11 DYNAMIC 42 7 0 0 0 0 1 1 1 1 3
 
 # Spells
@@ -1384,6 +1378,20 @@ M 95.7 12.6875 1.1 FFFFFF 1.0 16 FINISH
 #S 0 8 9 3 1 FFFF00 1 0.1 0 1
 
 C 0 SPAWN 4 4
+
+# Ghost
+O 4 ACTIVE ghost.aobj
+I 4 4 ACTIVE 63 7 0 0 180 0 1 1 1
+E 0 4 -1 4 0.5 10 20 0 1
+
+# SpaceInvaders 1
+O 9 ACTIVE spaceinvaders.aobj
+I 140 9 ACTIVE 68 14 0 0 0 0 1 1 1 1 0
+E 1 140 -1 4 0.5 10 20 0 1
+
+# SpaceInvaders 2
+I 141 9 ACTIVE 72 13 0 0 0 0 1 1 1 1 0
+E 2 141 -1 4 0.5 10 20 0 1
 
 # End
 O 10000 DYNAMIC finish.dobj

@@ -115,6 +115,7 @@ typedef struct PhysicsArea PhysicsArea;
 typedef struct Entity Entity;
 typedef struct Message Message;
 typedef struct Map Map;
+typedef struct HighScoreValue HighScoreValue;
 
 // menu.h
 typedef struct Menu Menu;

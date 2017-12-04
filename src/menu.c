@@ -44,9 +44,9 @@ void setOptionsDefaults(GameInstance* this) {
 	array3(this->options->sneek.id, GLFW_KEY_LEFT_SHIFT, GLFW_KEY_S, GLFW_KEY_DOWN);
 	array3(this->options->attack.id, GLFW_MOUSE_BUTTON_LEFT, GLFW_KEY_LEFT_CONTROL, GLFW_KEY_RIGHT_CONTROL);
 	array3(this->options->use.id, GLFW_KEY_F, -1.0f, -1.0f);
-	array3(this->options->spell1.id, GLFW_KEY_F2, GLFW_KEY_2, -1.0f);
-	array3(this->options->spell2.id, GLFW_KEY_F3, GLFW_KEY_3, -1.0f);
-	array3(this->options->spell3.id, GLFW_KEY_F4, GLFW_KEY_4, -1.0f);
+	array3(this->options->spell1.id, GLFW_KEY_F1, GLFW_KEY_1, -1.0f);
+	array3(this->options->spell2.id, GLFW_KEY_F2, GLFW_KEY_2, -1.0f);
+	array3(this->options->spell3.id, GLFW_KEY_F3, GLFW_KEY_3, -1.0f);
 	array3(this->options->menu.id, GLFW_KEY_ESCAPE, GLFW_KEY_PAUSE, -1);
 }
 

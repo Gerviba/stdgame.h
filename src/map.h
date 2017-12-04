@@ -67,10 +67,11 @@ typedef enum {
 #define MOVE_BLOCK_Y			(TT_BORDER_TOP | TT_BORDER_BOTTOM) & 0b11110
 #define MOVE_BLOCK_X			(TT_BORDER_RIGHT | TT_BORDER_LEFT) & 0b11110
 
-#define ACTION_VALUE_DONT_CARE -65536
-#define ACTION_LOSE_ID -10000
-#define HEALT_COMPONENT_ID -1000
-#define SCORE_COMPONENT_ID -1001
+#define ACTION_VALUE_DONT_CARE 	-65536
+#define ACTION_LOSE_ID 			-10000
+#define HEALT_COMPONENT_ID 		-1000
+#define SCORE_COMPONENT_ID 		-1001
+#define ENTITY_FLOATING_REFERENCEPOINT_ID 8
 
 struct Light {
 	GLint id;
@@ -181,7 +182,7 @@ struct Message {
 
 struct Entity {
 	GLint id;
-	ActiveObjectInstance *spellId;
+	ActiveObjectInstance *obj;
 	GLint lightId;
 	GLfloat spellSpeed;
 	GLfloat damage;
@@ -206,6 +207,7 @@ struct Map {
 	LinkedList /*Region*/ *regions;
 	LinkedList /*Message*/ *messages;
 	LinkedList /*PhysicsArea*/ *physics;
+	LinkedList /*Entity*/ *entities;
 
 	ObjectInfo *objects;
 	Menu *menu;
@@ -216,6 +218,12 @@ struct Map {
 	time_t startTime;
 };
 
+struct HighScoreValue {
+	char name[255];
+	int type;
+	int value;
+};
+
 Map* loadMap(GameInstance *this, char path[]);
 void freeMap(Map *map);
 void getKeyName(GameInstance *this, char *str, int key);
@@ -224,5 +232,6 @@ void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY r
 		Align align, GLfloat x, GLfloat y, FontSize size);
 void addTextComponentColor(Map* map, char text[], int id, RelativeX relX, RelativeY relY,
 		Align align, GLfloat pos[3], GLfloat color[4], FontSize size);
+void saveHightScore(GameInstance *this, time_t deltaT);
 
 #endif /* MAP_H_ */

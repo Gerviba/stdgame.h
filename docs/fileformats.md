@@ -1,4 +1,6 @@
-# Assets - File formats
+# File formats
+
+## Assets folder
 
 - maps
   + Map (.map)
@@ -19,8 +21,8 @@
 
 - Use # for comments
 - Max line length: 255 char
-- Strict orders: X->Y->T, O->I
-- Whitespace start chars not allowed
+- Strict orders: X->Y->T, O->I->(E, B)
+- Whitespace start chars are not allowed
 
 |Sign|Type|Format|
 |:---:|----|-------|
@@ -40,7 +42,7 @@
 |D|ImageComponent|D id path x y z height width action (3) |
 |N|Action|N id ActionType value (7) |
 |P|PhysicsArea|P id x y|
-|E|Entity|E id aobj.id ligth.id spellSpeed damage hp score floatFi0 hitboxRadius|
+|E|Entity|E id aobjI.id ligth.id spellSpeed damage hp score floatFi0 hitboxRadius|
 
 - (1) Texture, TextureBlock and Tile lines are only processed in maps and the first loaded menu file.
 - (2) Reference: required and available only for dynamic objects.
@@ -96,6 +98,7 @@
 |5|Right hand|
 |6|Top spikes|
 |7|Player center|
+|8|Entity floating|
 
 - ActionType values:
 |ActionType|Id|Arguments|
@@ -181,7 +184,45 @@ Format:
 
 ### Vertex Shader
 
+Special arguments:
+
 |Argument name|Type|Description|
 |-------------|----|-----------|
 |ligthColor|uniform vec3 [28]|RGB color (0.0 - 1.0) |
 |ligthInfo|uniform vec3 [28]|Specular 1:on/0:off, distFactor, lightIntensity|
+
+## Data folder
+
+> The program won't be able to run without an existing `data` folder.
+
+### Options (data/options.dat)
+
+ - Type: Binary file
+ - Format: (default, -1.0 = nothing)
+   + version (1)
+   + msaa (16)
+   + fullscreen (true)
+   + windowedHeight (0 = auto)
+   + windowedWidth (0 = auto)
+   + cameraMovement (true)
+   + moveLeft (A, LEFT)
+   + moveRight (D, RIGHT)
+   + jump (SPACE, W, UP)
+   + sneek (SHIFT, S, DOWN)
+   + attack (MOSE_LEFT, CONTROL_LEFT, CONTROL_RIGHT)
+   + use (F)
+   + spell1 (F1, 1)
+   + spell2 (F2, 2)
+   + spell3 (F3, 3)
+   + menu (ESC, PAUSE)
+ - See: menu.c for more info
+ 
+### Records (data/records.dat)
+
+ - Type: Text file
+ - Format per line:
+   + Map name
+   + Record type (0: time, 1: score)
+   + Record value (time: sec, score: count)
+ - Separator: whitespace
+ 

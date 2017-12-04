@@ -10,6 +10,7 @@
 
 ### Releases
 
+v1.0 - Done 2017.12.03.
 v0.5 - Half done 2017.11.12.
 
 ### How to create map/mob or object
@@ -27,11 +28,6 @@ Compile the sources using Eclipse C/C++ Makefile project (Cross GCC)
 Compile:
 ```bash
 $ make compile
-```
-
-Run:
-```bash
-$ make run
 ```
 
 ##### Windows:

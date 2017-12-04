@@ -398,15 +398,15 @@ void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
 	glPushMatrix();
 	glLoadIdentity();
 
-	glTranslatef(obj->position[X] + instance->position[X],
-			obj->position[Y] + instance->position[Y],
-			obj->position[Z] + instance->position[Z]);
-	glScalef(obj->scale[X] * instance->scale[X],
-			obj->scale[Y] * instance->scale[Y],
-			obj->scale[Z] * instance->scale[Z]);
-	glRotatef(-(obj->rotation[X] + instance->rotation[X]), 1.0f, 0.0f, 0.0f);
-	glRotatef(-(obj->rotation[Y] + instance->rotation[Y]), 0.0f, 1.0f, 0.0f);
-	glRotatef(-(obj->rotation[Z] + instance->rotation[Z]), 0.0f, 0.0f, 1.0f);
+	glTranslatef(obj->position[X] + instance->position[X] + instance->reference->position[X],
+			obj->position[Y] + instance->position[Y] + instance->reference->position[Y],
+			obj->position[Z] + instance->position[Z] + instance->reference->position[Z]);
+	glScalef(obj->scale[X] * instance->scale[X] * instance->reference->scale[X],
+			obj->scale[Y] * instance->scale[Y] * instance->reference->scale[Y],
+			obj->scale[Z] * instance->scale[Z] * instance->reference->scale[Z]);
+	glRotatef(-(obj->rotation[X] + instance->rotation[X] + instance->reference->rotation[X]), 1.0f, 0.0f, 0.0f);
+	glRotatef(-(obj->rotation[Y] + instance->rotation[Y] + instance->reference->rotation[Y]), 0.0f, 1.0f, 0.0f);
+	glRotatef(-(obj->rotation[Z] + instance->rotation[Z] + instance->reference->rotation[Z]), 0.0f, 0.0f, 1.0f);
 
 	glGetFloatv(GL_MODELVIEW_MATRIX, instance->moveMat);
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
@@ -552,7 +552,7 @@ void initStraticInstance(StaticObjectInstance *instance) {
 void initReferencePoints(GameInstance *this) {
 	this->referencePoints = newList(ReferencePoint);
 	GLint i;
-	for (i = 0; i < 8; ++i) {
+	for (i = 0; i < 9; ++i) {
 		ReferencePoint rp;
 		rp.id = i;
 		rp.timing = 0;
@@ -561,6 +561,7 @@ void initReferencePoints(GameInstance *this) {
 		setScale(rp.scale, 1.0f, 1.0f, 1.0f);
 		listPush(this->referencePoints, &rp);
 	}
+	this->cursor->pointer->reference = (ReferencePoint *) this->referencePoints->first->data;
 }
 
 void updateReferencePoint(GameInstance *this, GLfloat delta) {
@@ -569,17 +570,18 @@ void updateReferencePoint(GameInstance *this, GLfloat delta) {
 		ReferencePoint *rp = it->data;
 		if (rp->id == 1) {
 			rp->timing += delta;
-
 			rp->position[Y] = sinf(rp->timing * 2) / 6;
 			rp->rotation[Z] = rp->timing * 180.0;
 		} else if (rp->id == 3) {
 			rp->timing += delta * 4;
-
 			rp->position[Y] = sinf(rp->timing) / 6;
 		} else if (rp->id == 6) {
 			rp->timing += delta * 4;
-
 			rp->position[Y] = sinf(rp->timing) / 16;
+		} else if (rp->id == 8) {
+			rp->timing += delta * 2;
+			rp->position[Y] = sinf(rp->timing) / 6;
+			rp->position[X] = sinf(rp->timing / 2) / 10;
 		}
 	}
 }

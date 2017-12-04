@@ -1,8 +1,28 @@
+/**
+ * @file font.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief Font family loader and renderer
+ *
+ * @par Header:
+ * 		font.h
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "includes.h"
+#include <math.h>
+#include "stdgame.h"
 
+static Char* loadChar(char path[], char charId, GLfloat *colors);
+static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor);
+
+/**
+ * Loads a char
+ * @param path Char file path
+ * @paran charId Character identifier
+ * @param colors Color bank array
+ * @returs The loaded Char object
+ */
 static Char* loadChar(char path[], char charId, GLfloat *colors) {
 	FILE *file;
 	char buff[255];
@@ -40,8 +60,8 @@ static Char* loadChar(char path[], char charId, GLfloat *colors) {
 			case 'B': { // Block
 				CharPart part;
 
-				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
-						&part.position[Z], &part.type, &part.colorId);
+				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y], &part.position[Z],
+						(int*) &part.type, &part.colorId);
 				--part.colorId;
 
 				listPush(c->parts, &part);
@@ -53,17 +73,20 @@ static Char* loadChar(char path[], char charId, GLfloat *colors) {
 	return c;
 }
 
+/**
+ * Initialize font from `assets/fonts/default.font`
+ */
 void initFont(GameInstance *this) {
 	this->font = new(Font);
 	this->font->chars = newList(Char);
 
 	FILE *file;
 	char buff[255];
-	printf("[Font] Loading font: default\n");
+	DEBUG("Font", "Loading font: default");
 
 	file = fopen("assets/fonts/default.font", "r");
 	if (!file) {
-		fprintf(stderr, "[Font] Failed to load font.\n");
+		ERROR("Failed to load font.");
 		return;
 	}
 
@@ -82,50 +105,75 @@ void initFont(GameInstance *this) {
 
 		Char *c = loadChar(finalPath, charId, this->font->colors);
 		if (c == NULL) {
-			fprintf(stderr, "[Font] Failed to load char object from '%s'\n", finalPath);
+			ERROR("Failed to load char object from '%s'", finalPath);
 			continue;
 		}
 
 		listPush(this->font->chars, c);
-	}
-
-	this->font->unknown = loadChar("assets/fonts/_unknown.char", '\0', this->font->colors);
-	if (this->font->unknown == NULL) {
-		fprintf(stderr, "[Font] Failed to load char object from '%s'\n",
-				"assets/fonts/_unknown.char");
+		free(c);
 	}
 
 	Char *space = loadChar("assets/fonts/_space.char", ' ', this->font->colors);
 	if (space == NULL) {
-		fprintf(stderr, "[Font] Failed to load char object from '%s'\n",
-				"assets/fonts/_space.char");
+		ERROR("Failed to load char object from '%s'", "assets/fonts/_space.char");
 	} else {
 		listPush(this->font->chars, space);
+		free(space);
 	}
+
+	this->font->unknown = loadChar("assets/fonts/_unknown.char", '\0', this->font->colors);
+	if (this->font->unknown == NULL) {
+		ERROR("Failed to load char object from '%s'", "assets/fonts/_unknown.char");
+	}
+
+	fclose(file);
 }
 
 //TODO: Call
+/**
+ * Free the loaded fonts <br>
+ * Must be called before exit
+ *
+ * @param this Actual GameInstance instance
+ */
 void freeFont(GameInstance *this) {
 	free(this->font->unknown);
 	free(this->font->colors);
-	ListElement *it;
+	Iterator it;
 	for (it = this->font->chars->first; it != NULL; it = it->next)
 		listFree(((Char *)it->data)->parts);
 	listFree(this->font->chars);
 	free(this->font);
 }
 
-static Char* getChar(Font *font, char c) {
-	ListElement *it;
+/**
+ * Get Char type pointer from the default.
+ *
+ * @param font Font family
+ * @param c Character identifier
+ * @returns Char object pointer
+ */
+Char* getChar(Font *font, char c) {
+	Iterator it;
 	for (it = font->chars->first; it != NULL; it = it->next)
 		if (c == ((Char *)it->data)->code)
 			return it->data;
 	return font->unknown;
 }
 
+/**
+ * Render selected char.
+ *
+ * @param this Actual GameInstance instance
+ * @param font Font family
+ * @param c Character pointer
+ * @param x Coordinates (x-dim)
+ * @param z Coordinates (z-dim)
+ * @param defaultColor Default color of the font
+ */
 static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor) {
-	ListElement *it;
-	for (it = c->parts->first; it != NULL; it = it->next) {
+	Iterator it;
+	foreach (it, c->parts->first) {
 		CharPart part = *(CharPart *)it->data;
 		glUniform4fv(this->shader->baseColor, 1, part.colorId == -1 ?
 				defaultColor : &font->colors[4 * part.colorId]);
@@ -135,7 +183,7 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, -1, 0.0f,
 					0.0f, 1, 0.0f, 0.0f,
-					x + part.position[X], part.position[Y] + 1, z + part.position[Z], 1.0f});
+					x + part.position[X], part.position[Y] + 1 + c->y, z + part.position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -144,7 +192,7 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, cosf(PI + PI / 2), -sinf(PI + PI / 2), 0.0f,
 					0.0f, sinf(PI + PI / 2), cosf(PI + PI / 2), 0.0f,
-					x + part.position[X], part.position[Y], z + part.position[Z] - 1, 1.0f});
+					x + part.position[X], part.position[Y] + c->y, z + part.position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -153,7 +201,7 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					cosf(PI), 0.0f, sinf(PI), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI), 0.0f, cosf(PI), 0.0f,
-					x + part.position[X] + 1, part.position[Y], z + part.position[Z] - 1, 1.0f});
+					x + part.position[X] + 1, part.position[Y] + c->y, z + part.position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -162,7 +210,7 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					cosf(PI / 2), 0.0f, sinf(PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI / 2), 0.0f, cosf(PI / 2), 0.0f,
-					x + part.position[X], part.position[Y], z + part.position[Z] - 1, 1.0f});
+					x + part.position[X], part.position[Y] + c->y, z + part.position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -171,7 +219,7 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 1.0f, 0.0f,
-					x + part.position[X], part.position[Y], z + part.position[Z], 1.0f});
+					x + part.position[X], part.position[Y] + c->y, z + part.position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
@@ -180,13 +228,26 @@ static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLflo
 					cosf(PI + PI / 2), 0.0f, sinf(PI + PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI + PI / 2), 0.0f, cosf(PI + PI / 2), 0.0f,
-					x + part.position[X] + 1, part.position[Y], z + part.position[Z], 1.0f});
+					x + part.position[X] + 1, part.position[Y] + c->y, z + part.position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
 	}
 }
 
+/**
+ * Renders the entered text.
+ *
+ * @param this GameInstance pointer
+ * @param str String to render
+ * @param position Where to render
+ * @param color Dynamic color
+ * @param size Size of the chars
+ *
+ * @note This function can be used in both `onLogic` and `onRender` functions.
+ *
+ * @see renderFontToComponent()
+ */
 void renderFontTo(GameInstance *this, char str[], GLfloat position[3], GLfloat defaultColor[4], FontSize size) {
 	const GLfloat dist = 1.0 / size;
 
@@ -210,4 +271,52 @@ void renderFontTo(GameInstance *this, char str[], GLfloat position[3], GLfloat d
 		x += c->width + 1;
 		++i;
 	}
+}
+
+/**
+ * Renders the entered text and saves the min and the max coordinates into the pass arguments.
+ *
+ * @param this GameInstance pointer
+ * @param str String to render
+ * @param position Where to render
+ * @param color Dynamic color
+ * @param size Size of the chars
+ * @param min Minimum coordinate of the rendered object
+ * @param max Maximum coordinate of the rendered object
+ *
+ * @note This function can be used in both `onLogic` and `onRender` functions.
+ * @warning It sets the value of the `min` and the `max` arrays.
+ *
+ * @see renderFontTo()
+ */
+void renderFontToComponent(GameInstance *this, char str[], GLfloat position[3], GLfloat defaultColor[4],
+		FontSize size, GLfloat min[3], GLfloat max[3]) {
+	const GLfloat dist = 1.0 / size;
+
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef(position[X], position[Y], position[Z]);
+	glScalef(dist, dist, dist);
+
+	GLfloat moveMat[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, moveMat);
+	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, moveMat);
+	glPopMatrix();
+
+	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
+
+	min[X] = position[X];
+	min[Y] = position[Y] - dist;
+
+	int i = 0;
+	GLfloat x = 0;
+	while (str[i] != '\0') {
+		Char *c = getChar(this->font, toupper(str[i]));
+		renderChar(this, this->font, c, x, 1.0f, defaultColor);
+		x += c->width + 1;
+		++i;
+	}
+
+	max[X] = position[X] + (x * dist);
+	max[Y] = position[Y] + (6 * dist);
 }

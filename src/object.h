@@ -1,16 +1,32 @@
+/**
+ * @file object.h
+ * @author Gerviba (Szabo Gergely)
+ * @brief Static, dynamic and active object loader and renderer. ReferencePoint manager. (header)
+ *
+ * @par Definition:
+ * 		object.c
+ */
+
 #ifndef OBJECT_H_
 #define OBJECT_H_
 
+#include "stdgame.h"
+
 /**
- * 0bUDTRBL
- * U = UP
- * D = DOWN
- * T = TOP
- * R = RIGHT
- * B = BOTTOM
- * L = LEFT
+ * Object part type
  *
- * TRBL olyan mint a css box-modellben.
+ * **Format**: 0bUDTRBL
+ *
+ * |Key| Meaning |
+ * |:-:|---------|
+ * | U | UP      |
+ * | D | DOWN    |
+ * | T | TOP     |
+ * | R | RIGHT   |
+ * | B | BOTTOM  |
+ * | L | LEFT    |
+ *
+ * Similar to the CSS box model.
  */
 typedef enum {
 	PT_NULL 							= 0b000000,
@@ -79,25 +95,50 @@ typedef enum {
 	PT_UP_DOWN_TOP_RIGHT_BOTTOM_LEFT	= 0b111111,
 } PartType;
 
+/** Render UP part mask */
 #define PTMASK_RENDER_UP		PT_UP
+/** Render DOWN part mask */
 #define PTMASK_RENDER_DOWN		PT_DOWN
+/** Render TOP part mask */
 #define PTMASK_RENDER_TOP		PT_TOP
+/** Render RIGHT part mask */
 #define PTMASK_RENDER_RIGHT		PT_RIGHT
+/** Render BOTTOM part mask */
 #define PTMASK_RENDER_BOTTOM	PT_BOTTOM
+/** Render LEFT part mask */
 #define PTMASK_RENDER_LEFT		PT_LEFT
 
-typedef struct {
+/**
+ * Cube part of the objects. The smallest unit
+ *
+ * Used in all the three object types.
+ * @see StaticObject
+ * @see DynamicObject
+ * @see ActiveObject
+ */
+struct StaticObjectPart {
 	PartType type;
 	GLfloat *color; // -> colors[4]
 	GLfloat position[3];
-} StaticObjectPart;
+};
 
-typedef struct {
+/**
+ * Color of a cube. Stored in color banks.
+ */
+struct PartColor {
 	int id;
 	GLfloat color[4];
-} PartColor;
+};
 
-typedef struct {
+/**
+ * StaticObject - Precalculated move matrix
+ *
+ * Cannot be moved
+ * @par File format:
+ * 		sobj
+ * @see StaticObjectInstance
+ */
+struct StaticObject {
 	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
@@ -105,9 +146,14 @@ typedef struct {
 	GLfloat moveMat[16];
 	LinkedList /*StaticObjectPart*/ *parts;
 	LinkedList /*PartColor*/ *colors;
-} StaticObject;
+};
 
-typedef struct {
+/**
+ * Instance of a StaticObject logically
+ *
+ * @see StaticObject
+ */
+struct StaticObjectInstance {
 	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
@@ -115,15 +161,29 @@ typedef struct {
 	GLfloat moveMat[16];
 	GLboolean visible;
 	StaticObject *object;
-} StaticObjectInstance;
+};
 
-typedef struct {
+/**
+ * Dynamically changing reference points for animations
+ *
+ * @see fileformats.md
+ */
+struct ReferencePoint {
+	GLint id;
 	GLfloat position[3];
 	GLfloat rotation[3];
 	GLfloat scale[3];
-} ReferencePoint;
+	GLfloat timing;
+};
 
-typedef struct {
+/**
+ * DynamicObject - Movable object
+ *
+ * @par File format:
+ * 		dobj
+ * @see DynamicObjectInstance
+ */
+struct DynamicObject {
 	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
@@ -131,9 +191,14 @@ typedef struct {
 	GLfloat moveMat[16];
 	LinkedList /*StaticObjectPart*/ *parts;
 	LinkedList /*PartColor*/ *colors;
-} DynamicObject;
+};
 
-typedef struct {
+/**
+ * Instance of a DynamicObject logically
+ *
+ * @see DynamicObject
+ */
+struct DynamicObjectInstance {
 	int id;
 	GLfloat position[3];
 	GLfloat rotation[3];
@@ -142,15 +207,28 @@ typedef struct {
 	GLboolean visible;
 	ReferencePoint *reference;
 	DynamicObject *object;
-} DynamicObjectInstance;
+};
 
-typedef struct {
+/**
+ * ActiveObject - Set of DynamicObject
+ *
+ * Used in animated objects.
+ * @par File format:
+ * 		aobj
+ * @see ActiveObjectInstance
+ */
+struct ActiveObject {
 	int id;
 	int size;
-	DynamicObject parts[];
-} ActiveObject;
+	DynamicObject *parts;
+};
 
-typedef struct {
+/**
+ * Instance of a ActiveObject logically
+ *
+ * @see ActiveObject
+ */
+struct ActiveObjectInstance {
 	int id;
 	int activePart;
 	GLfloat position[3];
@@ -158,9 +236,14 @@ typedef struct {
 	GLfloat scale[3];
 	GLboolean visible;
 	ActiveObject *object;
-} ActiveObjectInstance;
+	GLfloat moveMat[16];
+	ReferencePoint *reference;
+};
 
-typedef struct {
+/**
+ * Object storage
+ */
+struct ObjectInfo {
 	LinkedList /*StaticObject*/ *staticObjects;
 	LinkedList /*StaticObjectInstance*/ *staticInstances;
 
@@ -169,8 +252,27 @@ typedef struct {
 
 	LinkedList /*ActiveObject*/ *activeObjects;
 	LinkedList /*ActiveObjectInstance*/ *activeInstances;
-} ObjectInfo;
+};
 
-StaticObject *loadObject(char*);
+/**
+ * Cursor object and info storage
+ */
+struct Cursor {
+	ActiveObject *cursorObject;
+	ActiveObjectInstance *pointer;
+};
+
+StaticObject *loadStaticObject(char[]);
+DynamicObject *loadDynamicObject(char[]);
+ActiveObject *loadActiveObject(char[]);
+
+void renderStaticObject(GameInstance*, StaticObjectInstance*);
+void renderDynamicObject(GameInstance*, DynamicObjectInstance*);
+void renderActiveObject(GameInstance*, ActiveObjectInstance*);
+void renderTile(GameInstance*, Tile*);
+void initStraticInstance(StaticObjectInstance*);
+
+void initReferencePoints(GameInstance *this);
+void updateReferencePoint(GameInstance *this, GLfloat delta);
 
 #endif /* OBJECT_H_ */

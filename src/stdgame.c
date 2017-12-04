@@ -1,161 +1,194 @@
+/**
+ * @file stdgame.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief The main header of the project
+ *
+ * @par Header:
+ * 		stdgame.h
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <ctype.h>
+#include "stdgame.h"
 
-#include "includes.h"
-
-static int mode = 0;
-static int modelId = 0;
-
-GameInstance *gi; //TODO: Debug
+static void initGLFW();
+static void createWindow(GameInstance* this, const GLFWvidmode* mode);
+static void setupOpenGL(GameInstance* this, double width, double height);
+static void setupWindowSize(const GLFWvidmode* mode, GameInstance* this);
+static void setPerspective(GameInstance *this, float fov, float aspect, float near, float far);
+static void printVersionInfo(void);
+static void initCursor(GameInstance* this);
+static void doGameLoop(GameInstance* this);
+static void freeGameInstance(GameInstance* this);
 
 /**
- * TODO: Remove this chaos:
+ * The main method
+ *
+ * This is where the story begins.
  */
-void debugKeyPress(const char key, int x, int y) {
-	if (mode == 0) {
-		switch (key) {
-			case 'A': gi->camera->rotation[1] += 2; break;
-			case 'D': gi->camera->rotation[1] -= 2; break;
-			case 'W': gi->camera->rotation[0] += 2; break;
-			case 'S': gi->camera->rotation[0] -= 2; break;
-			case 'Q': gi->camera->rotation[2] += 2; break;
-			case 'E': gi->camera->rotation[2] -= 2; break;
-			case 'J': gi->camera->position[0] -= 0.2; break;
-			case 'L': gi->camera->position[0] += 0.2; break;
-			case 'K': gi->camera->position[1] -= 0.2; break;
-			case 'I': gi->camera->position[1] += 0.2; break;
-			case 'U': gi->camera->position[2] -= 0.2; break;
-			case 'O': gi->camera->position[2] += 0.2; break;
-
-			case 'N': mode = 2; break;
-			case 'M': mode = 1; break;
-
-			default:
-				printf("INVALID KEY: %d %c\n", key, key);
-				break;
-		}
-	} else if (mode == 1) {
-		StaticObjectInstance *obj;
-		ListElement *it;
-		for (it = gi->map->objects->staticInstances->first; it != NULL; it = it->next) {
-			if (((StaticObjectInstance *)it->data)->id == modelId) {
-				obj = (StaticObjectInstance *)it->data;
-				break;
-			}
-		}
-		switch (key) {
-			case 'S': obj->position[1] += 1.0f / 16; break;
-			case 'W': obj->position[1] -= 1.0f / 16; break;
-			case 'A': obj->position[0] += 1.0f / 16; break;
-			case 'D': obj->position[0] -= 1.0f / 16; break;
-			case 'Q': obj->position[2] += 1.0f / 16; break;
-			case 'E': obj->position[2] -= 1.0f / 16; break;
-
-			case 'F': obj->scale[0] -= 0.1; break;
-			case 'H': obj->scale[0] += 0.1; break;
-			case 'G': obj->scale[1] -= 0.1; break;
-			case 'T': obj->scale[1] += 0.1; break;
-			case 'R': obj->scale[2] -= 0.1; break;
-			case 'Z': obj->scale[2] += 0.1; break;
-
-			case 'J': obj->rotation[0] -= PI / 4; break;
-			case 'L': obj->rotation[0] += PI / 4; break;
-			case 'K': obj->rotation[1] -= PI / 4; break;
-			case 'I': obj->rotation[1] += PI / 4; break;
-			case 'U': obj->rotation[2] -= PI / 4; break;
-			case 'O': obj->rotation[2] += PI / 4; break;
-
-			case 'N': mode = 0; break;
-			case 'M': mode = 2; break;
-			case 'B': scanf("%d", &modelId); break;
-			case 'V': printf("POS: %f %f %f\nROT: %f %f %f\nSCL: %f %f %f\n",
-					obj->position[0], obj->position[1], obj->position[2],
-					obj->rotation[0], obj->rotation[1], obj->rotation[2],
-					obj->scale[0], obj->scale[1], obj->scale[2]);
-			break;
-
-			default:
-				printf("INVALID KEY: %d %c\n", key, key);
-				break;
-		}
-	}
-}
-
-void onKeyAction(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
-	if (key == GLFW_KEY_H && action == GLFW_PRESS)
-		printf("%g %g\n", gi->player->position[X], gi->player->position[Y]);
-#ifdef DEBUG_MOVEMENT
-	debugKeyPress(key, 0, 0);
-#endif
-}
-
-static void onError(int error, const char* description) {
-	fprintf(stderr, "[Error] %s\n", description);
-}
-
-void printVersionInfo() {
-	printf("[Info] OpenGL version supported: (%s): \n", glGetString(GL_VERSION));
-	int major, minor, revision;
-	glfwGetVersion(&major, &minor, &revision);
-	printf("[Info] Running against GLFW %i.%i.%i\n", major, minor, revision);
-}
-
 int main(int argc, char *argv[]) {
 	GameInstance *this = new(GameInstance);
-	gi = this; //TODO: Remove this
+	getGameInstance(&this);
+
 	this->shader = new(ShaderInfo);
 	this->lighting = new(LigingInfo);
 	this->lighting->numLights = 0;
 	this->camera = new(CameraInfo);
-	this->camera->rotation[X] = 0.0f;
-	this->camera->rotation[Y] = 0.0f;
-	this->camera->rotation[Z] = 0.0f;
+	setRotation(this->camera->rotation, 0.0f, 0.0f, 0.0f);
+	this->options = new(Options);
+	this->options->selectedToSet = NULL;
+	this->player = NULL;
 
-	glfwSetErrorCallback(onError);
+	loadDefaultOptions(this);
+	loadOptions(this);
+
+	do {
+		this->options->reloadProgram = GL_FALSE;
+		initGLFW(this);
+		const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		createWindow(this, mode);
+		setupWindowSize(mode, this);
+		printVersionInfo();
+		initCursor(this);
+		gameInit(this);
+		fixViewport(this);
+
+		doGameLoop(this);
+
+		saveOptions(this);
+		glfwDestroyWindow(this->window);
+		glfwTerminate();
+	} while(this->options->reloadProgram);
+
+	freeGameInstance(this);
+	DEBUG("Info", "Closing game");
+
+	exit(EXIT_SUCCESS);
+}
+
+/**
+ * Free all the memory allocated values from GameInstance
+ * and then the GameInstance itself.
+ *
+ * @param this Actual GameInstance instance
+ */
+static void freeGameInstance(GameInstance* this) {
+	free(this->shader);
+	free(this->lighting);
+	free(this->camera);
+	free(this->options);
+
+	if (this->player != NULL)
+		freePlayer(this);
+
+	int i;
+	for (i = 0; i < this->cursor->cursorObject->size; ++i) {
+		listFree(this->cursor->cursorObject->parts[i].parts);
+		free(this->cursor->cursorObject->parts[i].parts);
+	}
+	listFree(this->cursor->cursorObject->parts[0].colors);
+	free(this->cursor->cursorObject->parts[0].colors);
+
+	free(this->cursor->cursorObject->parts);
+	free(this->cursor->cursorObject);
+	free(this->cursor->pointer);
+	free(this->cursor);
+
+	Iterator it;
+	foreach (it, this->font->chars->first) {
+		Char *c = it->data;
+		listFree(c->parts);
+		free(c->parts);
+	}
+	listFree(this->font->chars);
+	free(this->font->chars);
+
+	free(this->font->colors);
+	listFree(this->font->unknown->parts);
+	free(this->font->unknown->parts);
+	free(this->font->unknown);
+	free(this->font);
+
+	listFree(this->referencePoints);
+	free(this->referencePoints);
+	free(this);
+}
+
+/**
+ * Initialize GLFW
+ *
+ * @param this Actual GameInstance instance
+ */
+static void initGLFW(GameInstance *this) {
+	glfwSetErrorCallback(onErrorEvent);
 
 	if (!glfwInit()) {
-		printf("[ERROR] Init failed\n");
+		ERROR("GLFW init failed");
 		exit(EXIT_FAILURE);
 	}
 
-	glfwWindowHint(GLFW_SAMPLES, 16);
+	if (this->options->msaa != 0)
+		glfwWindowHint(GLFW_SAMPLES, this->options->msaa);
+	DEBUG("Info", "MSAA: x%d", this->options->msaa);
+
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+}
 
-	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-	this->window = glfwCreateWindow(mode->width, mode->height,
-			"stdgame | The Epic Platformer Game",
-			glfwGetPrimaryMonitor(), NULL);
-	this->options.height = mode->height;
-	this->options.width = mode->width;
-	printf("[Info] Window size: %dx%d\n", mode->width, mode->height); //TODO: Load from config
+/**
+ * Create GLFW window
+ *
+ * @param this Actual GameInstance instance
+ * @param mode GLFW video mode
+ */
+static void createWindow(GameInstance* this, const GLFWvidmode* mode) {
+	if (this->options->fullscreen) {
+		this->window = glfwCreateWindow(mode->width, mode->height,
+				"stdgame | The Epic Platformer Game", glfwGetPrimaryMonitor(), NULL);
+	} else {
+		if (this->options->windowedWidth == 0)
+			this->options->windowedWidth = this->options->width;
+		if (this->options->windowedHeight == 0)
+			this->options->windowedHeight = this->options->height;
 
+		this->window = glfwCreateWindow(this->options->windowedWidth,
+				this->options->windowedHeight, "stdgame | The Epic Platformer Game",
+				NULL, NULL);
+	}
+
+	this->options->height = mode->height;
+	this->options->width = mode->width;
+
+	DEBUG("Info", "Window size: %dx%d", mode->width, mode->height); //TODO: Load from config
 	if (!this->window) {
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
 
-// TODO: Cursor
-//	glfwSetWindowCloseCallback(window, window_close_callback);
-//	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	glfwSetInputMode(this->window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-	glfwSetKeyCallback(this->window, onKeyAction);
-
-// TODO: Icon
-//	GLFWimage images[2];
-//	images[0] = load_icon("my_icon.png");
-//	images[1] = load_icon("my_icon_small.png");
-//	glfwSetWindowIcon(window, 2, images);
-
+	glfwSetMouseButtonCallback(this->window, onClickEvent);
+	glfwSetKeyCallback(this->window, onKeyEvent);
+	glfwSetScrollCallback(this->window, onScrollEvent);
+	glfwSetCharModsCallback(this->window, onCharModEvent);
 	glfwMakeContextCurrent(this->window);
 	glfwSwapInterval(1);
+}
 
+/**
+ * Setup OpenGL
+ *
+ * @param this Actual GameInstance instance
+ * @param width Width of the window
+ * @param height Height of the window
+ */
+static void setupOpenGL(GameInstance *this, double width, double height) {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClearDepth(1.0f);
-	glEnable(GL_MULTISAMPLE);
+
+	if (this->options->msaa != 0)
+		glEnable(GL_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_CULL_FACE);
@@ -166,28 +199,137 @@ int main(int argc, char *argv[]) {
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	setPerspective(this, PI / 4.0f, (double) mode->width / (double) mode->height, 0.1f, 200.0f);
+	setPerspective(this, PI / 4.0f, (float) width / (float) height, 0.1f, 200.0f);
 	glMatrixMode(GL_MODELVIEW);
+}
 
-	printVersionInfo();
-	gameInit(this);
+/**
+ * Setup GLFW window size
+ *
+ * @param mode GLFW video mode
+ * @param this Actual GameInstance instance
+ */
+static void setupWindowSize(const GLFWvidmode* mode, GameInstance* this) {
+	if (this->options->fullscreen) {
+		setupOpenGL(this, mode->width, mode->height);
+	} else {
+		if (this->options->windowedWidth == 0)
+			this->options->windowedWidth = this->options->width;
 
+		if (this->options->windowedHeight == 0)
+			this->options->windowedHeight = this->options->height;
+
+		setupOpenGL(this, this->options->windowedWidth,
+				this->options->windowedHeight);
+	}
+}
+
+/**
+ * Setup the perspective, projection matrix
+ *
+ * @param this Actual GameInstance instance
+ * @param fov Field of view
+ * @param aspect Aspect ratio
+ * @param near Near value
+ * @param far Far value
+ */
+static void setPerspective(GameInstance *this, float fov, float aspect, float near, float far) {
+	this->options->tanFov = tanf(fov);
+	this->options->aspectRatio = aspect;
+	float temp = 1.0f / tanf(fov / 2.0f);
+
+	this->camera->projMat[0x0] = temp / aspect;
+	this->camera->projMat[0x1] = 0.0f;
+	this->camera->projMat[0x2] = 0.0f;
+	this->camera->projMat[0x3] = 0.0f;
+
+	this->camera->projMat[0x4] = 0.0f;
+	this->camera->projMat[0x5] = temp;
+	this->camera->projMat[0x6] = 0.0f;
+	this->camera->projMat[0x7] = 0.0f;
+
+	this->camera->projMat[0x8] = 0.0f;
+	this->camera->projMat[0x9] = 0.0f;
+	this->camera->projMat[0xA] = (far + near) / (near - far);
+	this->camera->projMat[0xB] = -1.0f;
+
+	this->camera->projMat[0xC] = 0.0f;
+	this->camera->projMat[0xD] = 0.0f;
+	this->camera->projMat[0xE] = (2.0f * far * near) / (near - far);
+	this->camera->projMat[0xF] = 0.0f;
+
+	glMultMatrixf(this->camera->projMat);
+}
+
+/**
+ * Prints OpenGL and GLFW version numbers
+ */
+static void printVersionInfo(void) {
+	printf("[Info] OpenGL version supported: (%s) \n", glGetString(GL_VERSION));
+	int major, minor, revision;
+	glfwGetVersion(&major, &minor, &revision);
+	printf("[Info] Running against GLFW %i.%i.%i\n", major, minor, revision);
+}
+
+/**
+ * Initialize the cursor
+ *
+ * @param this Actual GameInstance instance
+ */
+static void initCursor(GameInstance* this) {
+	this->cursor = new(Cursor);
+	this->cursor->cursorObject = loadActiveObject("assets/objects/cursor.aobj");
+	this->cursor->pointer = new(ActiveObjectInstance);
+	this->cursor->pointer->id = -2147483647;
+	setPosition(this->cursor->pointer->position, 0.0f, 0.0f, 0.0f);
+	setRotation(this->cursor->pointer->rotation, 0.0f, 0.0f, 0.0f);
+	setScale(this->cursor->pointer->scale, 1.0, 1.0, 1.0);
+	this->cursor->pointer->visible = GL_TRUE;
+	this->cursor->pointer->activePart = 0;
+	this->cursor->pointer->object = this->cursor->cursorObject;
+}
+
+/**
+ * Fix the viewport size
+ *
+ * Sometimes there is a black rectangle at the top the window. This function fix it.
+ *
+ * @param this Actual GameInstance instance
+ */
+void fixViewport(GameInstance* this) {
+	int width, height;
+	glfwGetFramebufferSize(this->window, &width, &height);
+	glViewport(0, 0, width, height);
+}
+
+/**
+ * GameInstance getter for GLFW event functions
+ *
+ * @warning  Don't use it is you can.
+ *
+ * @param this Actual GameInstance instance
+ */
+void getGameInstance(GameInstance **this) {
+	static GameInstance *storedInstance = NULL;
+	if (storedInstance == NULL)
+		storedInstance = *this;
+
+	*this = storedInstance;
+}
+
+/**
+ * Game loop method
+ *
+ * @param this Actual GameInstance instance
+ */
+static void doGameLoop(GameInstance* this) {
 	while (!glfwWindowShouldClose(this->window)) {
+		glfwPollEvents();
 		onLogic(this);
-
-// FIXME: Remove this code
-//		int width, height;
-//		glfwGetFramebufferSize(window, &width, &height);
-//		glViewport(0, 0, width, height);
-
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		onRender(this);
-
 		glfwSwapBuffers(this->window);
-		glfwPollEvents();
 	}
-
-	glfwDestroyWindow(this->window);
-	glfwTerminate();
-	exit(EXIT_SUCCESS);
+	freeMap(this->map);
 }
+

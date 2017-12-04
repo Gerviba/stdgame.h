@@ -1,29 +1,39 @@
+/**
+ * @file object.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief Static, dynamic and active object loader and renderer. ReferencePoint manager.
+ *
+ * @par Header:
+ * 		object.h
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "includes.h"
+#include "stdgame.h"
 
+/**
+ * Load static object
+ *
+ * @param path The path of the file
+ * @see StaticObject
+ * @return Loaded StaticObject
+ */
 StaticObject *loadStaticObject(char path[]) {
 	StaticObject *obj = new(StaticObject);
 	obj->parts = newList(StaticObjectPart);
 	obj->colors = newList(PartColor);
-	obj->position[X] = 0;
-	obj->position[Y] = 0;
-	obj->position[Z] = 0;
-	obj->rotation[X] = 0;
-	obj->rotation[Y] = 0;
-	obj->rotation[Z] = 0;
-	obj->scale[X] = 1.0f / 16;
-	obj->scale[Y] = 1.0f / 16;
-	obj->scale[Z] = 1.0f / 16;
+	setPosition(obj->position, 0.0f, 0.0f, 0.0f);
+	setRotation(obj->rotation, 0.0f, 0.0f, 0.0f);
+	setScale(obj->scale,  1.0f / 16,  1.0f / 16,  1.0f / 16);
 
 	FILE *file;
 	char buff[255];
-	printf("[Object] Loading object: %s\n", path);
+	DEBUG("Object", "Loading object: %s", path);
 
 	file = fopen(path, "r");
 	if (!file) {
-		printf("[Object] Failed to load. File not accessable.\n");
+		ERROR("Failed to load static object. File '%s' is not accessable.", path);
 		return NULL;
 	}
 
@@ -60,9 +70,9 @@ StaticObject *loadStaticObject(char path[]) {
 				int colorId;
 
 				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
-						&part.position[Z], &part.type, &colorId);
+						&part.position[Z], (int *) &part.type, &colorId);
 
-				ListElement *it;
+				Iterator it;
 				for (it = obj->colors->first; it != NULL; it = it->next) {
 					if (((TextureBlock *) it->data)->id == colorId) {
 						part.color = ((PartColor *) it->data)->color;
@@ -80,27 +90,28 @@ StaticObject *loadStaticObject(char path[]) {
 	return obj;
 }
 
+/**
+ * Load dynamic object
+ *
+ * @param path The path of the file
+ * @see DynamicObject
+ * @return Loaded DynamicObject
+ */
 DynamicObject *loadDynamicObject(char path[]) {
 	DynamicObject *obj = new(DynamicObject);
 	obj->parts = newList(StaticObjectPart);
 	obj->colors = newList(PartColor);
-	obj->position[X] = 0;
-	obj->position[Y] = 0;
-	obj->position[Z] = 0;
-	obj->rotation[X] = 0;
-	obj->rotation[Y] = 0;
-	obj->rotation[Z] = 0;
-	obj->scale[X] = 1.0f / 16;
-	obj->scale[Y] = 1.0f / 16;
-	obj->scale[Z] = 1.0f / 16;
+	setPosition(obj->position, 0.0f, 0.0f, 0.0f);
+	setRotation(obj->rotation, 0.0f, 0.0f, 0.0f);
+	setScale(obj->scale,  1.0f / 16,  1.0f / 16,  1.0f / 16);
 
 	FILE *file;
 	char buff[255];
-	printf("[Object] Loading object: %s\n", path);
+	DEBUG("Object", "Loading object: %s", path);
 
 	file = fopen(path, "r");
 	if (!file) {
-		printf("[Object] Failed to load. File not accessable.\n");
+		ERROR("Failed to load dynamic object. File '%s' is not accessable.", path);
 		return NULL;
 	}
 
@@ -136,10 +147,11 @@ DynamicObject *loadDynamicObject(char path[]) {
 				StaticObjectPart part;
 				int colorId;
 
-				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
-						&part.position[Z], &part.type, &colorId);
+				sscanf(buff, "B %f %f %f %d %d",
+						&part.position[X], &part.position[Y], &part.position[Z],
+						(int*) &part.type, &colorId);
 
-				ListElement *it;
+				Iterator it;
 				for (it = obj->colors->first; it != NULL; it = it->next) {
 					if (((TextureBlock *) it->data)->id == colorId) {
 						part.color = ((PartColor *) it->data)->color;
@@ -157,29 +169,28 @@ DynamicObject *loadDynamicObject(char path[]) {
 	return obj;
 }
 
+/**
+ * Load active object
+ *
+ * @param path The path of the file
+ * @see ActiveObject
+ * @return Loaded ActiveObject
+ */
 ActiveObject *loadActiveObject(char path[]) {
 	ActiveObject *aobj = new(ActiveObject);
-	DynamicObject *obj = NULL;
 
-	obj->parts = newList(StaticObjectPart);
-	obj->colors = newList(PartColor);
-	obj->position[X] = 0;
-	obj->position[Y] = 0;
-	obj->position[Z] = 0;
-	obj->rotation[X] = 0;
-	obj->rotation[Y] = 0;
-	obj->rotation[Z] = 0;
-	obj->scale[X] = 1.0f / 16;
-	obj->scale[Y] = 1.0f / 16;
-	obj->scale[Z] = 1.0f / 16;
+	GLfloat position[3] = {0.0f, 0.0f, 0.0f};
+	GLfloat rotation[3] = {0.0f, 0.0f, 0.0f};
+	GLfloat scale[3] = {0.0f, 0.0f, 0.0f};
+	LinkedList /*ColorPart*/ *colors = newList(PartColor);
 
 	FILE *file;
 	char buff[255];
-	printf("[Object] Loading object: %s\n", path);
+	DEBUG("Object", "Loading object: %s", path);
 
 	file = fopen(path, "r");
 	if (!file) {
-		printf("[Object] Failed to load. File not accessable.\n");
+		ERROR("Failed to load active object. File '%s' is not accessable.", path);
 		return NULL;
 	}
 
@@ -189,14 +200,26 @@ ActiveObject *loadActiveObject(char path[]) {
 				char type[32];
 				sscanf(buff, "$ %s", type);
 				if (equals(type, "POSITION")) {
-					sscanf(buff, "$ %*s %f %f %f", &obj->position[X], &obj->position[Y], &obj->position[Z]);
+					sscanf(buff, "$ %*s %f %f %f", &position[X], &position[Y], &position[Z]);
 				} else if (equals(type, "ROTATION")) {
-					sscanf(buff, "$ %*s %f %f %f", &obj->rotation[X], &obj->rotation[Y], &obj->rotation[Z]);
+					sscanf(buff, "$ %*s %f %f %f", &rotation[X], &rotation[Y], &rotation[Z]);
 				} else if (equals(type, "SCALE")) {
-					sscanf(buff, "$ %*s %f %f %f", &obj->scale[X], &obj->scale[Y], &obj->scale[Z]);
-					obj->scale[X] *= (1.0f / 16);
-					obj->scale[Y] *= (1.0f / 16);
-					obj->scale[Z] *= (1.0f / 16);
+					sscanf(buff, "$ %*s %f %f %f", &scale[X], &scale[Y], &scale[Z]);
+					scale[X] *= (1.0f / 16);
+					scale[Y] *= (1.0f / 16);
+					scale[Z] *= (1.0f / 16);
+				} else if (equals(type, "SIZE")) {
+					sscanf(buff, "$ SIZE %d", &aobj->size);
+					aobj->parts = malloc(sizeof(DynamicObject) * aobj->size);
+
+					int i;
+					for (i = 0; i < aobj->size; ++i) {
+						aobj->parts[i].parts = newList(StaticObjectPart);
+						aobj->parts[i].colors = colors;
+						setPosition(aobj->parts[i].position, position[X], position[Y], position[Z]);
+						setRotation(aobj->parts[i].rotation, rotation[X], rotation[Y], rotation[Z]);
+						setScale(aobj->parts[i].scale, scale[X], scale[Y], scale[Z]);
+					}
 				}
 				break;
 			}
@@ -208,25 +231,26 @@ ActiveObject *loadActiveObject(char path[]) {
 				color.color[G] = (float) g / 255;
 				color.color[B] = (float) b / 255;
 
-				listPush(obj->colors, &color);
+				listPush(colors, &color);
 				break;
 			}
 			case 'B': { // Block
 				StaticObjectPart part;
-				int colorId;
+				int colorId, state;
 
-				sscanf(buff, "B %f %f %f %d %d", &part.position[X], &part.position[Y],
-						&part.position[Z], &part.type, &colorId);
+				sscanf(buff, "B %d %f %f %f %d %d", &state,
+						&part.position[X], &part.position[Y], &part.position[Z],
+						(int*) &part.type, &colorId);
 
-				ListElement *it;
-				for (it = obj->colors->first; it != NULL; it = it->next) {
-					if (((TextureBlock *) it->data)->id == colorId) {
+				Iterator it;
+				for (it = colors->first; it != NULL; it = it->next) {
+					if (((PartColor *) it->data)->id == colorId) {
 						part.color = ((PartColor *) it->data)->color;
 						break;
 					}
 				}
 
-				listPush(obj->parts, &part);
+				listPush(aobj->parts[state].parts, &part);
 				break;
 			}
 		}
@@ -236,156 +260,279 @@ ActiveObject *loadActiveObject(char path[]) {
 	return aobj;
 }
 
+/**
+ * Render static object
+ *
+ * @param this Actual GameInstance instance
+ * @param instance Object instance to render
+ */
 void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 	StaticObject *obj = instance->object;
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
 
-	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
-	ListElement *it;
-	for (it = obj->parts->first; it != NULL; it = it->next) {
-		StaticObjectPart part = *(StaticObjectPart *) it->data;
-		glUniform4fv(this->shader->baseColor, 1, part.color);
+	if (getDistSquared2DDelta(instance->position, obj->position, this->camera->position) > 100)
+		return;
 
-		if ((part.type & PTMASK_RENDER_UP) > 0) {
+	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
+	Iterator it;
+	foreach (it, obj->parts->first) {
+		StaticObjectPart *part = it->data;
+		glUniform4fv(this->shader->baseColor, 1, part->color);
+
+		if ((part->type & PTMASK_RENDER_UP) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, -1, 0.0f,
 					0.0f, 1, 0.0f, 0.0f,
-					part.position[X], part.position[Y] + 1, part.position[Z], 1.0f});
+					part->position[X], part->position[Y] + 1, part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_DOWN) > 0) {
+		if ((part->type & PTMASK_RENDER_DOWN) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, cosf(PI + PI / 2), -sinf(PI + PI / 2), 0.0f,
 					0.0f, sinf(PI + PI / 2), cosf(PI + PI / 2), 0.0f,
-					part.position[X], part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_TOP) > 0) {
+		if ((part->type & PTMASK_RENDER_TOP) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI), 0.0f, sinf(PI), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI), 0.0f, cosf(PI), 0.0f,
-					part.position[X] + 1, part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X] + 1, part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_LEFT) > 0) {
+		if ((part->type & PTMASK_RENDER_LEFT) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI / 2), 0.0f, sinf(PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI / 2), 0.0f, cosf(PI / 2), 0.0f,
-					part.position[X], part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_BOTTOM) > 0) {
+		if ((part->type & PTMASK_RENDER_BOTTOM) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 1.0f, 0.0f,
-					part.position[X], part.position[Y], part.position[Z], 1.0f});
+					part->position[X], part->position[Y], part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_RIGHT) > 0) {
+		if ((part->type & PTMASK_RENDER_RIGHT) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI + PI / 2), 0.0f, sinf(PI + PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI + PI / 2), 0.0f, cosf(PI + PI / 2), 0.0f,
-					part.position[X] + 1, part.position[Y], part.position[Z], 1.0f});
+					part->position[X] + 1, part->position[Y], part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
-
 	}
 }
 
+/**
+ * Render dynamic object
+ *
+ * @param this Actual GameInstance instance
+ * @param instance Object instance to render
+ */
 void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 	DynamicObject *obj = instance->object;
+
+	if (!instance->visible)
+		return;
+	if (getDistSquared2DDelta(instance->position, instance->reference->position, this->camera->position) > 100)
+		return;
+
 	glPushMatrix();
 	glLoadIdentity();
 
-	glTranslatef(obj->position[X] + instance->position[X],
-			obj->position[Y] + instance->position[Y],
-			obj->position[Z] + instance->position[Z]);
-	glScalef(obj->scale[X] * instance->scale[X],
-			obj->scale[Y] * instance->scale[Y],
-			obj->scale[Z] * instance->scale[Z]);
-	glRotatef(-(obj->rotation[X] + instance->rotation[X]), 1.0f, 0.0f, 0.0f);
-	glRotatef(-(obj->rotation[Y] + instance->rotation[Y]), 0.0f, 1.0f, 0.0f);
-	glRotatef(-(obj->rotation[Z] + instance->rotation[Z]), 0.0f, 0.0f, 1.0f);
+	glTranslatef(obj->position[X] + instance->position[X] + instance->reference->position[X],
+			obj->position[Y] + instance->position[Y] + instance->reference->position[Y],
+			obj->position[Z] + instance->position[Z] + instance->reference->position[Z]);
+	glScalef(obj->scale[X] * instance->scale[X] * instance->reference->scale[X],
+			obj->scale[Y] * instance->scale[Y] * instance->reference->scale[Y],
+			obj->scale[Z] * instance->scale[Z] * instance->reference->scale[Z]);
+	glRotatef(-(obj->rotation[X] + instance->rotation[X] + instance->reference->rotation[X]), 1.0f, 0.0f, 0.0f);
+	glRotatef(-(obj->rotation[Y] + instance->rotation[Y] + instance->reference->rotation[Y]), 0.0f, 1.0f, 0.0f);
+	glRotatef(-(obj->rotation[Z] + instance->rotation[Z] + instance->reference->rotation[Z]), 0.0f, 0.0f, 1.0f);
 
-	glGetFloatv(GL_MODELVIEW_MATRIX, &instance->moveMat);
+	glGetFloatv(GL_MODELVIEW_MATRIX, instance->moveMat);
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
 	glPopMatrix();
 
 	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
-	ListElement *it;
-	for (it = obj->parts->first; it != NULL; it = it->next) {
-		StaticObjectPart part = *(StaticObjectPart *) it->data;
-		glUniform4fv(this->shader->baseColor, 1, part.color);
+	Iterator it;
+	foreach (it, obj->parts->first) {
+		StaticObjectPart *part = it->data;
+		glUniform4fv(this->shader->baseColor, 1, part->color);
 
-		if ((part.type & PTMASK_RENDER_UP) > 0) {
+		if ((part->type & PTMASK_RENDER_UP) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, -1, 0.0f,
 					0.0f, 1, 0.0f, 0.0f,
-					part.position[X], part.position[Y] + 1, part.position[Z], 1.0f});
+					part->position[X], part->position[Y] + 1, part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_DOWN) > 0) {
+		if ((part->type & PTMASK_RENDER_DOWN) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, cosf(PI + PI / 2), -sinf(PI + PI / 2), 0.0f,
 					0.0f, sinf(PI + PI / 2), cosf(PI + PI / 2), 0.0f,
-					part.position[X], part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_TOP) > 0) {
+		if ((part->type & PTMASK_RENDER_TOP) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI), 0.0f, sinf(PI), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI), 0.0f, cosf(PI), 0.0f,
-					part.position[X] + 1, part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X] + 1, part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_LEFT) > 0) {
+		if ((part->type & PTMASK_RENDER_LEFT) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI / 2), 0.0f, sinf(PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI / 2), 0.0f, cosf(PI / 2), 0.0f,
-					part.position[X], part.position[Y], part.position[Z] - 1, 1.0f});
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_BOTTOM) > 0) {
+		if ((part->type & PTMASK_RENDER_BOTTOM) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 1.0f, 0.0f,
-					part.position[X], part.position[Y], part.position[Z], 1.0f});
+					part->position[X], part->position[Y], part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-		if ((part.type & PTMASK_RENDER_RIGHT) > 0) {
+		if ((part->type & PTMASK_RENDER_RIGHT) > 0) {
 			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 					cosf(PI + PI / 2), 0.0f, sinf(PI + PI / 2), 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					-sinf(PI + PI / 2), 0.0f, cosf(PI + PI / 2), 0.0f,
-					part.position[X] + 1, part.position[Y], part.position[Z], 1.0f});
+					part->position[X] + 1, part->position[Y], part->position[Z], 1.0f});
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
 	}
 }
 
-void renderTile(GameInstance* this, Tile* tile) {
+/**
+ * Render active object
+ *
+ * @param this Actual GameInstance instance
+ * @param instance Object instance to render
+ */
+void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
+	DynamicObject *obj = (DynamicObject *) (instance->object->parts + instance->activePart);
+
+	if (!instance->visible)
+		return;
+	if (getDistSquared2DDelta(instance->position, obj->position, this->camera->position) > 100)
+		return;
+
+	glPushMatrix();
+	glLoadIdentity();
+
+	glTranslatef(obj->position[X] + instance->position[X] + instance->reference->position[X],
+			obj->position[Y] + instance->position[Y] + instance->reference->position[Y],
+			obj->position[Z] + instance->position[Z] + instance->reference->position[Z]);
+	glScalef(obj->scale[X] * instance->scale[X] * instance->reference->scale[X],
+			obj->scale[Y] * instance->scale[Y] * instance->reference->scale[Y],
+			obj->scale[Z] * instance->scale[Z] * instance->reference->scale[Z]);
+	glRotatef(-(obj->rotation[X] + instance->rotation[X] + instance->reference->rotation[X]), 1.0f, 0.0f, 0.0f);
+	glRotatef(-(obj->rotation[Y] + instance->rotation[Y] + instance->reference->rotation[Y]), 0.0f, 1.0f, 0.0f);
+	glRotatef(-(obj->rotation[Z] + instance->rotation[Z] + instance->reference->rotation[Z]), 0.0f, 0.0f, 1.0f);
+
+	glGetFloatv(GL_MODELVIEW_MATRIX, instance->moveMat);
+	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
+	glPopMatrix();
+
+	glBindTexture(GL_TEXTURE_2D, this->blankTextureId);
+	Iterator it;
+	foreach (it, obj->parts->first) {
+		StaticObjectPart *part = it->data;
+		glUniform4fv(this->shader->baseColor, 1, part->color);
+
+		if ((part->type & PTMASK_RENDER_UP) > 0) {
+			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
+					1.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, 0.0f, -1, 0.0f,
+					0.0f, 1, 0.0f, 0.0f,
+					part->position[X], part->position[Y] + 1, part->position[Z], 1.0f});
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		}
+
+		if ((part->type & PTMASK_RENDER_DOWN) > 0) {
+			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
+					1.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, cosf(PI + PI / 2), -sinf(PI + PI / 2), 0.0f,
+					0.0f, sinf(PI + PI / 2), cosf(PI + PI / 2), 0.0f,
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		}
+
+		if ((part->type & PTMASK_RENDER_TOP) > 0) {
+			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
+					cosf(PI), 0.0f, sinf(PI), 0.0f,
+					0.0f, 1.0f, 0.0f, 0.0f,
+					-sinf(PI), 0.0f, cosf(PI), 0.0f,
+					part->position[X] + 1, part->position[Y], part->position[Z] - 1, 1.0f});
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		}
+
+		if ((part->type & PTMASK_RENDER_LEFT) > 0) {
+			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
+					cosf(PI / 2), 0.0f, sinf(PI / 2), 0.0f,
+					0.0f, 1.0f, 0.0f, 0.0f,
+					-sinf(PI / 2), 0.0f, cosf(PI / 2), 0.0f,
+					part->position[X], part->position[Y], part->position[Z] - 1, 1.0f});
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		}
+
+		if ((part->type & PTMASK_RENDER_BOTTOM) > 0) {
+			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
+					1.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, 1.0f, 0.0f, 0.0f,
+					0.0f, 0.0f, 1.0f, 0.0f,
+					part->position[X], part->position[Y], part->position[Z], 1.0f});
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		}
+
+		if ((part->type & PTMASK_RENDER_RIGHT) > 0) {
+			glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
+					cosf(PI + PI / 2), 0.0f, sinf(PI + PI / 2), 0.0f,
+					0.0f, 1.0f, 0.0f, 0.0f,
+					-sinf(PI + PI / 2), 0.0f, cosf(PI + PI / 2), 0.0f,
+					part->position[X] + 1, part->position[Y], part->position[Z], 1.0f});
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		}
+
+	}
+}
+
+/**
+ * Render map tile
+ *
+ * @param this Actual GameInstance instance
+ * @param tile Tile to render
+ */
+void renderTile(GameInstance *this, Tile *tile) {
+	if (getDistSquaredXY(tile->x, tile->y, this->camera->position) > 100)
+		return;
+
 	glBindTexture(GL_TEXTURE_2D, tile->texture->base->textureId);
 	glUniformMatrix4fv(this->shader->modelMat, 1, GL_FALSE, (GLfloat[]) {
 			1.0f, 0.0f, 0.0f, 0.0f,
@@ -437,7 +584,12 @@ void renderTile(GameInstance* this, Tile* tile) {
 	}
 }
 
-void initStraticInstance(GameInstance *this, StaticObjectInstance *instance) {
+/**
+ * Calculate the move matrix of the static object instance
+ *
+ * @param instance Object instance to init
+ */
+void initStraticInstance(StaticObjectInstance *instance) {
 	StaticObject *obj = instance->object;
 	glPushMatrix();
 	glLoadIdentity();
@@ -452,6 +604,54 @@ void initStraticInstance(GameInstance *this, StaticObjectInstance *instance) {
 	glRotatef(-(obj->rotation[Y] + instance->rotation[Y]), 0.0f, 1.0f, 0.0f);
 	glRotatef(-(obj->rotation[Z] + instance->rotation[Z]), 0.0f, 0.0f, 1.0f);
 
-	glGetFloatv(GL_MODELVIEW_MATRIX, &instance->moveMat);
+	glGetFloatv(GL_MODELVIEW_MATRIX, instance->moveMat);
 	glPopMatrix();
+}
+
+/**
+ * Initialize reference points
+ *
+ * @param this Actual GameInstance instance
+ */
+void initReferencePoints(GameInstance *this) {
+	this->referencePoints = newList(ReferencePoint);
+	GLint i;
+	for (i = 0; i < 9; ++i) {
+		ReferencePoint rp;
+		rp.id = i;
+		rp.timing = 0;
+		setPosition(rp.position, 0.0f, 0.0f, 0.0f);
+		setRotation(rp.rotation, 0.0f, 0.0f, 0.0f);
+		setScale(rp.scale, 1.0f, 1.0f, 1.0f);
+		listPush(this->referencePoints, &rp);
+	}
+	this->cursor->pointer->reference = (ReferencePoint *) this->referencePoints->first->data;
+}
+
+/**
+ * Update reference points
+ *
+ * @param this Actual GameInstance instance
+ * @param delta Ellapsed time
+ */
+void updateReferencePoint(GameInstance *this, GLfloat delta) {
+	Iterator it;
+	foreach (it, this->referencePoints->first) {
+		ReferencePoint *rp = it->data;
+		if (rp->id == 1) {
+			rp->timing += delta;
+			rp->position[Y] = sinf(rp->timing * 2) / 6;
+			rp->rotation[Z] = rp->timing * 180.0;
+		} else if (rp->id == 3) {
+			rp->timing += delta * 4;
+			rp->position[Y] = sinf(rp->timing) / 6;
+		} else if (rp->id == 6) {
+			rp->timing += delta * 4;
+			rp->position[Y] = sinf(rp->timing) / 16;
+		} else if (rp->id == 8) {
+			rp->timing += delta * 2;
+			rp->position[Y] = sinf(rp->timing) / 6;
+			rp->position[X] = sinf(rp->timing / 2) / 10;
+		}
+	}
 }

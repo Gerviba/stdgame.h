@@ -75,11 +75,12 @@ void loadTexture(GLuint *textureId, char path[]) {
  * @param y Y coordinate
  * @param size Size of the font
  */
-void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align,
+void addTextComponent(Map* map, char text[100], int id, RelativeX relX, RelativeY relY, Align align,
 		GLfloat x, GLfloat y, FontSize size) {
 
 	Component comp;
 	comp.id = id;
+	comp.value = NULL;
 	comp.text = new(TextComponent);
 	comp.type = CT_TEXT;
 	comp.relativeX = relX;
@@ -89,7 +90,7 @@ void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY r
 	comp.text->align = align;
 	setColor(comp.text->color, 1, 1, 1, 1);
 
-	comp.text->text = malloc(sizeof(char) * (strlen(text) + 1));
+	comp.text->text = (char*) malloc(sizeof(char) * (strlen(text) + 16));
 	strcpy(comp.text->text, text);
 	int i, length;
 	for (i = 0, length = strlen(comp.text->text); i < length; ++i)
@@ -113,11 +114,12 @@ void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY r
  * @param color Font default color (RGBA)
  * @param size Size of the font
  */
-void addTextComponentColor(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align,
+void addTextComponentColor(Map* map, char text[100], int id, RelativeX relX, RelativeY relY, Align align,
 		GLfloat pos[3], GLfloat color[4], FontSize size) {
 
 	Component comp;
 	comp.id = id;
+	comp.value = NULL;
 	comp.text = new(TextComponent);
 	comp.type = CT_TEXT;
 	comp.relativeX = relX;
@@ -533,6 +535,7 @@ static void processObject(GameInstance *this, Map *map, char buff[255]) {
 		StaticObject *sobj = loadStaticObject(finalPath);
 		sobj->id = id;
 		listPush(map->objects->staticObjects, sobj);
+		free(sobj);
 
 	} else if (equals(type, "DYNAMIC")) {
 		char path[255];
@@ -543,6 +546,7 @@ static void processObject(GameInstance *this, Map *map, char buff[255]) {
 		DynamicObject *dobj = loadDynamicObject(finalPath);
 		dobj->id = id;
 		listPush(map->objects->dynamicObjects, dobj);
+		free(dobj);
 
 	} else if (equals(type, "ACTIVE")) {
 		char path[255];
@@ -553,6 +557,7 @@ static void processObject(GameInstance *this, Map *map, char buff[255]) {
 		ActiveObject *aobj = loadActiveObject(finalPath);
 		aobj->id = id;
 		listPush(map->objects->activeObjects, aobj);
+		free(aobj);
 
 	} else {
 		WARNING("Invalid object type: '%s'", type);
@@ -657,6 +662,7 @@ static void processTextComponent(GameInstance *this, Map *map, char buff[255]) {
 	Component comp;
 	comp.text = new(TextComponent);
 	comp.type = CT_TEXT;
+	comp.value = NULL;
 
 	char text[255];
 	unsigned int r, g, b;
@@ -723,6 +729,8 @@ static void processObjectComponent(GameInstance *this, Map *map, char buff[255])
 	Component comp;
 	comp.type = CT_OBJECT;
 	comp.object = new(ObjectComponent);
+	comp.value = NULL;
+
 	int objectId;
 	sscanf(buff, "B %d %f %f %f %d %d %d", &comp.id,
 			&comp.position[X], &comp.position[Y], &comp.position[Z],
@@ -789,6 +797,8 @@ static void processAction(GameInstance *this, Map *map, char buff[255]) {
 		float data[4];
 		sscanf(buff, "N %*d %*d %f %f %f %f", &data[0], &data[1], &data[2], &data[3]);
 		action.value = newGenericValue(data, sizeof(float) * 4);
+	} else if (action.type == ACTION_WIN || action.type == ACTION_LOSE) {
+		action.value = NULL;
 	}
 
 	listPush(map->actions, &action);
@@ -938,6 +948,7 @@ Map* loadMap(GameInstance *this, char path[]) {
 		Action lose;
 		lose.id = ACTION_LOSE_ID;
 		lose.type = ACTION_LOSE;
+		lose.value = NULL;
 		listPush(map->actions, &lose);
 
 		map->spells = new(Spells);
@@ -946,6 +957,8 @@ Map* loadMap(GameInstance *this, char path[]) {
 		map->spells->spell1.reloadTime = 3;
 		map->spells->spell1.damage = 3;
 		map->spells->spell1.speed = 0;
+	} else {
+		map->spells = NULL;
 	}
 
 	fclose(file);
@@ -953,18 +966,104 @@ Map* loadMap(GameInstance *this, char path[]) {
 	fixViewport(this);
 
 	DEBUG("Map", "Successfully loaded");
+
 	return map;
 }
 
 /**
  * Free the map
  *
- * XXX: free
- *
  * @param map Map to free
  */
 void freeMap(Map *map) {
+	DEBUG("Map", "Cleaning map: %s", map->name);
+	Iterator it;
+	foreach (it, map->actions->first) {
+		Action *a = it->data;
+		if (a->value != NULL)
+			freeGenericValue(a->value);
+	}
+	listFree(map->actions);
+	free(map->actions);
 
+	listFree(map->tiles);
+	free(map->tiles);
+	listFree(map->lights);
+	free(map->lights);
+	listFree(map->textures);
+	free(map->textures);
+	listFree(map->textureBlocks);
+	free(map->textureBlocks);
+	listFree(map->regions);
+	free(map->regions);
+	listFree(map->messages);
+	free(map->messages);
+	listFree(map->physics);
+	free(map->physics);
+	listFree(map->entities);
+	free(map->entities);
+
+	foreach (it, map->objects->staticObjects->first) {
+		StaticObject *temp = it->data;
+		listFree(temp->parts);
+		free(temp->parts);
+		listFree(temp->colors);
+		free(temp->colors);
+	}
+	listFree(map->objects->staticObjects);
+	free(map->objects->staticObjects);
+	listFree(map->objects->staticInstances);
+	free(map->objects->staticInstances);
+
+	foreach (it, map->objects->dynamicObjects->first) {
+		DynamicObject *temp = it->data;
+		listFree(temp->parts);
+		free(temp->parts);
+		listFree(temp->colors);
+		free(temp->colors);
+	}
+	listFree(map->objects->dynamicObjects);
+	free(map->objects->dynamicObjects);
+	listFree(map->objects->dynamicInstances);
+	free(map->objects->dynamicInstances);
+
+	foreach (it, map->objects->activeObjects->first) {
+		ActiveObject *temp = it->data;
+		int i;
+		for (i = 0; i < temp->size; ++i) {
+			listFree(temp->parts[i].parts);
+			free(temp->parts[i].parts);
+		}
+		listFree(temp->parts[0].colors);
+		free(temp->parts[0].colors);
+		free(temp->parts);
+	}
+	listFree(map->objects->activeObjects);
+	free(map->objects->activeObjects);
+	listFree(map->objects->activeInstances);
+	free(map->objects->activeInstances);
+
+	free(map->objects);
+
+	foreach (it, map->menu->components->first) {
+		Component *temp = it->data;
+		if (temp->type == CT_TEXT) {
+			free(temp->text->text);
+			free(temp->text);
+		} else if (temp->type == CT_OBJECT) {
+			free(temp->object);
+		}
+		if (temp->value != NULL)
+			freeGenericValue(temp->value);
+	}
+	listFree(map->menu->components);
+	free(map->menu->components);
+	free(map->menu);
+	if (map->spells != NULL)
+		free(map->spells);
+
+	free(map);
+	DEBUG("Map", "Cleanup finished");
 }
 
 /**
@@ -983,6 +1082,7 @@ void updateHightScore(GameInstance *this, time_t deltaT) {
 		fprintf(file, "%s 1 %d\n", this->map->name, this->map->score);
 		fclose(file);
 		listFree(lines);
+		free(lines);
 		return;
 	}
 
@@ -1014,6 +1114,7 @@ void updateHightScore(GameInstance *this, time_t deltaT) {
 	fclose(file);
 
 	listFree(lines);
+	free(lines);
 	DEBUG("Hightscore", "Highscore saved");
 }
 

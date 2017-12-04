@@ -629,17 +629,6 @@ void initReferencePoints(GameInstance *this) {
 }
 
 /**
- * Free refrence points
- *
- * XXX: free
- *
- * @param this Actual GameInstance instance
- */
-void freeReferencePoints(GameInstance *this) {
-	free(this->referencePoints);
-}
-
-/**
  * Update reference points
  *
  * @param this Actual GameInstance instance

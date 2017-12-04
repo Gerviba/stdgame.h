@@ -17,7 +17,7 @@
  */
 void initPlayer(GameInstance *this) {
 	if (this->player != NULL)
-		free(this->player);
+		freePlayer(this);
 	this->player = new(Player);
 
 	this->player->id = 0;
@@ -34,8 +34,6 @@ void initPlayer(GameInstance *this) {
 
 /**
  * Free player
- *
- * XXX: free
  *
  * @param this Actual GameInstance instance
  */

@@ -54,6 +54,10 @@
 	#define WARNING(...) ;
 #endif
 
+#ifdef DEBUG_MALLOC
+#include "debugmalloc.h"
+#endif
+
 #include <string.h>
 #include <gl.h>
 #include <glext.h>

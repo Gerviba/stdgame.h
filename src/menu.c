@@ -21,6 +21,8 @@ static void setOptionsDefaults(GameInstance* this);
  * @param this Actual GameInstance instance
  */
 void onClickMenu(GameInstance *this) {
+	if (this->map == NULL || this->map->menu == NULL || this->map->menu->components == NULL)
+		return;
 	Iterator it;
 	foreach (it, this->map->menu->components->first) {
 		Component *comp = it->data;
@@ -28,8 +30,10 @@ void onClickMenu(GameInstance *this) {
 				comp->text->rawMin[Y] <= this->cursor->pointer->position[Y] &&
 				comp->text->rawMax[X] >= this->cursor->pointer->position[X] &&
 				comp->text->rawMax[Y] >= this->cursor->pointer->position[Y]) {
-			if (comp->onClick != NULL)
+			if (comp->onClick != NULL) {
 				comp->onClick(comp, this);
+				return;
+			}
 		}
 	}
 }
@@ -41,6 +45,8 @@ void onClickMenu(GameInstance *this) {
  * @param offset The Y-dim offset
  */
 void onScrollMenu(GameInstance *this, GLfloat offset) {
+	if (this->map == NULL || this->map->menu == NULL || this->map->menu->components == NULL)
+		return;
 	if (this->map->menu->scrollOffset - offset > this->map->menu->scrollMax ||
 			this->map->menu->scrollOffset - offset < this->map->menu->scrollMin)
 		return;

@@ -486,7 +486,7 @@ static void processVictory(GameInstance *this, Action *action) {
 			FS_HIGH_DPI);
 	addTextComponent(this->map, "Score", 20002, X_CENTER, Y_CENTER, ALIGN_LEFT, -1.5f, 0.2f, FS_NORMAL_DPI);
 	addTextComponent(this->map, "Time", 20002, X_CENTER, Y_CENTER, ALIGN_LEFT, -1.5f, -0.3f, FS_NORMAL_DPI);
-	char str[255];
+	char str[100] = {'\0'};
 	sprintf(str, "%d *", this->map->score);
 	addTextComponent(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_RIGHT, 1.5f, 0.2f, FS_NORMAL_DPI);
 
@@ -589,6 +589,9 @@ static GLfloat animatePlayer(GameInstance *this, GLfloat deltaMoveX, GLfloat del
 
 	if (isActionPerformed(this, &this->options->moveLeft)) {
 		deltaMoveX += -delta * PLAYER_SPEED;
+		if (isActionPerformed(this, &this->options->sneek))
+			deltaMoveX /= 2.0;
+
 		this->player->leftSide = GL_TRUE;
 		if (this->options->cameraMovement)
 			this->camera->destinationRotation[Y] = 2;
@@ -596,6 +599,9 @@ static GLfloat animatePlayer(GameInstance *this, GLfloat deltaMoveX, GLfloat del
 
 	if (isActionPerformed(this, &this->options->moveRight)) {
 		deltaMoveX += delta * PLAYER_SPEED;
+		if (isActionPerformed(this, &this->options->sneek))
+			deltaMoveX /= 2.0;
+
 		this->player->leftSide = GL_FALSE;
 		if (this->options->cameraMovement)
 			this->camera->destinationRotation[Y] = -2;
@@ -749,20 +755,13 @@ static void performRegions(GameInstance* this) {
 
 		if (region->maxUse != 0 && isPlayerInRegion(this, region)
 			&& (region->itemReq == -1 || (this->player->item == region->itemReq
-				&& isActionPerformed(this, &this->options->use)))) {
-			printf("R %d %d\n", region->actionId, region->notSneek ? 1 : 0);
-		}
-
-		if (region->maxUse != 0 && isPlayerInRegion(this, region)
-			&& (region->itemReq == -1 || (this->player->item == region->itemReq
 					&& isActionPerformed(this, &this->options->use)))
 			&& (region->notSneek == GL_FALSE || (region->notSneek == GL_TRUE
 					&& !isActionPerformed(this, &this->options->sneek)))) {
-			printf("RR %d\n", region->actionId);
+
 			activateAction(this, region->actionId);
 			if (region->maxUse > 0)
 				--region->maxUse;
-
 		}
 	}
 }
@@ -836,6 +835,56 @@ static void performReferencePoints(GameInstance* this) {
 }
 
 /**
+ * Updates the spells
+ *
+ * @param this Actual GameInstance instance
+ */
+static void updateSpells(GameInstance* this) {
+
+	if (isActionPerformed(this, &this->options->spell1)) {
+		Iterator it;
+		foreach (it, this->map->objects->activeInstances->first) {
+			ActiveObjectInstance *aobj = it->data;
+			if (aobj->id == -1) {
+				aobj->visible = GL_TRUE;
+				aobj->position[X] = this->player->position[X] - 1.0f;
+				aobj->position[Y] = this->player->position[Y];
+				aobj->rotation[Y] = this->player->leftSide ? 180 : 0;
+				break;
+			}
+		}
+
+		foreach (it, this->map->lights->first) {
+			Light *light = it->data;
+			if (light->id == 6) {
+				light->visible = GL_TRUE;
+				light->position[X] = this->player->position[X] + (this->player->leftSide ? -1.0f : 1.0f);
+				light->position[Y] = this->player->position[Y] + 0.3;
+				break;
+			}
+		}
+	} else {
+		Iterator it;
+		foreach (it, this->map->objects->activeInstances->first) {
+			ActiveObjectInstance *aobj = it->data;
+			if (aobj->id == -1) {
+				aobj->visible = GL_FALSE;
+				break;
+			}
+		}
+
+		foreach (it, this->map->lights->first) {
+			Light *light = it->data;
+			if (light->id == 6) {
+				light->visible = GL_FALSE;
+				break;
+			}
+		}
+	}
+
+}
+
+/**
  * Ingame subrenderer method
  *
  * Called when: GameInstance->state = INGAME
@@ -889,6 +938,8 @@ static void onLogicIngame(GameInstance *this, GLfloat delta) {
 		performGUI(this);
 
 	performReferencePoints(this);
+
+	updateSpells(this);
 }
 
 /**

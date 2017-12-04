@@ -110,6 +110,7 @@ void initFont(GameInstance *this) {
 		}
 
 		listPush(this->font->chars, c);
+		free(c);
 	}
 
 	Char *space = loadChar("assets/fonts/_space.char", ' ', this->font->colors);
@@ -117,6 +118,7 @@ void initFont(GameInstance *this) {
 		ERROR("Failed to load char object from '%s'", "assets/fonts/_space.char");
 	} else {
 		listPush(this->font->chars, space);
+		free(space);
 	}
 
 	this->font->unknown = loadChar("assets/fonts/_unknown.char", '\0', this->font->colors);

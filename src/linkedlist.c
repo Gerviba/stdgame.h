@@ -53,7 +53,7 @@ LinkedList* newLinkedListPointer(size_t size) {
  */
 void listPush(LinkedList *list, void *data) {
 	ListItem *new = new(ListItem);
-	new->data = malloc(list->dataSize);
+	new->data = calloc(1, list->dataSize);
 	new->next = NULL;
 
 	int i;
@@ -86,14 +86,17 @@ void* listGetValue(ListItem *it) {
  * @param list LinkedList head object
  */
 void listFree(LinkedList *list) {
+	if (list == NULL)
+		return;
 	ListItem* head = list->first;
 	ListItem* tmp;
 
 	while (head != NULL) {
-		tmp = head;
-		free(head->data);
-		head = head->next;
-		free(tmp);
+		tmp = head->next;
+		if (head->data != NULL)
+			free(head->data);
+		free(head);
+		head = tmp;
 	}
 
 	list->first = NULL;

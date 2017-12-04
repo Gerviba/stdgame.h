@@ -21,6 +21,7 @@ static void setPerspective(GameInstance *this, float fov, float aspect, float ne
 static void printVersionInfo(void);
 static void initCursor(GameInstance* this);
 static void doGameLoop(GameInstance* this);
+static void freeGameInstance(GameInstance* this);
 
 /**
  * The main method
@@ -38,6 +39,7 @@ int main(int argc, char *argv[]) {
 	setRotation(this->camera->rotation, 0.0f, 0.0f, 0.0f);
 	this->options = new(Options);
 	this->options->selectedToSet = NULL;
+	this->player = NULL;
 
 	loadDefaultOptions(this);
 	loadOptions(this);
@@ -60,9 +62,58 @@ int main(int argc, char *argv[]) {
 		glfwTerminate();
 	} while(this->options->reloadProgram);
 
+	freeGameInstance(this);
 	DEBUG("Info", "Closing game");
 
 	exit(EXIT_SUCCESS);
+}
+
+/**
+ * Free all the memory allocated values from GameInstance
+ * and then the GameInstance itself.
+ *
+ * @param this Actual GameInstance instance
+ */
+static void freeGameInstance(GameInstance* this) {
+	free(this->shader);
+	free(this->lighting);
+	free(this->camera);
+	free(this->options);
+
+	if (this->player != NULL)
+		freePlayer(this);
+
+	int i;
+	for (i = 0; i < this->cursor->cursorObject->size; ++i) {
+		listFree(this->cursor->cursorObject->parts[i].parts);
+		free(this->cursor->cursorObject->parts[i].parts);
+	}
+	listFree(this->cursor->cursorObject->parts[0].colors);
+	free(this->cursor->cursorObject->parts[0].colors);
+
+	free(this->cursor->cursorObject->parts);
+	free(this->cursor->cursorObject);
+	free(this->cursor->pointer);
+	free(this->cursor);
+
+	Iterator it;
+	foreach (it, this->font->chars->first) {
+		Char *c = it->data;
+		listFree(c->parts);
+		free(c->parts);
+	}
+	listFree(this->font->chars);
+	free(this->font->chars);
+
+	free(this->font->colors);
+	listFree(this->font->unknown->parts);
+	free(this->font->unknown->parts);
+	free(this->font->unknown);
+	free(this->font);
+
+	listFree(this->referencePoints);
+	free(this->referencePoints);
+	free(this);
 }
 
 /**
@@ -279,5 +330,6 @@ static void doGameLoop(GameInstance* this) {
 		onRender(this);
 		glfwSwapBuffers(this->window);
 	}
+	freeMap(this->map);
 }
 

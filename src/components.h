@@ -125,7 +125,7 @@ struct GenericType {
  */
 struct TextComponent {
 	FontSize fontSize;
-	char *text; //TODO: free
+	char *text;
 	GLfloat color[4];
 	GLfloat baseColor[4];
 	Align align;

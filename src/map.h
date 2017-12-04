@@ -270,9 +270,9 @@ void freeMap(Map *map);
 void getKeyName(GameInstance *this, char *str, int key);
 void getOptionCaption(GameInstance *this, char *name, char *str, int id);
 
-void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY,
+void addTextComponent(Map* map, char text[100], int id, RelativeX relX, RelativeY relY,
 		Align align, GLfloat x, GLfloat y, FontSize size);
-void addTextComponentColor(Map* map, char text[], int id, RelativeX relX, RelativeY relY,
+void addTextComponentColor(Map* map, char text[100], int id, RelativeX relX, RelativeY relY,
 		Align align, GLfloat pos[3], GLfloat color[4], FontSize size);
 void updateHightScore(GameInstance *this, time_t deltaT);
 

@@ -273,7 +273,6 @@ void renderTile(GameInstance*, Tile*);
 void initStraticInstance(StaticObjectInstance*);
 
 void initReferencePoints(GameInstance *this);
-void freeReferencePoints(GameInstance *this);
 void updateReferencePoint(GameInstance *this, GLfloat delta);
 
 #endif /* OBJECT_H_ */

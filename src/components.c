@@ -139,8 +139,10 @@ GLfloat getGenericFloatValue(GenericType *value) {
  * @note The passed argument cannot be used after this method processed
  */
 void freeGenericValue(GenericType *value) {
-	free(value->value);
-	free(value);
+	if (value != NULL && value->value != NULL)
+		free(value->value);
+	if (value != NULL)
+		free(value);
 }
 
 /**
@@ -453,7 +455,7 @@ void clickGameSelector(Component *comp, GameInstance *this) {
 			if (type == 0) {
 				Component *comp = getTextComponentById(this, 11);
 				if (comp != NULL) {
-					char str[17];
+					char str[27];
 					sprintf(str, "BEST TIME: %02d:%02d", value / 60, value % 60);
 					strcpy(comp->text->text, str);
 				}
@@ -469,7 +471,7 @@ void clickGameSelector(Component *comp, GameInstance *this) {
 			if (type == 0) {
 				Component *comp = getTextComponentById(this, 21);
 				if (comp != NULL) {
-					char str[17];
+					char str[27];
 					sprintf(str, "BEST TIME: %02d:%02d", value / 60, value % 60);
 					strcpy(comp->text->text, str);
 				}

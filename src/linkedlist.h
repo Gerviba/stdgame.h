@@ -16,6 +16,9 @@
  */
 #define newList(x) (newLinkedListPointer(sizeof(x)))
 
+// FIXME: DEBUG
+//#define newList(x) (newLinkedListPointer(sizeof(x), #x))
+
 /**
  * Foreach for lists
  * @param it Iterator

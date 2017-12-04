@@ -23,6 +23,9 @@
 - Spell2: `F2` or `2`
 - Spell3: `F3` or `3`
 
+> If you sneek you will be slower. <br>
+> 
+
 ### Items
 
 - Key: You can grab the key and use it to open door

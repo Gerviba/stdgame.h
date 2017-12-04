@@ -23,8 +23,11 @@
 - Spell2: `F2` or `2`
 - Spell3: `F3` or `3`
 
+#### Fun facts:
+
 > If you sneek you will be slower. <br>
-> 
+> You can do double jump by pressing the jump key in the air. <br>
+> Your feet doesn't need to be on the ground to jump.
 
 ### Items
 

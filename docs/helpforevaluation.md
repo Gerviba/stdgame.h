@@ -14,8 +14,8 @@ $ make countlines
    + GameInstance
    + Map 
    + ActiveObject
- - Structok száma:
- - Enumok száma: 
+ - Structok száma: 44
+ - Enumok száma: 9
  - Forrásfájlok száma: 22 (11 .c és 11 .h)
 
 ### ... dinamikus memóriakezelés,

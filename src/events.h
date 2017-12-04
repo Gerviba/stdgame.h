@@ -1,3 +1,12 @@
+/**
+ * @file events.h
+ * @author Gerviba (Szabo Gergely)
+ * @brief Event handler methods (header)
+ *
+ * @par Definition:
+ * 		events.c
+ */
+
 #ifndef EVENTS_H_
 #define EVENTS_H_
 

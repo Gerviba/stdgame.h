@@ -1,7 +1,10 @@
 /**
  * @file font.h
  * @author Gerviba (Szabo Gergely)
- * @brief Font family loader and renderer
+ * @brief Font family loader and renderer (header)
+ *
+ * @par Definition:
+ * 		font.c
  */
 
 #ifndef FONT_H_
@@ -39,6 +42,10 @@ struct CharPart {
 	GLfloat position[3];
 };
 
+/**
+ * Character object (used in Font families)
+ * @see Font
+ */
 struct Char {
 	char code;
 	char name[32];
@@ -47,61 +54,25 @@ struct Char {
 	LinkedList /*CharPart*/ *parts;
 };
 
+/**
+ * Font family
+ */
 struct Font {
 	LinkedList /*Char*/ *chars;
 	Char *unknown;
 	GLfloat *colors; // 4 * size TODO: Add pointer to its name
 };
 
-/**
- * Initialize font from `assets/fonts/default.font`
- */
+
 void initFont(GameInstance*);
 
-/**
- * Renders the entered text.
- *
- * @param this GameInstance pointer
- * @param str String to render
- * @param position Where to render
- * @param color Dynamic color
- * @param size Size of the chars
- *
- * @note This function can be used in both `onLogic` and `onRender` functions.
- *
- * @see renderFontToComponent()
- */
 void renderFontTo(GameInstance* this, char str[], GLfloat position[3], GLfloat color[4], FontSize size);
 
-/**
- * Renders the entered text and saves the min and the max coordinates into the pass arguments.
- *
- * @param this GameInstance pointer
- * @param str String to render
- * @param position Where to render
- * @param color Dynamic color
- * @param size Size of the chars
- * @param min Minimum coordinate of the rendered object
- * @param max Maximum coordinate of the rendered object
- *
- * @note This function can be used in both `onLogic` and `onRender` functions.
- * @warning It sets the value of the `min` and the `max` arrays.
- *
- * @see renderFontTo()
- */
 void renderFontToComponent(GameInstance* this, char str[], GLfloat position[3], GLfloat color[4],
 		FontSize size, GLfloat min[3], GLfloat max[3]);
 
-/**
- * Free the loaded fonts
- *
- * Must be called before exit
- */
 void freeFont(GameInstance*);
 
-
 Char* getChar(Font*, char);
-void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor);
-Char* loadChar(char path[], char charId, GLfloat *colors);
 
 #endif /* FONT_H_ */

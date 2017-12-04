@@ -1,15 +1,19 @@
 /**
  * @file player.h
  * @author Gerviba (Szabo Gergely)
- * @brief Player specific types and functions
+ * @brief Player specific types and functions (header)
+ *
+ * @par Definition:
+ * 		player.c
  */
 
 #ifndef PLAYER_H_
 #define PLAYER_H_
 
+#include <time.h>
 #include "stdgame.h"
 
-#define PLAYER_SPEED 6//2.3
+#define PLAYER_SPEED 2.3
 #define PLAYER_JUMP 0.6
 
 /**
@@ -30,8 +34,31 @@ struct Player {
 };
 
 /**
- * Initialise player instance
+ * Spell type
  */
+struct Spell {
+	GLint id;
+	DynamicObject *spellObj;
+	DynamicObjectInstance *spellObjInstance;
+	GLfloat speed;
+	GLfloat damage;
+	time_t lastUse;
+	time_t reloadTime;
+	Position position;
+};
+
+/**
+ * Spells storage
+ */
+struct Spells {
+	Spell spell1;
+	Spell spell2;
+	Spell spell3;
+
+	LinkedList /*Spell*/ mobSpells;
+};
+
 void initPlayer(GameInstance *this);
+void freePlayer(GameInstance *this);
 
 #endif /* PLAYER_H_ */

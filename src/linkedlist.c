@@ -1,23 +1,56 @@
+/**
+ * @file linkedlist.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief Generic type linked list
+ *
+ * @par Header:
+ * 		linkedlist.h
+ *
+ * @note For iterations use the foreach() macro.
+ */
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include "stdgame.h"
 
-
+/**
+ * New list value
+ *
+ * @param size The size of the list type
+ * @note It uses malloc, so the listFree() function is required to free its values.
+ * @deprecated Use dynamic allocated newLinkedListPointer() instead.
+ * @see newLinkedListPointer()
+ */
 LinkedList newLinkedList(size_t size) {
-	LinkedList list = {0, size, NULL, NULL};
+	LinkedList list = {size, NULL, NULL};
 	return list;
 }
 
+/**
+ * New list pointer
+ *
+ * @param size The size of the list type
+ * @note It uses malloc, so the listFree() function is required to free its values.
+ * @return Dynamicly allocated linked list
+ * @see listFree()
+ */
 LinkedList* newLinkedListPointer(size_t size) {
 	LinkedList *list = new(LinkedList);
-	list->size = 0;
 	list->dataSize = size;
 	list->first = NULL;
 	list->last = NULL;
 	return list;
 }
 
+/**
+ * Add a new list into the end of the list
+ *
+ * @note The content will be copied
+ *
+ * @param list LinkedList head object
+ * @param data Pointer to the data
+ */
 void listPush(LinkedList *list, void *data) {
 	ListItem *new = new(ListItem);
 	new->data = malloc(list->dataSize);
@@ -34,13 +67,24 @@ void listPush(LinkedList *list, void *data) {
 		list->last->next = new;
 
 	list->last = new;
-	++list->size;
 }
 
+/**
+ * Returns a pointer to the value of the ListItem
+ *
+ * @param list Actual item
+ * @return Value pointer
+ */
 void* listGetValue(ListItem *it) {
 	return it->data;
 }
 
+/**
+ * Free the dynamicly allocated memory
+ *
+ * @note The list could not be used after calling this method.
+ * @param list LinkedList head object
+ */
 void listFree(LinkedList *list) {
 	ListItem* head = list->first;
 	ListItem* tmp;
@@ -52,7 +96,6 @@ void listFree(LinkedList *list) {
 		free(tmp);
 	}
 
-	list->size = 0;
 	list->first = NULL;
 	list->last = NULL;
 }

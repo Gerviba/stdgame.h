@@ -56,7 +56,7 @@
   + `CURSOR` true/false *(optional, default: false)*
   + `SCROLL` true/false min max *(optional, default: false, 0, 0)*
 
-- (3) Action types:
+- (3) Component action types:
 |Action|Effect|
 |------|------|
 |0|(Nothing)|

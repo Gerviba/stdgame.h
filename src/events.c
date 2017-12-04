@@ -1,15 +1,42 @@
+/**
+ * @file events.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief Event handler methods
+ *
+ * @par Header:
+ * 		events.h
+ */
+
 #include "stdgame.h"
 
+/**
+ * GLFW Error Event
+ *
+ * @warning Don't call this directly. GLFW will manage it.
+ *
+ * @param error Error code
+ * @param description The detailed description of the error
+ */
 void onErrorEvent(int error, const char* description) {
 	ERROR("[Error] [%d] %s", error, description);
 }
 
+/**
+ * GLFW Mouse click event
+ *
+ * @warning Don't call this directly. GLFW will manage it.
+ *
+ * @param window The active (clicked) window
+ * @param button Mouse button identifier
+ * @param action Action id
+ * @param mods Modifiers
+ */
 void onClickEvent(GLFWwindow* window, int button, int action, int mods) {
 	if (action == GLFW_RELEASE) {
 		GameInstance *this = NULL;
 		getGameInstance(&this);
 
-		if (updateControlsMouse(this, button))
+		if (updateControllsMouse(this, button))
 			return;
 	}
 
@@ -22,6 +49,15 @@ void onClickEvent(GLFWwindow* window, int button, int action, int mods) {
 
 }
 
+/**
+ * GLFW Mouse wheel scroll event
+ *
+ * @warning Don't call this directly. GLFW will manage it.
+ *
+ * @param window The active window
+ * @param xOffset Wheel x-dim offset
+ * @param yOffset Wheel y-dim offset
+ */
 void onScrollEvent(GLFWwindow* window, double xOffset, double yOffset) {
 	GameInstance *this = NULL;
 	getGameInstance(&this);
@@ -30,12 +66,30 @@ void onScrollEvent(GLFWwindow* window, double xOffset, double yOffset) {
 		this->map->menu->onScroll(this, yOffset / 10);
 }
 
+/**
+ * GLFW Keyboard mods down event
+ *
+ * @param window The active window
+ * @param key Key code
+ * @param mods Modifiers
+ */
 void onCharModEvent(GLFWwindow* window, unsigned int key, int mods) {
 	GameInstance *this = NULL;
 	getGameInstance(&this);
-	updateControlsKey(key, this);
+	updateControlsKey(this, key);
 }
 
+/**
+ * GLFW Key down event
+ *
+ * @warning Don't call this directly. GLFW will manage it.
+ *
+ * @param window The active window
+ * @param key Key code
+ * @param scancode Scan code
+ * @param action Action
+ * @param mods Modifiers
+ */
 void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	GameInstance *this = NULL;
 	getGameInstance(&this);

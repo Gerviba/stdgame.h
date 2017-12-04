@@ -1,7 +1,10 @@
 /**
  * @file map.h
  * @author Gerviba (Szabo Gergely)
- * @brief Map and menu loader and utilities
+ * @brief Map and menu loader and utilities (header)
+ *
+ * @par Definition:
+ * 		map.c
  */
 
 #ifndef MAP_H_
@@ -73,6 +76,9 @@ typedef enum {
 #define SCORE_COMPONENT_ID 		-1001
 #define ENTITY_FLOATING_REFERENCEPOINT_ID 8
 
+/**
+ * Point light object
+ */
 struct Light {
 	GLint id;
 	GLfloat position[3];
@@ -84,11 +90,17 @@ struct Light {
 	GLboolean visible;
 };
 
+/**
+ * Loaded texture
+ */
 struct Texture {
 	int id;
 	GLuint textureId;
 };
 
+/**
+ * Block sides textures
+ */
 struct TextureBlock {
 	int id;
 	Texture *base;
@@ -98,6 +110,9 @@ struct TextureBlock {
 	Texture *left;
 };
 
+/**
+ * Map tile
+ */
 struct Tile {
 	float x, y;
 	TextureBlock *texture;
@@ -105,7 +120,7 @@ struct Tile {
 };
 
 /**
- *
+ * Type of an action
  * @see Action
  */
 typedef enum {
@@ -151,12 +166,21 @@ typedef enum {
 	ACTION_LOSE
 } ActionType;
 
+/**
+ * Action instance
+ */
 struct Action {
+	/** It not required to be unique */
 	GLint id;
 	ActionType type;
 	GenericType *value;
 };
 
+/**
+ * Physics area
+ *
+ * Players can't enter if it is enabled
+ */
 struct PhysicsArea {
 	GLint id;
 	GLfloat x;
@@ -164,6 +188,9 @@ struct PhysicsArea {
 	GLboolean enabled;
 };
 
+/**
+ * Action activator region
+ */
 struct Region {
 	GLfloat xMin, yMin;
 	GLfloat xMax, yMax;
@@ -173,6 +200,9 @@ struct Region {
 	GLboolean notSneek;
 };
 
+/**
+ * Text message (rendered as 3D object)
+ */
 struct Message {
 	Position position;
 	Color color;
@@ -180,6 +210,9 @@ struct Message {
 	char message[100];
 };
 
+/**
+ * Mobs, monsters
+ */
 struct Entity {
 	GLint id;
 	ActiveObjectInstance *obj;
@@ -192,6 +225,9 @@ struct Entity {
 	GLfloat radius;
 };
 
+/**
+ * The game map or menu
+ */
 struct Map {
 	char name[64];
 	char author[64];
@@ -211,6 +247,7 @@ struct Map {
 
 	ObjectInfo *objects;
 	Menu *menu;
+	Spells *spells;
 
 	int score;
 	float healt;
@@ -218,6 +255,9 @@ struct Map {
 	time_t startTime;
 };
 
+/**
+ * Record file line
+ */
 struct HighScoreValue {
 	char name[255];
 	int type;
@@ -226,12 +266,14 @@ struct HighScoreValue {
 
 Map* loadMap(GameInstance *this, char path[]);
 void freeMap(Map *map);
+
 void getKeyName(GameInstance *this, char *str, int key);
 void getOptionCaption(GameInstance *this, char *name, char *str, int id);
+
 void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY,
 		Align align, GLfloat x, GLfloat y, FontSize size);
 void addTextComponentColor(Map* map, char text[], int id, RelativeX relX, RelativeY relY,
 		Align align, GLfloat pos[3], GLfloat color[4], FontSize size);
-void saveHightScore(GameInstance *this, time_t deltaT);
+void updateHightScore(GameInstance *this, time_t deltaT);
 
 #endif /* MAP_H_ */

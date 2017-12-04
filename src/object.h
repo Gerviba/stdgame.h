@@ -1,3 +1,12 @@
+/**
+ * @file object.h
+ * @author Gerviba (Szabo Gergely)
+ * @brief Static, dynamic and active object loader and renderer. ReferencePoint manager. (header)
+ *
+ * @par Definition:
+ * 		object.c
+ */
+
 #ifndef OBJECT_H_
 #define OBJECT_H_
 
@@ -86,24 +95,49 @@ typedef enum {
 	PT_UP_DOWN_TOP_RIGHT_BOTTOM_LEFT	= 0b111111,
 } PartType;
 
+/** Render UP part mask */
 #define PTMASK_RENDER_UP		PT_UP
+/** Render DOWN part mask */
 #define PTMASK_RENDER_DOWN		PT_DOWN
+/** Render TOP part mask */
 #define PTMASK_RENDER_TOP		PT_TOP
+/** Render RIGHT part mask */
 #define PTMASK_RENDER_RIGHT		PT_RIGHT
+/** Render BOTTOM part mask */
 #define PTMASK_RENDER_BOTTOM	PT_BOTTOM
+/** Render LEFT part mask */
 #define PTMASK_RENDER_LEFT		PT_LEFT
 
+/**
+ * Cube part of the objects. The smallest unit
+ *
+ * Used in all the three object types.
+ * @see StaticObject
+ * @see DynamicObject
+ * @see ActiveObject
+ */
 struct StaticObjectPart {
 	PartType type;
 	GLfloat *color; // -> colors[4]
 	GLfloat position[3];
 };
 
+/**
+ * Color of a cube. Stored in color banks.
+ */
 struct PartColor {
 	int id;
 	GLfloat color[4];
 };
 
+/**
+ * StaticObject - Precalculated move matrix
+ *
+ * Cannot be moved
+ * @par File format:
+ * 		sobj
+ * @see StaticObjectInstance
+ */
 struct StaticObject {
 	int id;
 	GLfloat position[3];
@@ -114,6 +148,11 @@ struct StaticObject {
 	LinkedList /*PartColor*/ *colors;
 };
 
+/**
+ * Instance of a StaticObject logically
+ *
+ * @see StaticObject
+ */
 struct StaticObjectInstance {
 	int id;
 	GLfloat position[3];
@@ -124,6 +163,11 @@ struct StaticObjectInstance {
 	StaticObject *object;
 };
 
+/**
+ * Dynamically changing reference points for animations
+ *
+ * @see fileformats.md
+ */
 struct ReferencePoint {
 	GLint id;
 	GLfloat position[3];
@@ -132,6 +176,13 @@ struct ReferencePoint {
 	GLfloat timing;
 };
 
+/**
+ * DynamicObject - Movable object
+ *
+ * @par File format:
+ * 		dobj
+ * @see DynamicObjectInstance
+ */
 struct DynamicObject {
 	int id;
 	GLfloat position[3];
@@ -142,6 +193,11 @@ struct DynamicObject {
 	LinkedList /*PartColor*/ *colors;
 };
 
+/**
+ * Instance of a DynamicObject logically
+ *
+ * @see DynamicObject
+ */
 struct DynamicObjectInstance {
 	int id;
 	GLfloat position[3];
@@ -153,12 +209,25 @@ struct DynamicObjectInstance {
 	DynamicObject *object;
 };
 
+/**
+ * ActiveObject - Set of DynamicObject
+ *
+ * Used in animated objects.
+ * @par File format:
+ * 		aobj
+ * @see ActiveObjectInstance
+ */
 struct ActiveObject {
 	int id;
 	int size;
 	DynamicObject *parts;
 };
 
+/**
+ * Instance of a ActiveObject logically
+ *
+ * @see ActiveObject
+ */
 struct ActiveObjectInstance {
 	int id;
 	int activePart;
@@ -171,6 +240,9 @@ struct ActiveObjectInstance {
 	ReferencePoint *reference;
 };
 
+/**
+ * Object storage
+ */
 struct ObjectInfo {
 	LinkedList /*StaticObject*/ *staticObjects;
 	LinkedList /*StaticObjectInstance*/ *staticInstances;
@@ -182,6 +254,9 @@ struct ObjectInfo {
 	LinkedList /*ActiveObjectInstance*/ *activeInstances;
 };
 
+/**
+ * Cursor object and info storage
+ */
 struct Cursor {
 	ActiveObject *cursorObject;
 	ActiveObjectInstance *pointer;
@@ -196,7 +271,9 @@ void renderDynamicObject(GameInstance*, DynamicObjectInstance*);
 void renderActiveObject(GameInstance*, ActiveObjectInstance*);
 void renderTile(GameInstance*, Tile*);
 void initStraticInstance(StaticObjectInstance*);
+
 void initReferencePoints(GameInstance *this);
+void freeReferencePoints(GameInstance *this);
 void updateReferencePoint(GameInstance *this, GLfloat delta);
 
 #endif /* OBJECT_H_ */

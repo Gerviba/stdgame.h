@@ -1,10 +1,26 @@
+/**
+ * @file shader.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief Shader file loader and compiler
+ *
+ * @par Header:
+ * 		shader.h
+ */
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gl.h>
+#include <glext.h>
 #include "stdgame.h"
 
-char* shaderLoadSource(const char *filePath) {
+/**
+ * Load shader from file
+ *
+ * @param filePath The shader file's path
+ */
+static char* shaderLoadSource(const char *filePath) {
 	const size_t blockSize = 512;
 	FILE *file;
 	char buff[blockSize];
@@ -43,7 +59,13 @@ char* shaderLoadSource(const char *filePath) {
 	return source;
 }
 
-GLuint shaderCompileFromFile(GLenum type, const char *filePath) {
+/**
+ * Compile shader program
+ *
+ * @param type Vertex or Fragment shader
+ * @param filePath The shader file's path
+ */
+static GLuint shaderCompileFromFile(GLenum type, const char *filePath) {
 	char *source;
 	GLuint shader;
 	GLint length, result;
@@ -76,6 +98,14 @@ GLuint shaderCompileFromFile(GLenum type, const char *filePath) {
 	return shader;
 }
 
+
+/**
+ * Load and attach shader program
+ *
+ * @param program identifier
+ * @param type Vertex or Fragment shader
+ * @param filePath The shader file's path
+ */
 GLuint shaderAttachFromFile(GLuint program, GLenum type, const char *filePath) {
 	GLuint shader = shaderCompileFromFile(type, filePath);
 	if (shader != 0) {

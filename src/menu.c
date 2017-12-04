@@ -1,9 +1,25 @@
+/**
+ * @file menu.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief Component, click and scroll manager
+ *
+ * @par Header:
+ * 		menu.h
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
 #include "stdgame.h"
 
+static void setOptionsDefaults(GameInstance* this);
+
+/**
+ * onClick() - Menu click method
+ *
+ * @param this Actual GameInstance instance
+ */
 void onClickMenu(GameInstance *this) {
 	Iterator it;
 	foreach (it, this->map->menu->components->first) {
@@ -18,6 +34,12 @@ void onClickMenu(GameInstance *this) {
 	}
 }
 
+/**
+ * onScroll() - Scroll menu method
+ *
+ * @param this Actual GameInstance instance
+ * @param offset The Y-dim offset
+ */
 void onScrollMenu(GameInstance *this, GLfloat offset) {
 	if (this->map->menu->scrollOffset - offset > this->map->menu->scrollMax ||
 			this->map->menu->scrollOffset - offset < this->map->menu->scrollMin)
@@ -31,7 +53,12 @@ void onScrollMenu(GameInstance *this, GLfloat offset) {
 	}
 }
 
-void setOptionsDefaults(GameInstance* this) {
+/**
+ * Initialize the options storage with the default values
+ *
+ * @param this Actual GameInstance instance
+ */
+static void setOptionsDefaults(GameInstance* this) {
 	this->options->msaa = 16;
 	this->options->fullscreen = GL_TRUE;
 	this->options->windowedHeight = 0;
@@ -50,6 +77,11 @@ void setOptionsDefaults(GameInstance* this) {
 	array3(this->options->menu.id, GLFW_KEY_ESCAPE, GLFW_KEY_PAUSE, -1);
 }
 
+/**
+ * Creates the options file if not exists and loads the default options
+ *
+ * @param this Actual GameInstance instance
+ */
 void loadDefaultOptions(GameInstance *this) {
 	if (access("data/options.dat", R_OK) != -1)
 		return;
@@ -87,6 +119,11 @@ void loadDefaultOptions(GameInstance *this) {
 	fclose(file);
 }
 
+/**
+ * Load options from the options file is possible
+ *
+ * @param this Actual GameInstance instance
+ */
 void loadOptions(GameInstance *this) {
 
 	FILE *file = fopen("data/options.dat", "rb");
@@ -130,6 +167,11 @@ void loadOptions(GameInstance *this) {
 	fclose(file);
 }
 
+/**
+ * Save modified options
+ *
+ * @param this Actual GameInstance instance
+ */
 void saveOptions(GameInstance *this) {
 	FILE *file = fopen("data/options.dat", "wb");
 	if (file == NULL) {
@@ -167,7 +209,13 @@ void saveOptions(GameInstance *this) {
 	fclose(file);
 }
 
-void updateControlsKey(unsigned int key, GameInstance* this) {
+/**
+ * Controls key button processor
+ *
+ * @param this Actual GameInstance instance
+ * @param key Key code
+ */
+void updateControlsKey(GameInstance* this, unsigned int key) {
 	if (this->options->selectedToSet != NULL) {
 		key = toupper(key);
 
@@ -224,6 +272,13 @@ void updateControlsKey(unsigned int key, GameInstance* this) {
 	}
 }
 
+/**
+ * Controls key modifier button processor
+ *
+ * @param this Actual GameInstance instance
+ * @param mods Modifiers
+ * @param key Key code
+ */
 void updateControlsMods(GameInstance* this, int mods, int key) {
 	if (this->options->selectedToSet != NULL) {
 
@@ -280,7 +335,13 @@ void updateControlsMods(GameInstance* this, int mods, int key) {
 	}
 }
 
-GLboolean updateControlsMouse(GameInstance *this, int button) {
+/**
+ * Controls mouse button processor
+ *
+ * @param this Actual GameInstance instance
+ * @param button Mouse button id
+ */
+GLboolean updateControllsMouse(GameInstance *this, int button) {
 	if (this->options->selectedToSet != NULL) {
 		int id = 1, i = 0;
 		while (this->options->selectedToSet->text->text[i] != '\0') {
@@ -334,5 +395,6 @@ GLboolean updateControlsMouse(GameInstance *this, int button) {
 		this->options->selectedToSet = NULL;
 		return GL_TRUE;
 	}
+
 	return GL_FALSE;
 }

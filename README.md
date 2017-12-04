@@ -10,8 +10,8 @@
 
 ### Releases
 
-v1.0 - Done 2017.12.03.
-v0.5 - Half done 2017.11.12.
+- v1.0 - Done 2017.12.03.
+- v0.5 - Half done 2017.11.12.
 
 ### How to create map/mob or object
 

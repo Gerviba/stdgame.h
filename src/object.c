@@ -1,8 +1,24 @@
+/**
+ * @file object.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief Static, dynamic and active object loader and renderer. ReferencePoint manager.
+ *
+ * @par Header:
+ * 		object.h
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "stdgame.h"
 
+/**
+ * Load static object
+ *
+ * @param path The path of the file
+ * @see StaticObject
+ * @return Loaded StaticObject
+ */
 StaticObject *loadStaticObject(char path[]) {
 	StaticObject *obj = new(StaticObject);
 	obj->parts = newList(StaticObjectPart);
@@ -74,6 +90,13 @@ StaticObject *loadStaticObject(char path[]) {
 	return obj;
 }
 
+/**
+ * Load dynamic object
+ *
+ * @param path The path of the file
+ * @see DynamicObject
+ * @return Loaded DynamicObject
+ */
 DynamicObject *loadDynamicObject(char path[]) {
 	DynamicObject *obj = new(DynamicObject);
 	obj->parts = newList(StaticObjectPart);
@@ -146,6 +169,13 @@ DynamicObject *loadDynamicObject(char path[]) {
 	return obj;
 }
 
+/**
+ * Load active object
+ *
+ * @param path The path of the file
+ * @see ActiveObject
+ * @return Loaded ActiveObject
+ */
 ActiveObject *loadActiveObject(char path[]) {
 	ActiveObject *aobj = new(ActiveObject);
 
@@ -230,6 +260,12 @@ ActiveObject *loadActiveObject(char path[]) {
 	return aobj;
 }
 
+/**
+ * Render static object
+ *
+ * @param this Actual GameInstance instance
+ * @param instance Object instance to render
+ */
 void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 	StaticObject *obj = instance->object;
 	glUniformMatrix4fv(this->shader->moveMat, 1, GL_FALSE, instance->moveMat);
@@ -299,6 +335,12 @@ void renderStaticObject(GameInstance *this, StaticObjectInstance *instance) {
 	}
 }
 
+/**
+ * Render dynamic object
+ *
+ * @param this Actual GameInstance instance
+ * @param instance Object instance to render
+ */
 void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 	DynamicObject *obj = instance->object;
 
@@ -387,6 +429,12 @@ void renderDynamicObject(GameInstance *this, DynamicObjectInstance *instance) {
 	}
 }
 
+/**
+ * Render active object
+ *
+ * @param this Actual GameInstance instance
+ * @param instance Object instance to render
+ */
 void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
 	DynamicObject *obj = (DynamicObject *) (instance->object->parts + instance->activePart);
 
@@ -475,6 +523,12 @@ void renderActiveObject(GameInstance *this, ActiveObjectInstance *instance) {
 	}
 }
 
+/**
+ * Render map tile
+ *
+ * @param this Actual GameInstance instance
+ * @param tile Tile to render
+ */
 void renderTile(GameInstance *this, Tile *tile) {
 	if (getDistSquaredXY(tile->x, tile->y, this->camera->position) > 100)
 		return;
@@ -530,6 +584,11 @@ void renderTile(GameInstance *this, Tile *tile) {
 	}
 }
 
+/**
+ * Calculate the move matrix of the static object instance
+ *
+ * @param instance Object instance to init
+ */
 void initStraticInstance(StaticObjectInstance *instance) {
 	StaticObject *obj = instance->object;
 	glPushMatrix();
@@ -549,6 +608,11 @@ void initStraticInstance(StaticObjectInstance *instance) {
 	glPopMatrix();
 }
 
+/**
+ * Initialize reference points
+ *
+ * @param this Actual GameInstance instance
+ */
 void initReferencePoints(GameInstance *this) {
 	this->referencePoints = newList(ReferencePoint);
 	GLint i;
@@ -564,6 +628,23 @@ void initReferencePoints(GameInstance *this) {
 	this->cursor->pointer->reference = (ReferencePoint *) this->referencePoints->first->data;
 }
 
+/**
+ * Free refrence points
+ *
+ * XXX: free
+ *
+ * @param this Actual GameInstance instance
+ */
+void freeReferencePoints(GameInstance *this) {
+	free(this->referencePoints);
+}
+
+/**
+ * Update reference points
+ *
+ * @param this Actual GameInstance instance
+ * @param delta Ellapsed time
+ */
 void updateReferencePoint(GameInstance *this, GLfloat delta) {
 	Iterator it;
 	foreach (it, this->referencePoints->first) {

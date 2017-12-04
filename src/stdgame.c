@@ -1,9 +1,32 @@
+/**
+ * @file stdgame.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief The main header of the project
+ *
+ * @par Header:
+ * 		stdgame.h
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
 #include "stdgame.h"
 
+static void initGLFW();
+static void createWindow(GameInstance* this, const GLFWvidmode* mode);
+static void setupOpenGL(GameInstance* this, double width, double height);
+static void setupWindowSize(const GLFWvidmode* mode, GameInstance* this);
+static void setPerspective(GameInstance *this, float fov, float aspect, float near, float far);
+static void printVersionInfo(void);
+static void initCursor(GameInstance* this);
+static void doGameLoop(GameInstance* this);
+
+/**
+ * The main method
+ *
+ * This is where the story begins.
+ */
 int main(int argc, char *argv[]) {
 	GameInstance *this = new(GameInstance);
 	getGameInstance(&this);
@@ -42,7 +65,12 @@ int main(int argc, char *argv[]) {
 	exit(EXIT_SUCCESS);
 }
 
-void initGLFW(GameInstance *this) {
+/**
+ * Initialize GLFW
+ *
+ * @param this Actual GameInstance instance
+ */
+static void initGLFW(GameInstance *this) {
 	glfwSetErrorCallback(onErrorEvent);
 
 	if (!glfwInit()) {
@@ -58,7 +86,13 @@ void initGLFW(GameInstance *this) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 }
 
-void createWindow(GameInstance* this, const GLFWvidmode* mode) {
+/**
+ * Create GLFW window
+ *
+ * @param this Actual GameInstance instance
+ * @param mode GLFW video mode
+ */
+static void createWindow(GameInstance* this, const GLFWvidmode* mode) {
 	if (this->options->fullscreen) {
 		this->window = glfwCreateWindow(mode->width, mode->height,
 				"stdgame | The Epic Platformer Game", glfwGetPrimaryMonitor(), NULL);
@@ -91,7 +125,14 @@ void createWindow(GameInstance* this, const GLFWvidmode* mode) {
 	glfwSwapInterval(1);
 }
 
-void setupOpenGL(GameInstance *this, double width, double height) {
+/**
+ * Setup OpenGL
+ *
+ * @param this Actual GameInstance instance
+ * @param width Width of the window
+ * @param height Height of the window
+ */
+static void setupOpenGL(GameInstance *this, double width, double height) {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClearDepth(1.0f);
 
@@ -111,7 +152,13 @@ void setupOpenGL(GameInstance *this, double width, double height) {
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void setupWindowSize(const GLFWvidmode* mode, GameInstance* this) {
+/**
+ * Setup GLFW window size
+ *
+ * @param mode GLFW video mode
+ * @param this Actual GameInstance instance
+ */
+static void setupWindowSize(const GLFWvidmode* mode, GameInstance* this) {
 	if (this->options->fullscreen) {
 		setupOpenGL(this, mode->width, mode->height);
 	} else {
@@ -126,7 +173,16 @@ void setupWindowSize(const GLFWvidmode* mode, GameInstance* this) {
 	}
 }
 
-void setPerspective(GameInstance *this, float fov, float aspect, float near, float far) {
+/**
+ * Setup the perspective, projection matrix
+ *
+ * @param this Actual GameInstance instance
+ * @param fov Field of view
+ * @param aspect Aspect ratio
+ * @param near Near value
+ * @param far Far value
+ */
+static void setPerspective(GameInstance *this, float fov, float aspect, float near, float far) {
 	this->options->tanFov = tanf(fov);
 	this->options->aspectRatio = aspect;
 	float temp = 1.0f / tanf(fov / 2.0f);
@@ -154,14 +210,22 @@ void setPerspective(GameInstance *this, float fov, float aspect, float near, flo
 	glMultMatrixf(this->camera->projMat);
 }
 
-void printVersionInfo() {
+/**
+ * Prints OpenGL and GLFW version numbers
+ */
+static void printVersionInfo(void) {
 	printf("[Info] OpenGL version supported: (%s) \n", glGetString(GL_VERSION));
 	int major, minor, revision;
 	glfwGetVersion(&major, &minor, &revision);
 	printf("[Info] Running against GLFW %i.%i.%i\n", major, minor, revision);
 }
 
-void initCursor(GameInstance* this) {
+/**
+ * Initialize the cursor
+ *
+ * @param this Actual GameInstance instance
+ */
+static void initCursor(GameInstance* this) {
 	this->cursor = new(Cursor);
 	this->cursor->cursorObject = loadActiveObject("assets/objects/cursor.aobj");
 	this->cursor->pointer = new(ActiveObjectInstance);
@@ -174,13 +238,40 @@ void initCursor(GameInstance* this) {
 	this->cursor->pointer->object = this->cursor->cursorObject;
 }
 
+/**
+ * Fix the viewport size
+ *
+ * Sometimes there is a black rectangle at the top the window. This function fix it.
+ *
+ * @param this Actual GameInstance instance
+ */
 void fixViewport(GameInstance* this) {
 	int width, height;
 	glfwGetFramebufferSize(this->window, &width, &height);
 	glViewport(0, 0, width, height);
 }
 
-void doGameLoop(GameInstance* this) {
+/**
+ * GameInstance getter for GLFW event functions
+ *
+ * @warning  Don't use it is you can.
+ *
+ * @param this Actual GameInstance instance
+ */
+void getGameInstance(GameInstance **this) {
+	static GameInstance *storedInstance = NULL;
+	if (storedInstance == NULL)
+		storedInstance = *this;
+
+	*this = storedInstance;
+}
+
+/**
+ * Game loop method
+ *
+ * @param this Actual GameInstance instance
+ */
+static void doGameLoop(GameInstance* this) {
 	while (!glfwWindowShouldClose(this->window)) {
 		glfwPollEvents();
 		onLogic(this);
@@ -190,10 +281,3 @@ void doGameLoop(GameInstance* this) {
 	}
 }
 
-void getGameInstance(GameInstance **this) {
-	static GameInstance *storedInstance = NULL;
-	if (storedInstance == NULL)
-		storedInstance = *this;
-
-	*this = storedInstance;
-}

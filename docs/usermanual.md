@@ -6,7 +6,7 @@
   + Select map: Map list
     - Ingame
 - Options
-  + Graphics: Graphical settings (MSAA, FullScreen, Shadow, etc)
+  + Graphics: Graphical settings (MSAA, FullScreen, Camera movement, etc)
   + Controls: Movement, spells, attack
 - Credits: Credits and license info
 - Exit: Quit game
@@ -17,15 +17,30 @@
 - Go backward: `A` or `Left arrow` key
 - Jump: `Space` or `Up arrow` key
 - Sneek: `S`, `Shift` or `Down arrow` key
-- Attack: `Left mouse button`
+- Attack: `Left mouse button, or any control`
+- Menu: `Esc` or `Pause`
+- Spell1: `F1` or `1`
+- Spell2: `F2` or `2`
+- Spell3: `F3` or `3`
 
 ### Items
 
-- Key
-- Coin
+- Key: You can grab the key and use it to open door
+- Coin: More coin equals more score
 
 ### Traps
 
+- Bottom spikes: If you fall into them, you will die.
+- Lava: You can't swim lava, I believe.
+- Top spikes: You must sneek to avoid death.
+
 ### Mobs
 
+- Ghost from pacman
+- Space invaders mob
+
 ### Maps
+ 
+- Tutorial
+- Pyramid (not included)
+ 

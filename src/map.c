@@ -1,6 +1,10 @@
 /**
  * @file map.c
  * @author Gerviba (Szabo Gergely)
+ * @brief Map and menu loader and utilities
+ *
+ * @par Header:
+ * 		map.h
  */
 
 #include <stdio.h>
@@ -9,18 +13,36 @@
 #include <ctype.h>
 #include "stdgame.h"
 
-//TODO: Remove them from here:
-extern void clickGameSelector(Component*, GameInstance*);
-extern void clickExit(Component*, GameInstance*);
-extern void clickCredits(Component*, GameInstance*);
-extern void clickBack(Component*, GameInstance*);
-extern void clickOpenGithub(Component*, GameInstance*);
-extern void clickStartButton(Component*, GameInstance*);
-extern void clickOptions(Component*, GameInstance*);
-extern void clickControllsSet(Component*, GameInstance*);
-extern void clickGraphicsSet(Component*, GameInstance*);
-extern void calcOptionsGraphicsButton(Component*, GameInstance*);
+static void (*getAction(int id)) (Component*, GameInstance*);
 
+static void initMapDefaults(Map* map);
+static void initLists(Map* map);
+static void initObjects(Map* map);
+static void initMenu(Map* map);
+
+static void processMeta(GameInstance *this, Map *map, char buff[255]);
+static void processTexture(GameInstance *this, Map *map, char buff[255]);
+static void processTextureBlock(GameInstance *this, Map *map, char buff[255]);
+static void processTile(GameInstance *this, Map *map, char buff[255]);
+static void processStaticLight(GameInstance *this, Map *map, char buff[255]);
+static void processObject(GameInstance *this, Map *map, char buff[255]);
+static void processObjectInstance(GameInstance *this, Map *map, char buff[255]);
+static void processTextComponent(GameInstance *this, Map *map, char buff[255]);
+static void processObjectComponent(GameInstance *this, Map *map, char buff[255]);
+static void processAction(GameInstance *this, Map *map, char buff[255]);
+static void processRegion(GameInstance *this, Map *map, char buff[255]);
+static void processMessage(GameInstance *this, Map *map, char buff[255]);
+static void processEntity(GameInstance *this, Map *map, char buff[255]);
+static void processPhysics(GameInstance *this, Map *map, char buff[255]);
+
+/**
+ * Loads a texture
+ *
+ * @note It uses SOIL2
+ *
+ * @param textureId The texture id pointer
+ * @param path Texture file path
+ */
 void loadTexture(GLuint *textureId, char path[]) {
 	glGenTextures(1, textureId);
 	glBindTexture(GL_TEXTURE_2D, *textureId);
@@ -41,7 +63,17 @@ void loadTexture(GLuint *textureId, char path[]) {
 }
 
 /**
- * Documented header
+ * Adds a TextComponent
+ *
+ * @param map Current map
+ * @param text Caption
+ * @param id Identifier
+ * @param relX Relative X point
+ * @param relY Relative Y point
+ * @param align Alignment
+ * @param x X coordinate
+ * @param y Y coordinate
+ * @param size Size of the font
  */
 void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align,
 		GLfloat x, GLfloat y, FontSize size) {
@@ -68,6 +100,19 @@ void addTextComponent(Map* map, char text[], int id, RelativeX relX, RelativeY r
 	listPush(map->menu->components, &comp);
 }
 
+/**
+ * Adds a TextComponent
+ *
+ * @param map Current map
+ * @param text Caption
+ * @param id Identifier
+ * @param relX Relative X point
+ * @param relY Relative Y point
+ * @param align Alignment
+ * @param pos Coordinates (3D)
+ * @param color Font default color (RGBA)
+ * @param size Size of the font
+ */
 void addTextComponentColor(Map* map, char text[], int id, RelativeX relX, RelativeY relY, Align align,
 		GLfloat pos[3], GLfloat color[4], FontSize size) {
 
@@ -93,7 +138,13 @@ void addTextComponentColor(Map* map, char text[], int id, RelativeX relX, Relati
 	listPush(map->menu->components, &comp);
 }
 
-void (*getAction(int id)) (Component*, GameInstance*) {
+/**
+ * Action method getter
+ *
+ * @see fileformats.md -> Component action types
+ * @returns The selected function pointer
+ */
+static void (*getAction(int id)) (Component*, GameInstance*) {
 	switch (id) {
 	case 0: return NULL;
 	case 1: return clickGameSelector;
@@ -109,6 +160,13 @@ void (*getAction(int id)) (Component*, GameInstance*) {
 	}
 }
 
+/**
+ * Copy a key name into the str value
+ *
+ * @param this Actual GameInstance instance
+ * @param str This is where the name will be copied (The longest will be: 9 + '\0')
+ * @param key Key id
+ */
 void getKeyName(GameInstance *this, char *str, int key) {
 	if (key >= GLFW_KEY_APOSTROPHE && key <= GLFW_KEY_GRAVE_ACCENT) {
 		char temp[2];
@@ -200,6 +258,14 @@ void getKeyName(GameInstance *this, char *str, int key) {
 	}
 }
 
+/**
+ * Find and copy a key name into the str value by option name and index
+ *
+ * @param this Actual GameInstance instance
+ * @param name Option name
+ * @param str This is where the name will be copied (The longest will be: 9 + '\0')
+ * @param id Index of the key (0-2)
+ */
 void getOptionCaption(GameInstance *this, char *name, char *str, int id) {
 	if (equals(name, "moveLeft")) {
 		getKeyName(this, str, this->options->moveLeft.id[id]);
@@ -224,13 +290,24 @@ void getOptionCaption(GameInstance *this, char *name, char *str, int id) {
 	}
 }
 
-Map* loadMap(GameInstance *this, char path[]) {
-	Map *map = new(Map);
+/**
+ * Initialize the default values of the map
+ *
+ * @param map The map
+ */
+static void initMapDefaults(Map* map) {
 	map->score = 0;
 	map->healt = 3.0f;
 	map->allowMovement = GL_TRUE;
 	map->startTime = time(NULL);
+}
 
+/**
+ * Initialize linked lists
+ *
+ * @param map The map
+ */
+static void initLists(Map* map) {
 	map->tiles = newList(Tile);
 	map->lights = newList(Light);
 	map->textures = newList(Texture);
@@ -240,7 +317,14 @@ Map* loadMap(GameInstance *this, char path[]) {
 	map->messages = newList(Message);
 	map->physics = newList(PhysicsArea);
 	map->entities = newList(Entity);
+}
 
+/**
+ * Initialize objects storage
+ *
+ * @param map The map
+ */
+static void initObjects(Map* map) {
 	map->objects = new(ObjectInfo);
 	map->objects->staticObjects = newList(StaticObject);
 	map->objects->staticInstances = newList(StaticObjectInstance);
@@ -248,7 +332,14 @@ Map* loadMap(GameInstance *this, char path[]) {
 	map->objects->dynamicInstances = newList(DynamicObjectInstance);
 	map->objects->activeObjects = newList(ActiveObject);
 	map->objects->activeInstances = newList(ActiveObjectInstance);
+}
 
+/**
+ * Initialize menu
+ *
+ * @param map The map
+ */
+static void initMenu(Map* map) {
 	map->menu = new(Menu);
 	map->menu->components = newList(Component);
 	map->menu->useCursor = GL_FALSE;
@@ -257,11 +348,561 @@ Map* loadMap(GameInstance *this, char path[]) {
 	map->menu->scrollMin = 0;
 	map->menu->scrollMax = 0;
 	map->menu->scrollOffset = 0;
+}
 
-	Action lose;
-	lose.id = ACTION_LOSE_ID;
-	lose.type = ACTION_LOSE;
-	listPush(map->actions, &lose);
+/**
+ * Meta loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processMeta(GameInstance *this, Map *map, char buff[255]) {
+	char type[32];
+	sscanf(buff, "$ %s", type);
+	if (equals(type, "NAME")) {
+		sscanf(buff, "$ %*s %s", map->name);
+	} else if (equals(type, "AUTHOR")) {
+		sscanf(buff, "$ %*s %s", map->author);
+	} else if (equals(type, "DESCRIPTION")) {
+		sscanf(buff, "$ %*s %s", map->description);
+		char *p;
+		for (p = map->description; *p != '\0'; ++p)
+			if (*p == '_')
+				*p = ' ';
+	} else if (equals(type, "AMBIENT")) {
+		sscanf(buff, "$ %*s %f %f %f", &map->ambient[R], &map->ambient[G], &map->ambient[B]);
+	} else if (equals(type, "SPAWN")) {
+		sscanf(buff, "$ %*s %f %f %f", &map->spawn[X], &map->spawn[Y], &map->spawn[Z]);
+	} else if (equals(type, "STATE")) {
+		sscanf(buff, "$ %*s %d", (int*) &this->state);
+		if (this->state == INGAME) {
+			addTextComponent(map, "$$$", HEALT_COMPONENT_ID, X_LEFT, Y_TOP, ALIGN_LEFT,
+					(1.0 / 16) * 21, -(1.0 / 16) * 14, FS_NORMAL_DPI);
+			addTextComponent(map, "0 *", SCORE_COMPONENT_ID, X_RIGHT, Y_TOP, ALIGN_RIGHT,
+					-(1.0 / 16) * 21, -(1.0 / 16) * 14, FS_NORMAL_DPI);
+		}
+		map->menu->onClick = this->state == INGAME ? NULL : onClickMenu;
+	} else if (equals(type, "CURSOR")) {
+		char value[6];
+		map->menu->useCursor = sscanf(buff, "$ %*s %s", value) == 1 && equals(value, "true");
+	} else if (equals(type, "SCROLL")) {
+		char value[6];
+		map->menu->onScroll = sscanf(buff, "$ %*s %s %f %f", value,
+				&map->menu->scrollMin, &map->menu->scrollMax) == 3
+				&& equals(value, "true") ? onScrollMenu : NULL;
+	}
+}
+
+/**
+ * Texture loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processTexture(GameInstance *this, Map *map, char buff[255]) {
+	Texture texture;
+	char path[255];
+
+	sscanf(buff, "X %d %s", &texture.id, path);
+	loadTexture(&texture.textureId, path);
+	listPush(map->textures, &texture);
+}
+
+/**
+ * TextureBlock loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processTextureBlock(GameInstance *this, Map *map, char buff[255]) {
+	TextureBlock block;
+	int side[5];
+
+	sscanf(buff, "Y %d %d %d %d %d %d", &block.id, &side[0], &side[1], &side[2], &side[3], &side[4]);
+
+	Texture **pointers[5] = {&block.base, &block.top, &block.right, &block.bottom, &block.left};
+	int i;
+	for (i = 0; i < 5; ++i) {
+		*pointers[i] = NULL;
+		if (side[i] < 0)
+			continue;
+
+		Iterator it;
+		foreach (it, map->textures->first) {
+			if (((Texture *)it->data)->id == side[i]) {
+				*pointers[i] = (Texture *)it->data;
+				break;
+			}
+		}
+
+		if (*pointers[i] == NULL)
+			printf("[Map] Texture with id '%d' not found\n", side[i]);
+	}
+
+	listPush(map->textureBlocks, &block);
+}
+
+/**
+ * Tile loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processTile(GameInstance *this, Map *map, char buff[255]) {
+	Tile tile;
+	int texBlockId, tileType;
+
+	sscanf(buff, "T %f %f %d %d", &tile.x, &tile.y, &texBlockId, &tileType);
+	tile.type = (TileType) tileType;
+	Iterator it;
+	for (it = map->textureBlocks->first; it != NULL; it = it->next) {
+		if (((TextureBlock *)it->data)->id == texBlockId) {
+			tile.texture = (TextureBlock *)it->data;
+			break;
+		}
+	}
+
+	listPush(map->tiles, &tile);
+}
+
+/**
+ * Light loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processStaticLight(GameInstance *this, Map *map, char buff[255]) {
+	Light light;
+	unsigned int r, g, b;
+	int referencePoint, visible;
+	sscanf(buff, "S %d %f %f %f %f %02x%02x%02x %f %f %d %d", &light.id,
+			&light.position[X], &light.position[Y], &light.position[Z],
+			&light.strength, &r, &g, &b, &light.specular, &light.intensity,
+			&referencePoint, &visible);
+	light.color[R] = (float) r / 255;
+	light.color[G] = (float) g / 255;
+	light.color[B] = (float) b / 255;
+	light.visible = visible == 1;
+
+	Iterator it;
+	foreach (it, this->referencePoints->first) {
+		if (((ReferencePoint *) it->data)->id == referencePoint) {
+			light.reference = it->data;
+			break;
+		}
+	}
+
+	listPush(map->lights, &light);
+}
+
+/**
+ * Object loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processObject(GameInstance *this, Map *map, char buff[255]) {
+	char type[32];
+	sscanf(buff, "O %*d %s", type);
+	int id;
+
+	if (equals(type, "STATIC")) {
+		char path[255];
+		sscanf(buff, "O %d STATIC %s", &id, path);
+		char finalPath[255] = "assets/objects/";
+		strcat(finalPath, path);
+
+		StaticObject *sobj = loadStaticObject(finalPath);
+		sobj->id = id;
+		listPush(map->objects->staticObjects, sobj);
+
+	} else if (equals(type, "DYNAMIC")) {
+		char path[255];
+		sscanf(buff, "O %d DYNAMIC %s", &id, path);
+		char finalPath[255] = "assets/objects/";
+		strcat(finalPath, path);
+
+		DynamicObject *dobj = loadDynamicObject(finalPath);
+		dobj->id = id;
+		listPush(map->objects->dynamicObjects, dobj);
+
+	} else if (equals(type, "ACTIVE")) {
+		char path[255];
+		sscanf(buff, "O %d ACTIVE %s", &id, path);
+		char finalPath[255] = "assets/objects/";
+		strcat(finalPath, path);
+
+		ActiveObject *aobj = loadActiveObject(finalPath);
+		aobj->id = id;
+		listPush(map->objects->activeObjects, aobj);
+
+	} else {
+		WARNING("Invalid object type: '%s'", type);
+	}
+}
+
+/**
+ * ObjectInstance loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processObjectInstance(GameInstance *this, Map *map, char buff[255]) {
+	char type[32];
+	sscanf(buff, "I %*d %*d %s", type);
+	int visible;
+
+	if (equals(type, "STATIC")) {
+		StaticObjectInstance soi;
+		int objectId;
+		sscanf(buff, "I %d %d STATIC %f %f %f %f %f %f %f %f %f %d", &soi.id, &objectId,
+				&soi.position[X], &soi.position[Y], &soi.position[Z],
+				&soi.rotation[X], &soi.rotation[Y], &soi.rotation[Z],
+				&soi.scale[X], &soi.scale[Y], &soi.scale[Z], &visible);
+		soi.visible = visible ? GL_TRUE : GL_FALSE;
+
+		Iterator it;
+		for (it = map->objects->staticObjects->first; it != NULL; it = it->next) {
+			if (((StaticObject *) it->data)->id == objectId) {
+				soi.object = (StaticObject *) it->data;
+				break;
+			}
+		}
+		initStraticInstance(&soi);
+		listPush(map->objects->staticInstances, &soi);
+
+	} else if (equals(type, "DYNAMIC")) {
+		DynamicObjectInstance doi;
+		int objectId, referencePoint;
+		sscanf(buff, "I %d %d DYNAMIC %f %f %f %f %f %f %f %f %f %d %d", &doi.id, &objectId,
+				&doi.position[X], &doi.position[Y], &doi.position[Z],
+				&doi.rotation[X], &doi.rotation[Y], &doi.rotation[Z],
+				&doi.scale[X], &doi.scale[Y], &doi.scale[Z], &visible, &referencePoint);
+		doi.visible = visible ? GL_TRUE : GL_FALSE;
+
+		Iterator it;
+		foreach (it, map->objects->dynamicObjects->first) {
+			if (((DynamicObject *) it->data)->id == objectId) {
+				doi.object = it->data;
+				break;
+			}
+		}
+
+		foreach (it, this->referencePoints->first) {
+			if (((ReferencePoint *) it->data)->id == referencePoint) {
+				doi.reference = it->data;
+				break;
+			}
+		}
+
+		listPush(map->objects->dynamicInstances, &doi);
+
+	} else if (equals(type, "ACTIVE")) {
+		ActiveObjectInstance aoi;
+		int objectId;
+		sscanf(buff, "I %d %d ACTIVE %f %f %f %f %f %f %f %f %f %d", &aoi.id, &objectId,
+				&aoi.position[X], &aoi.position[Y], &aoi.position[Z],
+				&aoi.rotation[X], &aoi.rotation[Y], &aoi.rotation[Z],
+				&aoi.scale[X], &aoi.scale[Y], &aoi.scale[Z], &visible);
+		aoi.visible = visible ? GL_TRUE : GL_FALSE;
+		aoi.activePart = 0;
+		aoi.reference = (ReferencePoint *) this->referencePoints->first->data;
+
+		Iterator it;
+		foreach (it, map->objects->activeObjects->first) {
+			if (((ActiveObject *) it->data)->id == objectId) {
+				aoi.object = (ActiveObject *) it->data;
+				break;
+			}
+		}
+
+		listPush(map->objects->activeInstances, &aoi);
+
+	} else {
+		WARNING("Invalid object type: '%s'", type);
+	}
+}
+
+/**
+ * TextComponent loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processTextComponent(GameInstance *this, Map *map, char buff[255]) {
+	Component comp;
+	comp.text = new(TextComponent);
+	comp.type = CT_TEXT;
+
+	char text[255];
+	unsigned int r, g, b;
+	int action;
+
+	sscanf(buff, "A %u %f %f %f %d %d %d %s %02x%02x%02x %f %d %d", &comp.id,
+			&comp.position[X], &comp.position[Y], &comp.position[Z],
+			(int*) &comp.relativeX, (int*) &comp.relativeY, (int*) &comp.text->align,
+			text, &r, &g, &b, &comp.text->baseColor[A], (int*) &comp.text->fontSize, &action);
+	comp.text->baseColor[R] = (float) r / 255;
+	comp.text->baseColor[G] = (float) g / 255;
+	comp.text->baseColor[B] = (float) b / 255;
+	setColor(comp.text->color,
+			comp.text->baseColor[R],
+			comp.text->baseColor[G],
+			comp.text->baseColor[B],
+			comp.text->baseColor[A]);
+	comp.text->text = malloc(sizeof(char) * (strlen(text) + 1));
+	strcpy(comp.text->text, text);
+
+	int i, length;
+	for (i = 0, length = strlen(comp.text->text); i < length; ++i)
+		if (comp.text->text[i] == '_')
+			comp.text->text[i] = ' ';
+
+	comp.onRender = renderTextComponent;
+	comp.onCalc = action == 21 ? calcOptionsGraphicsButton : calcTextButton;
+	comp.onClick = getAction(action);
+
+	if (action == 22) {
+		comp.value = newGenericValue(comp.text->text, sizeof(char) * (strlen(comp.text->text) + 1));
+		char str[12], finalStr[37];
+		getOptionCaption(this, comp.text->text, str, 0);
+		strcpy(finalStr, str);
+		getOptionCaption(this, comp.text->text, str, 1);
+		if (!equals(str, "N/A")) {
+			strcat(finalStr, " ");
+			strcat(finalStr, str);
+			getOptionCaption(this, comp.text->text, str, 2);
+			if (!equals(str, "N/A")) {
+				strcat(finalStr, " ");
+				strcat(finalStr, str);
+			}
+		}
+		free(comp.text->text);
+		comp.text->text = malloc(sizeof(char) * 37);
+		strcpy(comp.text->text, finalStr);
+	}
+
+	listPush(map->menu->components, &comp);
+}
+
+
+/**
+ * ObjectComponent loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processObjectComponent(GameInstance *this, Map *map, char buff[255]) {
+	Component comp;
+	comp.type = CT_OBJECT;
+	comp.object = new(ObjectComponent);
+	int objectId;
+	sscanf(buff, "B %d %f %f %f %d %d %d", &comp.id,
+			&comp.position[X], &comp.position[Y], &comp.position[Z],
+			(int*) &comp.relativeX, (int*) &comp.relativeY, &objectId);
+
+	Iterator it;
+	foreach (it, map->objects->activeInstances->first) {
+		if (((ActiveObjectInstance *) it->data)->id == objectId) {
+			comp.object->object = (ActiveObjectInstance *) it->data;
+			break;
+		}
+	}
+
+	comp.onRender = NULL;
+	comp.onCalc = calcObjectComponentPosition;
+
+	listPush(map->menu->components, &comp);
+}
+
+/**
+ * Action loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processAction(GameInstance *this, Map *map, char buff[255]) {
+	Action action;
+	sscanf(buff, "N %d %d", &action.id, (int*) &action.type);
+
+	if (action.type == ACTION_TELEPORT) {
+		float coord[2];
+		sscanf(buff, "N %*d %*d %f %f", &coord[X], &coord[Y]);
+		action.value = newGenericValue(coord, sizeof(float) * 2);
+	} else if (action.type == ACTION_DAMAGE || action.type == ACTION_ADD_SCORE) {
+		int count;
+		sscanf(buff, "N %*d %*d %d", &count);
+		action.value = newGenericValue(&count, sizeof(int));
+	} else if (action.type == ACTION_SET_DOBJ) {
+		float data[12];
+		sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f %f",
+				&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
+				&data[7], &data[8], &data[9], &data[10], &data[11]);
+		action.value = newGenericValue(data, sizeof(float) * 12);
+	} else if (action.type == ACTION_SET_AOBJ) {
+		float data[11];
+		sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f",
+				&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
+				&data[7], &data[8], &data[9], &data[10]);
+		action.value = newGenericValue(data, sizeof(float) * 11);
+	} else if (action.type == ACTION_SET_ITEM) {
+		GLint itemId;
+		sscanf(buff, "N %*d %*d %d", &itemId);
+		action.value = newGenericValue(&itemId, sizeof(GLint));
+	} else if (action.type == ACTION_SET_LIGHT) {
+		float data[12];
+		sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f %f",
+				&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
+				&data[7], &data[8], &data[9], &data[10], &data[11]);
+		action.value = newGenericValue(data, sizeof(float) * 12);
+	} else if (action.type == ACTION_OBJECT_PSX) {
+		float data[4];
+		sscanf(buff, "N %*d %*d %f %f %f %f", &data[0], &data[1], &data[2], &data[3]);
+		action.value = newGenericValue(data, sizeof(float) * 4);
+	}
+
+	listPush(map->actions, &action);
+}
+
+/**
+ * Region loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processRegion(GameInstance *this, Map *map, char buff[255]) {
+	Region region;
+	sscanf(buff, "R %f %f %f %f %d %d %d %d", &region.xMin, &region.yMin, &region.xMax, &region.yMax,
+			&region.actionId, &region.maxUse, &region.itemReq, (int*) &region.notSneek);
+
+	listPush(map->regions, &region);
+}
+
+/**
+ * Message loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processMessage(GameInstance *this, Map *map, char buff[255]) {
+	Message msg;
+	unsigned int r, g, b;
+	sscanf(buff, "M %f %f %f %02x%02x%02x %f %d %s",
+			&msg.position.x, &msg.position.y, &msg.position.z, &r, &g, &b,
+			&msg.color.a, (int*) &msg.size, msg.message);
+	msg.color.r = (float) r / 255;
+	msg.color.g = (float) g / 255;
+	msg.color.b = (float) b / 255;
+
+	int i = 0;
+	while (msg.message[i] != '\0') {
+		if (msg.message[i] == '_')
+			msg.message[i] = ' ';
+		++i;
+	}
+
+	listPush(map->messages, &msg);
+}
+
+/**
+ * Entity loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processEntity(GameInstance *this, Map *map, char buff[255]) {
+	Entity e;
+	int objectId;
+	sscanf(buff, "E %d %d %d %f %f %f %d %f %f", &e.id, &objectId, &e.lightId,
+			&e.spellSpeed, &e.damage, &e.hp, &e.score, &e.fi0, &e.radius);
+
+	Iterator it;
+	foreach (it, map->objects->activeInstances->first) {
+		if (((ActiveObjectInstance *) it->data)->id == objectId) {
+			e.obj = it->data;
+			break;
+		}
+	}
+
+	foreach (it, this->referencePoints->first) {
+		if (((ReferencePoint *) it->data)->id == ENTITY_FLOATING_REFERENCEPOINT_ID) {
+			e.obj->reference = it->data;
+			break;
+		}
+	}
+
+	listPush(map->entities, &e);
+}
+
+/**
+ * PhysicsArea loader processor
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param map The loading map
+ * @param buff The current line
+ */
+static void processPhysics(GameInstance *this, Map *map, char buff[255]) {
+	PhysicsArea pa;
+	sscanf(buff, "P %d %f %f %d", &pa.id, &pa.x, &pa.y, (int *) &pa.enabled);
+
+	listPush(map->physics, &pa);
+}
+
+/**
+ * Loads a map or menu
+ *
+ * @see fileformats.md -> Map and Menu table
+ *
+ * @param this Actual GameInstance instance
+ * @param path Map or menu file path
+ */
+Map* loadMap(GameInstance *this, char path[]) {
+	Map *map = new(Map);
+	initMapDefaults(map);
+	initLists(map);
+	initObjects(map);
+	initMenu(map);
 
 	this->state = MENU;
 	FILE *file;
@@ -276,420 +917,35 @@ Map* loadMap(GameInstance *this, char path[]) {
 
 	while (fgets(buff, 255, file)) {
 		switch (buff[X]) {
-			case '$': { // Meta
-				char type[32];
-				sscanf(buff, "$ %s", type);
-				if (equals(type, "NAME")) {
-					sscanf(buff, "$ %*s %s", map->name);
-				} else if (equals(type, "AUTHOR")) {
-					sscanf(buff, "$ %*s %s", map->author);
-				} else if (equals(type, "DESCRIPTION")) {
-					sscanf(buff, "$ %*s %s", map->description);
-					char *p;
-					for (p = map->description; *p != '\0'; ++p)
-						if (*p == '_')
-							*p = ' ';
-				} else if (equals(type, "AMBIENT")) {
-					sscanf(buff, "$ %*s %f %f %f", &map->ambient[R], &map->ambient[G], &map->ambient[B]);
-				} else if (equals(type, "SPAWN")) {
-					sscanf(buff, "$ %*s %f %f %f", &map->spawn[X], &map->spawn[Y], &map->spawn[Z]);
-				} else if (equals(type, "STATE")) {
-					sscanf(buff, "$ %*s %d", (int*) &this->state);
-					if (this->state == INGAME) {
-						addTextComponent(map, "$$$", HEALT_COMPONENT_ID, X_LEFT, Y_TOP, ALIGN_LEFT,
-								(1.0 / 16) * 21, -(1.0 / 16) * 14, FS_NORMAL_DPI);
-						addTextComponent(map, "0 *", SCORE_COMPONENT_ID, X_RIGHT, Y_TOP, ALIGN_RIGHT,
-								-(1.0 / 16) * 21, -(1.0 / 16) * 14, FS_NORMAL_DPI);
-					}
-					map->menu->onClick = this->state == INGAME ? NULL : onClickMenu;
-				} else if (equals(type, "CURSOR")) {
-					char value[6];
-					map->menu->useCursor = sscanf(buff, "$ %*s %s", value) == 1 && equals(value, "true");
-				} else if (equals(type, "SCROLL")) {
-					char value[6];
-					map->menu->onScroll = sscanf(buff, "$ %*s %s %f %f", value,
-							&map->menu->scrollMin, &map->menu->scrollMax) == 3
-							&& equals(value, "true") ? onScrollMenu : NULL;
-				}
-				break;
-			}
-			case 'X': { // Texture
-				Texture texture;
-				char path[255];
-
-				sscanf(buff, "X %d %s", &texture.id, path);
-				loadTexture(&texture.textureId, path);
-				listPush(map->textures, &texture);
-				break;
-			}
-			case 'Y': { // TextureBlock
-				TextureBlock block;
-				int side[5];
-
-				sscanf(buff, "Y %d %d %d %d %d %d", &block.id, &side[0], &side[1], &side[2], &side[3], &side[4]);
-
-				Texture **pointers[5] = {&block.base, &block.top, &block.right, &block.bottom, &block.left};
-				int i;
-				for (i = 0; i < 5; ++i) {
-					*pointers[i] = NULL;
-					if (side[i] < 0)
-						continue;
-
-					Iterator it;
-					foreach (it, map->textures->first) {
-						if (((Texture *)it->data)->id == side[i]) {
-							*pointers[i] = (Texture *)it->data;
-							break;
-						}
-					}
-
-					if (*pointers[i] == NULL)
-						printf("[Map] Texture with id '%d' not found\n", side[i]);
-				}
-
-				listPush(map->textureBlocks, &block);
-				break;
-			}
-			case 'T': { // Tile
-				Tile tile;
-				int texBlockId, tileType;
-
-				sscanf(buff, "T %f %f %d %d", &tile.x, &tile.y, &texBlockId, &tileType);
-				tile.type = (TileType) tileType;
-				Iterator it;
-				for (it = map->textureBlocks->first; it != NULL; it = it->next) {
-					if (((TextureBlock *)it->data)->id == texBlockId) {
-						tile.texture = (TextureBlock *)it->data;
-						break;
-					}
-				}
-
-				listPush(map->tiles, &tile);
-				break;
-			}
-			case 'S': { // Static Light
-				Light light;
-				unsigned int r, g, b;
-				int referencePoint, visible;
-				sscanf(buff, "S %d %f %f %f %f %02x%02x%02x %f %f %d %d", &light.id,
-						&light.position[X], &light.position[Y], &light.position[Z],
-						&light.strength, &r, &g, &b, &light.specular, &light.intensity,
-						&referencePoint, &visible);
-				light.color[R] = (float) r / 255;
-				light.color[G] = (float) g / 255;
-				light.color[B] = (float) b / 255;
-				light.visible = visible == 1;
-
-				Iterator it;
-				foreach (it, this->referencePoints->first) {
-					if (((ReferencePoint *) it->data)->id == referencePoint) {
-						light.reference = it->data;
-						break;
-					}
-				}
-
-				listPush(map->lights, &light);
-				break;
-			}
-			case 'O': { // Object
-				char type[32];
-				sscanf(buff, "O %*d %s", type);
-				int id;
-
-				if (equals(type, "STATIC")) {
-					char path[255];
-					sscanf(buff, "O %d STATIC %s", &id, path);
-					char finalPath[255] = "assets/objects/";
-					strcat(finalPath, path);
-
-					StaticObject *sobj = loadStaticObject(finalPath);
-					sobj->id = id;
-					listPush(map->objects->staticObjects, sobj);
-
-				} else if (equals(type, "DYNAMIC")) {
-					char path[255];
-					sscanf(buff, "O %d DYNAMIC %s", &id, path);
-					char finalPath[255] = "assets/objects/";
-					strcat(finalPath, path);
-
-					DynamicObject *dobj = loadDynamicObject(finalPath);
-					dobj->id = id;
-					listPush(map->objects->dynamicObjects, dobj);
-
-				} else if (equals(type, "ACTIVE")) {
-					char path[255];
-					sscanf(buff, "O %d ACTIVE %s", &id, path);
-					char finalPath[255] = "assets/objects/";
-					strcat(finalPath, path);
-
-					ActiveObject *aobj = loadActiveObject(finalPath);
-					aobj->id = id;
-					listPush(map->objects->activeObjects, aobj);
-
-				} else {
-					WARNING("Invalid object type: '%s'", type);
-				}
-				break;
-			}
-			case 'I': { // Object Instance
-				char type[32];
-				sscanf(buff, "I %*d %*d %s", type);
-				int visible;
-
-				if (equals(type, "STATIC")) {
-					StaticObjectInstance soi;
-					int objectId;
-					sscanf(buff, "I %d %d STATIC %f %f %f %f %f %f %f %f %f %d", &soi.id, &objectId,
-							&soi.position[X], &soi.position[Y], &soi.position[Z],
-							&soi.rotation[X], &soi.rotation[Y], &soi.rotation[Z],
-							&soi.scale[X], &soi.scale[Y], &soi.scale[Z], &visible);
-					soi.visible = visible ? GL_TRUE : GL_FALSE;
-
-					Iterator it;
-					for (it = map->objects->staticObjects->first; it != NULL; it = it->next) {
-						if (((StaticObject *) it->data)->id == objectId) {
-							soi.object = (StaticObject *) it->data;
-							break;
-						}
-					}
-					initStraticInstance(&soi);
-					listPush(map->objects->staticInstances, &soi);
-
-				} else if (equals(type, "DYNAMIC")) {
-					DynamicObjectInstance doi;
-					int objectId, referencePoint;
-					sscanf(buff, "I %d %d DYNAMIC %f %f %f %f %f %f %f %f %f %d %d", &doi.id, &objectId,
-							&doi.position[X], &doi.position[Y], &doi.position[Z],
-							&doi.rotation[X], &doi.rotation[Y], &doi.rotation[Z],
-							&doi.scale[X], &doi.scale[Y], &doi.scale[Z], &visible, &referencePoint);
-					doi.visible = visible ? GL_TRUE : GL_FALSE;
-
-					Iterator it;
-					foreach (it, map->objects->dynamicObjects->first) {
-						if (((DynamicObject *) it->data)->id == objectId) {
-							doi.object = it->data;
-							break;
-						}
-					}
-
-					foreach (it, this->referencePoints->first) {
-						if (((ReferencePoint *) it->data)->id == referencePoint) {
-							doi.reference = it->data;
-							break;
-						}
-					}
-
-					listPush(map->objects->dynamicInstances, &doi);
-
-				} else if (equals(type, "ACTIVE")) {
-					ActiveObjectInstance aoi;
-					int objectId;
-					sscanf(buff, "I %d %d ACTIVE %f %f %f %f %f %f %f %f %f %d", &aoi.id, &objectId,
-							&aoi.position[X], &aoi.position[Y], &aoi.position[Z],
-							&aoi.rotation[X], &aoi.rotation[Y], &aoi.rotation[Z],
-							&aoi.scale[X], &aoi.scale[Y], &aoi.scale[Z], &visible);
-					aoi.visible = visible ? GL_TRUE : GL_FALSE;
-					aoi.activePart = 0;
-					aoi.reference = (ReferencePoint *) this->referencePoints->first->data;
-
-					Iterator it;
-					foreach (it, map->objects->activeObjects->first) {
-						if (((ActiveObject *) it->data)->id == objectId) {
-							aoi.object = (ActiveObject *) it->data;
-							break;
-						}
-					}
-
-					listPush(map->objects->activeInstances, &aoi);
-
-				} else {
-					WARNING("Invalid object type: '%s'", type);
-				}
-				break;
-			}
-			case 'A': { // TextComponent
-				Component comp;
-				comp.text = new(TextComponent);
-				comp.type = CT_TEXT;
-
-				char text[255];
-				unsigned int r, g, b;
-				int action;
-
-				sscanf(buff, "A %u %f %f %f %d %d %d %s %02x%02x%02x %f %d %d", &comp.id,
-						&comp.position[X], &comp.position[Y], &comp.position[Z],
-						(int*) &comp.relativeX, (int*) &comp.relativeY, (int*) &comp.text->align,
-						text, &r, &g, &b, &comp.text->baseColor[A], (int*) &comp.text->fontSize, &action);
-				comp.text->baseColor[R] = (float) r / 255;
-				comp.text->baseColor[G] = (float) g / 255;
-				comp.text->baseColor[B] = (float) b / 255;
-				setColor(comp.text->color,
-						comp.text->baseColor[R],
-						comp.text->baseColor[G],
-						comp.text->baseColor[B],
-						comp.text->baseColor[A]);
-				comp.text->text = malloc(sizeof(char) * (strlen(text) + 1));
-				strcpy(comp.text->text, text);
-
-				int i, length;
-				for (i = 0, length = strlen(comp.text->text); i < length; ++i)
-					if (comp.text->text[i] == '_')
-						comp.text->text[i] = ' ';
-
-				comp.onRender = renderTextComponent;
-				comp.onCalc = action == 21 ? calcOptionsGraphicsButton : calcTextButton;
-				comp.onClick = getAction(action);
-
-				if (action == 22) {
-					comp.value = newGenericValue(comp.text->text, sizeof(char) * (strlen(comp.text->text) + 1));
-					char str[12], finalStr[37];
-					getOptionCaption(this, comp.text->text, str, 0);
-					strcpy(finalStr, str);
-					getOptionCaption(this, comp.text->text, str, 1);
-					if (!equals(str, "N/A")) {
-						strcat(finalStr, " ");
-						strcat(finalStr, str);
-						getOptionCaption(this, comp.text->text, str, 2);
-						if (!equals(str, "N/A")) {
-							strcat(finalStr, " ");
-							strcat(finalStr, str);
-						}
-					}
-					free(comp.text->text);
-					comp.text->text = malloc(sizeof(char) * 37);
-					strcpy(comp.text->text, finalStr);
-				}
-
-				listPush(map->menu->components, &comp);
-				break;
-			}
-			case 'B': { // ObjectComponent
-				Component comp;
-				comp.type = CT_OBJECT;
-				comp.object = new(ObjectComponent);
-				int objectId;
-				sscanf(buff, "B %d %f %f %f %d %d %d", &comp.id,
-						&comp.position[X], &comp.position[Y], &comp.position[Z],
-						(int*) &comp.relativeX, (int*) &comp.relativeY, &objectId);
-
-				Iterator it;
-				foreach (it, map->objects->activeInstances->first) {
-					if (((ActiveObjectInstance *) it->data)->id == objectId) {
-						comp.object->object = (ActiveObjectInstance *) it->data;
-						break;
-					}
-				}
-
-				comp.onRender = NULL;
-				comp.onCalc = calcObjectComponentPosition;
-
-				listPush(map->menu->components, &comp);
-				break;
-			}
-			case 'N': { // Action
-				Action action;
-				sscanf(buff, "N %d %d", &action.id, (int*) &action.type);
-
-				if (action.type == ACTION_TELEPORT) {
-					float coord[2];
-					sscanf(buff, "N %*d %*d %f %f", &coord[X], &coord[Y]);
-					action.value = newGenericValue(coord, sizeof(float) * 2);
-				} else if (action.type == ACTION_DAMAGE || action.type == ACTION_ADD_SCORE) {
-					int count;
-					sscanf(buff, "N %*d %*d %d", &count);
-					action.value = newGenericValue(&count, sizeof(int));
-				} else if (action.type == ACTION_SET_DOBJ) {
-					float data[12];
-					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f %f",
-							&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
-							&data[7], &data[8], &data[9], &data[10], &data[11]);
-					action.value = newGenericValue(data, sizeof(float) * 12);
-				} else if (action.type == ACTION_SET_AOBJ) {
-					float data[11];
-					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f",
-							&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
-							&data[7], &data[8], &data[9], &data[10]);
-					action.value = newGenericValue(data, sizeof(float) * 11);
-				} else if (action.type == ACTION_SET_ITEM) {
-					GLint itemId;
-					sscanf(buff, "N %*d %*d %d", &itemId);
-					action.value = newGenericValue(&itemId, sizeof(GLint));
-				} else if (action.type == ACTION_SET_LIGHT) {
-					float data[12];
-					sscanf(buff, "N %*d %*d %f %f %f %f %f %f %f %f %f %f %f %f",
-							&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6],
-							&data[7], &data[8], &data[9], &data[10], &data[11]);
-					action.value = newGenericValue(data, sizeof(float) * 12);
-				} else if (action.type == ACTION_OBJECT_PSX) {
-					float data[4];
-					sscanf(buff, "N %*d %*d %f %f %f %f", &data[0], &data[1], &data[2], &data[3]);
-					action.value = newGenericValue(data, sizeof(float) * 4);
-				}
-
-				listPush(map->actions, &action);
-				break;
-			}
-			case 'R': { // Region
-				Region region;
-				sscanf(buff, "R %f %f %f %f %d %d %d %d", &region.xMin, &region.yMin, &region.xMax, &region.yMax,
-						&region.actionId, &region.maxUse, &region.itemReq, (int*) &region.notSneek);
-
-				listPush(map->regions, &region);
-				break;
-			}
-			case 'M': { // Message
-				Message msg;
-				unsigned int r, g, b;
-				sscanf(buff, "M %f %f %f %02x%02x%02x %f %d %s",
-						&msg.position.x, &msg.position.y, &msg.position.z, &r, &g, &b,
-						&msg.color.a, (int*) &msg.size, msg.message);
-				msg.color.r = (float) r / 255;
-				msg.color.g = (float) g / 255;
-				msg.color.b = (float) b / 255;
-
-				int i = 0;
-				while (msg.message[i] != '\0') {
-					if (msg.message[i] == '_')
-						msg.message[i] = ' ';
-					++i;
-				}
-
-				listPush(map->messages, &msg);
-				break;
-			}
-			case 'E': { // Entity
-				Entity e;
-				int objectId;
-				sscanf(buff, "E %d %d %d %f %f %f %d %f %f", &e.id, &objectId, &e.lightId,
-						&e.spellSpeed, &e.damage, &e.hp, &e.score, &e.fi0, &e.radius);
-
-				Iterator it;
-				foreach (it, map->objects->activeInstances->first) {
-					if (((ActiveObjectInstance *) it->data)->id == objectId) {
-						e.obj = it->data;
-						break;
-					}
-				}
-
-				foreach (it, this->referencePoints->first) {
-					if (((ReferencePoint *) it->data)->id == ENTITY_FLOATING_REFERENCEPOINT_ID) {
-						e.obj->reference = it->data;
-						break;
-					}
-				}
-
-				listPush(map->entities, &e);
-
-				break;
-			}
-			case 'P': { // Physics
-				PhysicsArea pa;
-				sscanf(buff, "P %d %f %f %d", &pa.id, &pa.x, &pa.y, (int *) &pa.enabled);
-
-				listPush(map->physics, &pa);
-				break;
-			}
+			case '$': processMeta(this, map, buff); break;
+			case 'X': processTexture(this, map, buff); break;
+			case 'Y': processTextureBlock(this, map, buff); break;
+			case 'T': processTile(this, map, buff); break;
+			case 'S': processStaticLight(this, map, buff); break;
+			case 'O': processObject(this, map, buff); break;
+			case 'I': processObjectInstance(this, map, buff); break;
+			case 'A': processTextComponent(this, map, buff); break;
+			case 'B': processObjectComponent(this, map, buff); break;
+			case 'N': processAction(this, map, buff); break;
+			case 'R': processRegion(this, map, buff); break;
+			case 'M': processMessage(this, map, buff); break;
+			case 'E': processEntity(this, map, buff); break;
+			case 'P': processPhysics(this, map, buff); break;
 		}
+	}
+
+	if (this->state == INGAME) {
+		Action lose;
+		lose.id = ACTION_LOSE_ID;
+		lose.type = ACTION_LOSE;
+		listPush(map->actions, &lose);
+
+		map->spells = new(Spells);
+		map->spells->spell1.id = -1;
+		map->spells->spell1.lastUse = 0;
+		map->spells->spell1.reloadTime = 3;
+		map->spells->spell1.damage = 3;
+		map->spells->spell1.speed = 0;
 	}
 
 	fclose(file);
@@ -701,13 +957,23 @@ Map* loadMap(GameInstance *this, char path[]) {
 }
 
 /**
- * @todo Implement
+ * Free the map
+ *
+ * XXX: free
+ *
+ * @param map Map to free
  */
 void freeMap(Map *map) {
 
 }
 
-void saveHightScore(GameInstance *this, time_t deltaT) {
+/**
+ * Update highscores if necessary
+ *
+ * @param this Actual GameInstance instance
+ * @param deltaT Completed time
+ */
+void updateHightScore(GameInstance *this, time_t deltaT) {
 	LinkedList /*HighScoreValue*/ *lines = newList(HighScoreValue);
 
 	FILE *file = fopen("data/records.dat", "r");

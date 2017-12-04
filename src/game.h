@@ -53,12 +53,15 @@ struct GameInstance {
 };
 
 /**
- * @todo Add gamepad support
+ * Input action key and mouse wrapper
  */
 struct InputActionWrapper {
 	GLint id[3];
 };
 
+/**
+ * Options storage
+ */
 struct Options {
 	GLint msaa;
 	GLboolean fullscreen;
@@ -86,6 +89,9 @@ struct Options {
 	GLboolean reloadProgram;
 };
 
+/**
+ * Shader program uniform ids
+ */
 struct ShaderInfo {
 	GLuint shaderId;
 	GLuint cameraPosition;
@@ -101,6 +107,9 @@ struct ShaderInfo {
 	GLuint modelMat;
 };
 
+/**
+ * Game camera info storage
+ */
 struct CameraInfo {
 	GLfloat rotation[3];
 	GLfloat position[3];
@@ -111,6 +120,11 @@ struct CameraInfo {
 	GLfloat destinationPosition[3];
 };
 
+/**
+ * Finalized light info
+ *
+ * These values will be sent to the GPU
+ */
 struct LigingInfo {
 	int numLights;
 	GLfloat lightPosition[MAX_NUM_LIGHTS * 3];
@@ -146,5 +160,8 @@ GLfloat getDistSquared2DDelta(GLfloat a[3], GLfloat deltaA[3], GLfloat b[3]);
 GLfloat getDistSquaredXY(GLfloat x, GLfloat y, GLfloat b[3]);
 
 GLboolean isActionPerformed(GameInstance *this, InputActionWrapper* iaw);
+GLboolean isPlayerInRegion(GameInstance *this, Region *region);
+
+void activateAction(GameInstance *this, GLint id);
 
 #endif /* GAME_H_ */

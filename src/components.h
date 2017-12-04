@@ -1,7 +1,10 @@
 /**
  * @file components.h
  * @author Gerviba (Szabo Gergely)
- * @brief Components and event management for menus
+ * @brief Components and event management for menus (header)
+ *
+ * @par Definition:
+ * 		components.c
  */
 
 #ifndef COMPONENTS_H_
@@ -71,6 +74,12 @@ typedef enum {
 
 /**
  * The component base
+ *
+ * Components are located by the actual camera position.
+ *
+ * @see TextComponent
+ * @see ObjectComponent
+ * @see ImageComponent
  */
 struct Component {
 	GLuint id;
@@ -86,8 +95,6 @@ struct Component {
 		ImageComponent *image;
 	};
 
-	void (*onLoad)(struct Component*, GameInstance*);
-	void (*onDestroy)(struct Component*, GameInstance*);
 	void (*onRender)(struct Component*, GameInstance*);
 	void (*onCalc)(struct Component*, GameInstance*);
 	void (*onClick)(struct Component*, GameInstance*);
@@ -95,6 +102,7 @@ struct Component {
 
 /**
  * Generic type variable
+ *
  * @see newGenericValue()
  * @see newGenericIntValue()
  * @see newGenericFloatValue()
@@ -110,6 +118,11 @@ struct GenericType {
 	size_t valueLength;
 };
 
+/**
+ * Text type component specific values
+ *
+ * @see Component
+ */
 struct TextComponent {
 	FontSize fontSize;
 	char *text; //TODO: free
@@ -120,10 +133,24 @@ struct TextComponent {
 	GLfloat rawMin[3];
 };
 
+/**
+ * Object type component specific values
+ *
+ * Active object as a component
+ *
+ * @see ActiveObjectInstance
+ * @see Component
+ */
 struct ObjectComponent {
 	ActiveObjectInstance *object;
 };
 
+/**
+ * Image type component specific values
+ *
+ * @todo Unimplemented: ImageComponent
+ * @see Component
+ */
 struct ImageComponent {
 	GLuint textureId;
 };
@@ -142,11 +169,23 @@ GLfloat getAbsoluteX(GameInstance*, RelativeX);
 GLfloat getAbsoluteY(GameInstance*, RelativeY);
 GLfloat getCursorProjectedX(GameInstance*, double);
 GLfloat getCursorProjectedY(GameInstance*, double);
+GLfloat getFontAlign(GameInstance *this, char str[], FontSize fontSize, Align align);
 
 void renderTextComponent(Component*, GameInstance*);
 void calcTextButton(Component*, GameInstance*);
 void calcObjectComponentPosition(Component*, GameInstance*);
+void calcOptionsGraphicsButton(Component *comp, GameInstance *this);
 void clickStartButton(Component*, GameInstance*);
 void updateCursor(GameInstance *this);
+
+void clickGameSelector(Component *comp, GameInstance *this);
+void clickStartButton(Component *comp, GameInstance *this);
+void clickOptions(Component *comp, GameInstance *this);
+void clickCredits(Component *comp, GameInstance *this);
+void clickExit(Component *comp, GameInstance *this);
+void clickBack(Component *comp, GameInstance *this);
+void clickControllsSet(Component *comp, GameInstance *this);
+void clickGraphicsSet(Component *comp, GameInstance *this);
+void clickOpenGithub(Component *comp, GameInstance *this);
 
 #endif /* COMPONENTS_H_ */

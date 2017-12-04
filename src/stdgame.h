@@ -1,7 +1,10 @@
 /**
  * @file stdgame.h
  * @author Gerviba (Szabo Gergely)
- * @brief The main header of the project
+ * @brief The main header of the project (header)
+ *
+ * @par Definition:
+ * 		stdgame.c
  */
 
 #ifndef STDGAME_H__
@@ -89,8 +92,10 @@ typedef union Color {
 	};
 } Color;
 
-// character.h
+// player.h
 typedef struct Player Player;
+typedef struct Spell Spell;
+typedef struct Spells Spells;
 
 // components.h
 typedef struct GenericType GenericType;
@@ -184,15 +189,8 @@ static const float PI = 3.14159265358979323846f;
 /** Set 3D array */
 #define array4(array, a, b, c, d) ({array[0] = a; array[1] = b; array[2] = c; array[3] = d;})
 
-void initGLFW();
-void createWindow(GameInstance* this, const GLFWvidmode* mode);
-void setupOpenGL(GameInstance* this, double width, double height);
-void setupWindowSize(const GLFWvidmode* mode, GameInstance* this);
-void setPerspective(GameInstance *this, float fov, float aspect, float near, float far);
-void printVersionInfo();
-void initCursor(GameInstance* this);
-void fixViewport(GameInstance* this);
-void doGameLoop(GameInstance* this);
+int main(int argc, char *argv[]);
 void getGameInstance(GameInstance **this);
+void fixViewport(GameInstance* this);
 
 #endif /* STDGAME_H__ */

@@ -1,7 +1,23 @@
+/**
+ * @file player.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief Player specific types and functions
+ *
+ * @par Header:
+ * 		player.h
+ */
+
 #include <stdlib.h>
 #include "stdgame.h"
 
+/**
+ * Initialze player
+ *
+ * @param this Actual GameInstance instance
+ */
 void initPlayer(GameInstance *this) {
+	if (this->player != NULL)
+		free(this->player);
 	this->player = new(Player);
 
 	this->player->id = 0;
@@ -14,4 +30,15 @@ void initPlayer(GameInstance *this) {
 	this->player->sneek = GL_FALSE;
 	this->player->leftSide = GL_FALSE;
 	this->player->item = -1;
+}
+
+/**
+ * Free player
+ *
+ * XXX: free
+ *
+ * @param this Actual GameInstance instance
+ */
+void freePlayer(GameInstance *this) {
+	free(this->player);
 }

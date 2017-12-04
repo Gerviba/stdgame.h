@@ -1,8 +1,24 @@
+/**
+ * @file components.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief Components and event management for menus
+ *
+ * @par Header:
+ * 		components.h
+ */
+
 #include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
 #include "stdgame.h"
 
+/**
+ * Constructs a new generic value
+ *
+ * @param value Pointer to the data
+ * @param size Size of the data
+ * @return GenericValue instance pointer
+ */
 GenericType* newGenericValue(void *value, size_t size) {
 	GenericType *gt = new(GenericType);
 	gt->valueLength = size;
@@ -13,6 +29,12 @@ GenericType* newGenericValue(void *value, size_t size) {
 	return gt;
 }
 
+/**
+ * Constructs a new GLint generic value
+ *
+ * @param value GLint numeric value
+ * @return GenericValue instance pointer
+ */
 GenericType* newGenericIntValue(GLint intValue) {
 	GenericType *gt = new(GenericType);
 	gt->valueLength = sizeof(GLint);
@@ -24,6 +46,12 @@ GenericType* newGenericIntValue(GLint intValue) {
 	return gt;
 }
 
+/**
+ * Constructs a new GLfloat generic value
+ *
+ * @param value GLfloat numeric value
+ * @return GenericValue instance pointer
+ */
 GenericType* newGenericFloatValue(GLfloat floatValue) {
 	GenericType *gt = new(GenericType);
 	gt->valueLength = sizeof(GLfloat);
@@ -35,6 +63,13 @@ GenericType* newGenericFloatValue(GLfloat floatValue) {
 	return gt;
 }
 
+/**
+ * Sets the value of the passed generic instance
+ *
+ * @param value The passed generic instance
+ * @param newValue The new value
+ * @param newSize The size of the new value
+ */
 void setGenericValue(GenericType *value, void *newValue, size_t newSize) {
 	free(value->value);
 	value->valueLength = newSize;
@@ -44,6 +79,12 @@ void setGenericValue(GenericType *value, void *newValue, size_t newSize) {
 		*(char *)(value->value + i) = *(char *)(newValue + i);
 }
 
+/**
+ * Sets the value of the passed generic instance
+ *
+ * @param value The passed generic instance
+ * @param newIntValue The new GLint type value
+ */
 void setGenericIntValue(GenericType *value, GLint newIntValue) {
 	free(value->value);
 	value->valueLength = sizeof(GLint);
@@ -54,6 +95,12 @@ void setGenericIntValue(GenericType *value, GLint newIntValue) {
 		*(char *)(value->value + i) = *(char *)(newValue + i);
 }
 
+/**
+ * Sets the value of the passed generic instance
+ *
+ * @param value The passed generic instance
+ * @param newIntValue The new newFloatValue type value
+ */
 void setGenericFloatValue(GenericType *value, GLfloat newFloatValue) {
 	free(value->value);
 	value->valueLength = sizeof(GLfloat);
@@ -64,19 +111,48 @@ void setGenericFloatValue(GenericType *value, GLfloat newFloatValue) {
 		*(char *)(value->value + i) = *(char *)(newValue + i);
 }
 
+/**
+ * Generic value (GLint type) getter
+ *
+ * @param value The passed generic instance
+ * @returns GLint value
+ */
 GLint getGenericIntValue(GenericType *value) {
 	return *(GLint *)(*value).value;
 }
 
+/**
+ * Generic value (GLfloat type) getter
+ *
+ * @param value The passed generic instance
+ * @returns GLfloat value
+ */
 GLfloat getGenericFloatValue(GenericType *value) {
 	return *(GLfloat *)(*value).value;
 }
 
+
+/**
+ * Free the passed gereric value
+ *
+ * @param value The passed generic instance
+ * @note The passed argument cannot be used after this method processed
+ */
 void freeGenericValue(GenericType *value) {
 	free(value->value);
 	free(value);
 }
 
+/**
+ * Absolute coordinate by the specified relative point and the camera
+ *
+ * @note Z = 1
+ * @see RelativeX
+ *
+ * @param this Actual GameInstance instance
+ * @param relX Relative point (x-dim). Used as a reference.
+ * @returns Absolute x coordinate
+ */
 GLfloat getAbsoluteX(GameInstance *this, RelativeX relX) {
 	if (relX == X_LEFT)
 		return this->camera->position[X] -
@@ -88,6 +164,16 @@ GLfloat getAbsoluteX(GameInstance *this, RelativeX relX) {
 		return this->camera->position[X];
 }
 
+/**
+ * Absolute coordinate by the specified relative point and the camera
+ *
+ * @note Z = 1
+ * @see RelativeY
+ *
+ * @param this Actual GameInstance instance
+ * @param relY Relative point (y-dim). Used as a reference.
+ * @returns Absolute y coordinate
+ */
 GLfloat getAbsoluteY(GameInstance *this, RelativeY relY) {
 	if (relY == Y_BOTTOM)
 		return this->camera->position[Y] - (this->options->tanFov / 2 * (this->camera->position[Z] - 1));
@@ -97,16 +183,42 @@ GLfloat getAbsoluteY(GameInstance *this, RelativeY relY) {
 		return this->camera->position[Y];
 }
 
+/**
+ * Calculate cursor projected value
+ *
+ * @param this Actual GameInstance instance
+ * @param x Cursor x-dim position in pixels
+ *
+ * @returns Projected x-dim coordinate
+ */
 GLfloat getCursorProjectedX(GameInstance *this, double x) {
 	return this->camera->position[X] + ((this->options->tanFov / 2 * (this->camera->position[Z] - 1))
 			* (this->options->width / 2 - x) / this->options->width) * -2 * this->options->aspectRatio;
 }
 
+/**
+ * Calculate cursor projected value
+ *
+ * @param this Actual GameInstance instance
+ * @param y Cursor y-dim position in pixels
+ *
+ * @returns Projected y-dim coordinate
+ */
 GLfloat getCursorProjectedY(GameInstance *this, double y) {
 	return this->camera->position[Y] + ((this->options->tanFov / 2 * (this->camera->position[Z] - 1))
 			* (this->options->height / 2 - y) / this->options->height) * 2;
 }
 
+/**
+ * Calculate text alignment (x-dim)
+ *
+ * @param this Actual GameInstance instance
+ * @param str The text
+ * @paran fontSize The size of the font
+ * @param align Alignment
+ *
+ * @returns Calculated x-dim alignment
+ */
 GLfloat getFontAlign(GameInstance *this, char str[], FontSize fontSize, Align align) {
 	if (align == ALIGN_LEFT)
 		return 0;
@@ -122,6 +234,13 @@ GLfloat getFontAlign(GameInstance *this, char str[], FontSize fontSize, Align al
 	return align == ALIGN_CENTER ? size / 2 : size;
 }
 
+/**
+ * Update cursor pointer
+ *
+ * Only available when `menu->useCursor = true`.
+ *
+ * @param this Actual GameInstance instance
+ */
 void updateCursor(GameInstance *this) {
 	double cursorX, cursorY;
 	glfwGetCursorPos(this->window, &cursorX, &cursorY);
@@ -134,6 +253,12 @@ void updateCursor(GameInstance *this) {
 			glfwGetMouseButton(this->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0;
 }
 
+/**
+ * onRender() - TextComponent renderer method
+ *
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void renderTextComponent(Component *comp, GameInstance *this) {
 	renderFontToComponent(this, comp->text->text, (GLfloat[]) {
 			comp->position[X] + getAbsoluteX(this, comp->relativeX)
@@ -142,11 +267,25 @@ void renderTextComponent(Component *comp, GameInstance *this) {
 			comp->text->color, comp->text->fontSize, comp->text->rawMin, comp->text->rawMax);
 }
 
+
+/**
+ * onCalc() - Component position calculator method
+ *
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void calcObjectComponentPosition(Component *comp, GameInstance *this) {
 	comp->object->object->position[X] = comp->position[X] + getAbsoluteX(this, comp->relativeX);
 	comp->object->object->position[Y] = comp->position[Y] + getAbsoluteY(this, comp->relativeY);
 }
 
+
+/**
+ * onCalc() - TextComponent hover calculator method
+ *
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void calcTextButton(Component *comp, GameInstance *this) {
 	if (comp->onClick == NULL)
 		return;
@@ -178,6 +317,12 @@ void calcTextButton(Component *comp, GameInstance *this) {
 	}
 }
 
+/**
+ * onCalc() - Options button calculator method
+ *
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void calcOptionsGraphicsButton(Component *comp, GameInstance *this) {
 	Iterator it;
 	foreach (it, this->map->menu->components->first) {
@@ -269,6 +414,12 @@ void calcOptionsGraphicsButton(Component *comp, GameInstance *this) {
 	calcTextButton(comp, this);
 }
 
+/**
+ * TextComponent finder
+ *
+ * @param this Actual GameInstance instance
+ * @paran id Id of the TextComponent
+ */
 static Component* getTextComponentById(GameInstance *this, GLint id) {
 	Iterator it;
 	foreach (it, this->map->menu->components->first) {
@@ -279,6 +430,13 @@ static Component* getTextComponentById(GameInstance *this, GLint id) {
 	return NULL;
 }
 
+/**
+ * onClick() - StartGame button action
+ *
+ * @see fileformats.md -> Component action types
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void clickGameSelector(Component *comp, GameInstance *this) {
 	freeMap(this->map);
 	this->map = loadMap(this, "assets/maps/select.menu");
@@ -330,6 +488,13 @@ void clickGameSelector(Component *comp, GameInstance *this) {
 	fclose(file);
 }
 
+/**
+ * onClick() - Start map button action
+ *
+ * @see fileformats.md -> Component action types
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void clickStartButton(Component *comp, GameInstance *this) {
 	if (comp->id == 10) {
 		freeMap(this->map);
@@ -344,22 +509,51 @@ void clickStartButton(Component *comp, GameInstance *this) {
 	}
 }
 
+/**
+ * onClick() - Options menu button action
+ *
+ * @see fileformats.md -> Component action types
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void clickOptions(Component *comp, GameInstance *this) {
 	freeMap(this->map);
 	this->map = loadMap(this, "assets/maps/options.menu");
 	updateCamera(this);
 }
 
+
+/**
+ * onClick() - Credits menu button action
+ *
+ * @see fileformats.md -> Component action types
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void clickCredits(Component *comp, GameInstance *this) {
 	freeMap(this->map);
 	this->map = loadMap(this, "assets/maps/credits.menu");
 	updateCamera(this);
 }
 
+/**
+ * onClick() - Exit button action
+ *
+ * @see fileformats.md -> Component action types
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void clickExit(Component *comp, GameInstance *this) {
 	glfwSetWindowShouldClose(this->window, GL_TRUE);
 }
 
+/**
+ * onClick() - Back to the main menu button action
+ *
+ * @see fileformats.md -> Component action types
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void clickBack(Component *comp, GameInstance *this) {
 	if (this->options->reloadProgram) {
 		glfwSetWindowShouldClose(this->window, GL_TRUE);
@@ -370,6 +564,13 @@ void clickBack(Component *comp, GameInstance *this) {
 	updateCamera(this);
 }
 
+/**
+ * onClick() - Options menu controlls set button action
+ *
+ * @see fileformats.md -> Component action types
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void clickControllsSet(Component *comp, GameInstance *this) {
 	this->options->selectedToSet = comp;
 	int id = 0, i = 0;
@@ -407,6 +608,13 @@ void clickControllsSet(Component *comp, GameInstance *this) {
 		array3(this->options->menu.id, -1.0f, -1.0f, -1.0f);
 }
 
+/**
+ * onClick() - Options menu graphics setting set button action
+ *
+ * @see fileformats.md -> Component action types
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
 void clickGraphicsSet(Component *comp, GameInstance *this) {
 	if (comp->id == 11) {
 		this->options->msaa = 0;
@@ -444,7 +652,15 @@ void clickGraphicsSet(Component *comp, GameInstance *this) {
 	}
 }
 
-void clickOpenGithub() {
+/**
+ * onClick() - GitHub page opener button action
+ *
+ * @warning This can be platform specific and might not work on your system.
+ * @see fileformats.md -> Component action types
+ * @param comp Component instance
+ * @param this Actual GameInstance instance
+ */
+void clickOpenGithub(Component *comp, GameInstance *this) {
 #ifdef  __WIN32
 	system("start /c https://github.com/Gerviba/stdgame.h");
 #elif defined APPLE

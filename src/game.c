@@ -1,7 +1,7 @@
 /**
  * @file game.c
  * @author Gerviba (Szabo Gergely)
- * @brief Game initialisation and game loop definition (header)
+ * @brief Game initialisation and game loop
  *
  * @par Header:
  * 		game.h
@@ -13,7 +13,36 @@
 #include <time.h>
 #include "stdgame.h"
 
-void loadTileVAO(const GameInstance *this) {
+static void initShaderUniforms(GameInstance* this);
+
+static void processDobjAction(GameInstance *this, Action *action);
+static void processAobjAction(GameInstance *this, Action *action);
+static void processLightAction(GameInstance *this, Action *action);
+static void processObjPhysics(GameInstance *this, Action *action);
+static void processVictory(GameInstance *this, Action *action);
+static void processLose(GameInstance *this, Action *action);
+
+static GLfloat animatePlayer(GameInstance *this, GLfloat deltaMoveX, GLfloat delta,
+		ActiveObjectInstance *playerObj);
+static GLfloat checkMoveX(GameInstance *this, GLfloat deltaMoveX);
+static GLfloat checkMoveY(GameInstance *this, GLfloat deltaMoveY);
+static void performRegions(GameInstance* this);
+static void performGUI(GameInstance* this);
+static void performReferencePoints(GameInstance* this);
+
+static void onLogicIngame(GameInstance *this, GLfloat delta);
+static void onLogicMenu(GameInstance *this, GLfloat delta);
+static GLfloat getDelta(void);
+static void calcLights(GameInstance *this);
+
+/**
+ * Load the tile VAO
+ *
+ * This VertexArrayObject will be used in every cube.
+ *
+ * @param this Actual GameInstance instance
+ */
+static void loadTileVAO(const GameInstance *this) {
 	glGenVertexArrays(1, &this->tileVAO);
 	glBindVertexArray(this->tileVAO);
 
@@ -38,6 +67,32 @@ void loadTileVAO(const GameInstance *this) {
 	glEnableVertexAttribArray(2);
 }
 
+/**
+ * Initialize shader uniforms
+ *
+ * @param this Actual GameInstance instance
+ */
+static void initShaderUniforms(GameInstance* this) {
+	this->shader->cameraPosition = glGetUniformLocation(this->shader->shaderId, "cameraPosition");
+	this->shader->lightPosition = glGetUniformLocation(this->shader->shaderId, "lightPosition");
+	this->shader->lightColor = glGetUniformLocation(this->shader->shaderId,"lightColor");
+	this->shader->lightInfo = glGetUniformLocation(this->shader->shaderId, "lightInfo");
+	this->shader->texturePosition = glGetUniformLocation(this->shader->shaderId, "tex");
+	this->shader->numLights = glGetUniformLocation(this->shader->shaderId, "numLights");
+	this->shader->baseColor = glGetUniformLocation(this->shader->shaderId, "baseColor");
+	this->shader->projMat = glGetUniformLocation(this->shader->shaderId, "projMat");
+	this->shader->viewMat = glGetUniformLocation(this->shader->shaderId, "viewMat");
+	this->shader->moveMat = glGetUniformLocation(this->shader->shaderId, "moveMat");
+	this->shader->modelMat = glGetUniformLocation(this->shader->shaderId, "modelMat");
+}
+
+/**
+ * Initialize game, loads shader and call other init methods
+ *
+ * It also loads the main menu as a default menu.
+ *
+ * @param this Actual GameInstance instance
+ */
 void gameInit(GameInstance *this) {
 	this->shader->shaderId = glCreateProgram();
 	shaderAttachFromFile(this->shader->shaderId, GL_VERTEX_SHADER, "assets/shaders/shader.vertex");
@@ -65,18 +120,7 @@ void gameInit(GameInstance *this) {
 		this->shader->shaderId = 0;
 	}
 
-	this->shader->cameraPosition = glGetUniformLocation(this->shader->shaderId, "cameraPosition");
-	this->shader->lightPosition = glGetUniformLocation(this->shader->shaderId, "lightPosition");
-	this->shader->lightColor = glGetUniformLocation(this->shader->shaderId, "lightColor");
-	this->shader->lightInfo = glGetUniformLocation(this->shader->shaderId, "lightInfo");
-	this->shader->texturePosition = glGetUniformLocation(this->shader->shaderId, "tex");
-	this->shader->numLights = glGetUniformLocation(this->shader->shaderId, "numLights");
-	this->shader->baseColor = glGetUniformLocation(this->shader->shaderId, "baseColor");
-	this->shader->projMat = glGetUniformLocation(this->shader->shaderId, "projMat");
-	this->shader->viewMat = glGetUniformLocation(this->shader->shaderId, "viewMat");
-	this->shader->moveMat = glGetUniformLocation(this->shader->shaderId, "moveMat");
-	this->shader->modelMat = glGetUniformLocation(this->shader->shaderId, "modelMat");
-
+	initShaderUniforms(this);
 	loadTileVAO(this);
 	loadTexture(&this->blankTextureId, "null.png");
 	initReferencePoints(this);
@@ -93,6 +137,11 @@ void gameInit(GameInstance *this) {
 	glGetFloatv(GL_MODELVIEW_MATRIX, this->camera->viewMat);
 }
 
+/**
+ * Updates the camera position
+ *
+ * @param this Actual GameInstance instance
+ */
 void updateCamera(GameInstance* this) {
 	glLoadIdentity();
 	glRotatef(-this->camera->rotation[X], 1.0f, 0.0f, 0.0f);
@@ -103,6 +152,13 @@ void updateCamera(GameInstance* this) {
 			-this->camera->position[Z]);
 }
 
+/**
+ * Used for debugging lights
+ *
+ * Draws a comma for every lights
+ *
+ * @param this Actual GameInstance instance
+ */
 void debugLight(GameInstance *this) {
 	Iterator it;
 	int i = 0;
@@ -120,6 +176,13 @@ void debugLight(GameInstance *this) {
 	}
 }
 
+/**
+ * The renderer method
+ *
+ * This method will call all the renderer methods needed.
+ *
+ * @param this Actual GameInstance instance
+ */
 void onRender(GameInstance *this) {
 	static const GLfloat TILE_MOVE_MAT[16] = {
 			1.0f, 0.0f, 0.0f, 0.0f,
@@ -182,19 +245,48 @@ void onRender(GameInstance *this) {
 
 }
 
+/**
+ * Calculate squared distance between 2 coordinates
+ *
+ * @param a First 3D position
+ * @param b Second 3D position
+ */
 GLfloat getDistSquared2D(GLfloat a[3], GLfloat b[3]) {
 	return (a[X] - b[X]) * (a[X] - b[X]) + (a[Y] - b[Y]) * (a[Y] - b[Y]);
 }
 
+/**
+ * Calculate squared distance between 2 coordinates
+ *
+ * The deltaA will be added to the a coordinate safely. There will be no side effects.
+ *
+ * @param a First 3D position
+ * @param deltaA First 3D position delta
+ * @param b Second 3D position
+ */
 GLfloat getDistSquared2DDelta(GLfloat a[3], GLfloat deltaA[3], GLfloat b[3]) {
 	return (a[X] + deltaA[X] - b[X]) * (a[X] + deltaA[X] - b[X])
 			+ (a[Y] + deltaA[Y] - b[Y]) * (a[Y] + deltaA[Y] - b[Y]);
 }
 
+/**
+ * Calculate squared distance between 2 coordinates
+ *
+ * @param x X coordinate
+ * @param y Y coordinate
+ * @param b The other position (3D)
+ */
 GLfloat getDistSquaredXY(GLfloat x, GLfloat y, GLfloat b[3]) {
 	return (x - b[X]) * (x - b[X]) + (y - b[Y]) * (y - b[Y]);
 }
 
+/**
+ * Checks if an action key is used
+ *
+ * @param this Actual GameInstance instance
+ * @param iaw Action key type
+ * @returns true if the selected key is currently pressed
+ */
 GLboolean isActionPerformed(GameInstance *this, InputActionWrapper* iaw) {
 	int i;
 	for (i = 0; i < 3; ++i) {
@@ -211,11 +303,241 @@ GLboolean isActionPerformed(GameInstance *this, InputActionWrapper* iaw) {
 	return GL_FALSE;
 }
 
+/**
+ * Checks if the player is in the specifide region
+ *
+ * @param this Actual GameInstance instance
+ * @param region The specified region
+ * @returns true if the player is in this region
+ */
 GLboolean isPlayerInRegion(GameInstance *this, Region *region) {
 	return this->player->position[X] >= region->xMin && this->player->position[Y] >= region->yMin
 			&& this->player->position[X] <= region->xMax && this->player->position[Y] <= region->yMax;
 }
 
+/**
+ * Process Dobj action
+ *
+ * @param this Actual GameInstance instance
+ * @param action The specified action
+ */
+static void processDobjAction(GameInstance *this, Action *action) {
+	float *data = action->value->value;
+	Iterator dobjIt;
+	foreach (dobjIt, this->map->objects->dynamicInstances->first) {
+		DynamicObjectInstance *dobj = dobjIt->data;
+		if ((int) data[0] == dobj->id) {
+			if (data[1] != ACTION_VALUE_DONT_CARE)
+				dobj->position[X] = data[1];
+			if (data[2] != ACTION_VALUE_DONT_CARE)
+				dobj->position[Y] = data[2];
+			if (data[3] != ACTION_VALUE_DONT_CARE)
+				dobj->position[Z] = data[3];
+
+			if (data[4] != ACTION_VALUE_DONT_CARE)
+				dobj->rotation[X] = data[4];
+			if (data[5] != ACTION_VALUE_DONT_CARE)
+				dobj->rotation[Y] = data[5];
+			if (data[6] != ACTION_VALUE_DONT_CARE)
+				dobj->rotation[Z] = data[6];
+
+			if (data[7] != ACTION_VALUE_DONT_CARE)
+				dobj->scale[X] = data[7];
+			if (data[8] != ACTION_VALUE_DONT_CARE)
+				dobj->scale[Y] = data[8];
+			if (data[9] != ACTION_VALUE_DONT_CARE)
+				dobj->scale[Z] = data[9];
+
+			if (data[10] != ACTION_VALUE_DONT_CARE)
+				dobj->visible = data[10] != 0;
+
+			if (data[11] != ACTION_VALUE_DONT_CARE) {
+				Iterator refIt;
+				foreach (refIt, this->referencePoints->first) {
+					if (((ReferencePoint *) refIt->data)->id == (GLint) data[11]) {
+						dobj->reference = refIt->data;
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+/**
+ * Process Aobj action
+ *
+ * @param this Actual GameInstance instance
+ * @param action The specified action
+ */
+static void processAobjAction(GameInstance *this, Action *action) {
+	float *data = action->value->value;
+	Iterator aobjIt;
+	foreach (aobjIt, this->map->objects->dynamicInstances->first) {
+		ActiveObjectInstance *aobj = aobjIt->data;
+		if ((int) data[0] == aobj->id) {
+			if (data[1] != ACTION_VALUE_DONT_CARE)
+				aobj->position[X] = data[1];
+			if (data[2] != ACTION_VALUE_DONT_CARE)
+				aobj->position[Y] = data[2];
+			if (data[3] != ACTION_VALUE_DONT_CARE)
+				aobj->position[Z] = data[3];
+
+			if (data[4] != ACTION_VALUE_DONT_CARE)
+				aobj->rotation[X] = data[4];
+			if (data[5] != ACTION_VALUE_DONT_CARE)
+				aobj->rotation[Y] = data[5];
+			if (data[6] != ACTION_VALUE_DONT_CARE)
+				aobj->rotation[Z] = data[6];
+
+			if (data[7] != ACTION_VALUE_DONT_CARE)
+				aobj->scale[X] = data[7];
+			if (data[8] != ACTION_VALUE_DONT_CARE)
+				aobj->scale[Y] = data[8];
+			if (data[9] != ACTION_VALUE_DONT_CARE)
+				aobj->scale[Z] = data[9];
+
+			if (data[10] != ACTION_VALUE_DONT_CARE)
+				aobj->visible = data[10] != 0;
+		}
+	}
+}
+
+/**
+ * Process Light action
+ *
+ * @param this Actual GameInstance instance
+ * @param action The specified action
+ */
+static void processLightAction(GameInstance *this, Action *action) {
+	float *data = action->value->value;
+	Iterator lightIt;
+	foreach (lightIt, this->map->lights->first) {
+		Light *light = lightIt->data;
+		if ((int) data[0] == light->id) {
+			if (data[1] != ACTION_VALUE_DONT_CARE)
+				light->position[X] = data[1];
+			if (data[2] != ACTION_VALUE_DONT_CARE)
+				light->position[Y] = data[2];
+			if (data[3] != ACTION_VALUE_DONT_CARE)
+				light->position[Z] = data[3];
+
+			if (data[4] != ACTION_VALUE_DONT_CARE)
+				light->strength = data[4];
+			if (data[5] != ACTION_VALUE_DONT_CARE)
+				light->color[R] = data[5];
+			if (data[6] != ACTION_VALUE_DONT_CARE)
+				light->color[G] = data[6];
+			if (data[7] != ACTION_VALUE_DONT_CARE)
+				light->color[B] = data[7];
+
+			if (data[8] != ACTION_VALUE_DONT_CARE)
+				light->specular = data[8];
+			if (data[9] != ACTION_VALUE_DONT_CARE)
+				light->intensity = data[9];
+
+			if (data[10] != ACTION_VALUE_DONT_CARE)
+				light->visible = data[10] != 0;
+
+			if (data[11] != ACTION_VALUE_DONT_CARE) {
+				Iterator refIt;
+				foreach (refIt, this->referencePoints->first) {
+					if (((ReferencePoint *) refIt->data)->id == (GLint) data[11]) {
+						light->reference = refIt->data;
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+/**
+ * Process Object Physics action
+ *
+ * @param this Actual GameInstance instance
+ * @param action The specified action
+ */
+static void processObjPhysics(GameInstance *this, Action *action) {
+	float *data = action->value->value;
+	Iterator psxIt;
+	foreach (psxIt, this->map->physics->first) {
+		PhysicsArea *psx = psxIt->data;
+		if (psx->id == (int) data[0]) {
+			if (data[1] != ACTION_VALUE_DONT_CARE)
+				psx->x = data[1];
+			if (data[2] != ACTION_VALUE_DONT_CARE)
+				psx->y = data[2];
+			if (data[3] != ACTION_VALUE_DONT_CARE)
+				psx->enabled = data[3] != 0;
+		}
+	}
+}
+
+/**
+ * Process victory action
+ *
+ * @param this Actual GameInstance instance
+ * @param action The specified action
+ */
+static void processVictory(GameInstance *this, Action *action) {
+	addTextComponentColor(this->map, "VICTORY", 20001, X_CENTER, Y_CENTER, ALIGN_CENTER,
+			(GLfloat[]) {0.0f, 0.8f, 0.0f}, (GLfloat[]) {0.992156863f, 0.909803922f, 0.529411765f, 1.0f},
+			FS_HIGH_DPI);
+	addTextComponent(this->map, "Score", 20002, X_CENTER, Y_CENTER, ALIGN_LEFT, -1.5f, 0.2f, FS_NORMAL_DPI);
+	addTextComponent(this->map, "Time", 20002, X_CENTER, Y_CENTER, ALIGN_LEFT, -1.5f, -0.3f, FS_NORMAL_DPI);
+	char str[255];
+	sprintf(str, "%d *", this->map->score);
+	addTextComponent(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_RIGHT, 1.5f, 0.2f, FS_NORMAL_DPI);
+
+	time_t deltaT = time(NULL) - this->map->startTime;
+	sprintf(str, "%02d:%02d", ((int) deltaT) / 60, ((int) deltaT) % 60);
+	addTextComponent(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_RIGHT, 1.5f, -0.3f, FS_NORMAL_DPI);
+
+	char key[20];
+	getOptionCaption(this, "menu", key, 0);
+	sprintf(str, "Press '%s' to continue", key);
+	addTextComponentColor(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_CENTER,
+			(GLfloat[]) {0.0f, -0.85f, 0.0f}, (GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_LOW_DPI);
+
+	this->map->allowMovement = GL_FALSE;
+	ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
+	playerObj->visible = GL_FALSE;
+
+	updateHightScore(this, deltaT);
+}
+
+/**
+ * Process lose action
+ *
+ * @param this Actual GameInstance instance
+ * @param action The specified action
+ */
+static void processLose(GameInstance *this, Action *action) {
+	addTextComponentColor(this->map, "YOU LOSE", 20001, X_CENTER, Y_CENTER, ALIGN_CENTER,
+			(GLfloat[]) {0.0f, 0.2f, 0.0f}, (GLfloat[]) {1.0f, 0.1, 0.1, 1.0f},
+			FS_HIGH_DPI);
+
+	char str[255], key[20];
+	getOptionCaption(this, "menu", key, 0);
+	sprintf(str, "Press '%s' to continue", key);
+	addTextComponentColor(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_CENTER,
+			(GLfloat[]) {0.0f, -0.85f, 0.0f}, (GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_LOW_DPI);
+
+	this->map->allowMovement = GL_FALSE;
+	ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
+	playerObj->visible = GL_FALSE;
+}
+
+/**
+ * Activate action
+ *
+ * @see fileformats.md -> ActionType values
+ * @see Action
+ *
+ * @param this Actual GameInstance instance
+ * @param id The not unique id of the action
+ */
 void activateAction(GameInstance *this, GLint id) {
 	Iterator it;
 	foreach (it, this->map->actions->first) {
@@ -234,186 +556,37 @@ void activateAction(GameInstance *this, GLint id) {
 		} else if (action->type == ACTION_ADD_SCORE) {
 			this->map->score += *((int *) action->value->value);
 		} else if (action->type == ACTION_SET_DOBJ) {
-			float *data = action->value->value;
-			Iterator dobjIt;
-			foreach (dobjIt, this->map->objects->dynamicInstances->first) {
-				DynamicObjectInstance *dobj = dobjIt->data;
-				if ((int) data[0] == dobj->id) {
-					if (data[1] != ACTION_VALUE_DONT_CARE)
-						dobj->position[X] = data[1];
-					if (data[2] != ACTION_VALUE_DONT_CARE)
-						dobj->position[Y] = data[2];
-					if (data[3] != ACTION_VALUE_DONT_CARE)
-						dobj->position[Z] = data[3];
-
-					if (data[4] != ACTION_VALUE_DONT_CARE)
-						dobj->rotation[X] = data[4];
-					if (data[5] != ACTION_VALUE_DONT_CARE)
-						dobj->rotation[Y] = data[5];
-					if (data[6] != ACTION_VALUE_DONT_CARE)
-						dobj->rotation[Z] = data[6];
-
-					if (data[7] != ACTION_VALUE_DONT_CARE)
-						dobj->scale[X] = data[7];
-					if (data[8] != ACTION_VALUE_DONT_CARE)
-						dobj->scale[Y] = data[8];
-					if (data[9] != ACTION_VALUE_DONT_CARE)
-						dobj->scale[Z] = data[9];
-
-					if (data[10] != ACTION_VALUE_DONT_CARE)
-						dobj->visible = data[10] != 0;
-
-					if (data[11] != ACTION_VALUE_DONT_CARE) {
-						Iterator refIt;
-						foreach (refIt, this->referencePoints->first) {
-							if (((ReferencePoint *) refIt->data)->id == (GLint) data[11]) {
-								dobj->reference = refIt->data;
-								break;
-							}
-						}
-					}
-				}
-			}
+			processDobjAction(this, action);
 		} else if (action->type == ACTION_SET_AOBJ) {
-			float *data = action->value->value;
-			Iterator aobjIt;
-			foreach (aobjIt, this->map->objects->dynamicInstances->first) {
-				ActiveObjectInstance *aobj = aobjIt->data;
-				if ((int) data[0] == aobj->id) {
-					if (data[1] != ACTION_VALUE_DONT_CARE)
-						aobj->position[X] = data[1];
-					if (data[2] != ACTION_VALUE_DONT_CARE)
-						aobj->position[Y] = data[2];
-					if (data[3] != ACTION_VALUE_DONT_CARE)
-						aobj->position[Z] = data[3];
-
-					if (data[4] != ACTION_VALUE_DONT_CARE)
-						aobj->rotation[X] = data[4];
-					if (data[5] != ACTION_VALUE_DONT_CARE)
-						aobj->rotation[Y] = data[5];
-					if (data[6] != ACTION_VALUE_DONT_CARE)
-						aobj->rotation[Z] = data[6];
-
-					if (data[7] != ACTION_VALUE_DONT_CARE)
-						aobj->scale[X] = data[7];
-					if (data[8] != ACTION_VALUE_DONT_CARE)
-						aobj->scale[Y] = data[8];
-					if (data[9] != ACTION_VALUE_DONT_CARE)
-						aobj->scale[Z] = data[9];
-
-					if (data[10] != ACTION_VALUE_DONT_CARE)
-						aobj->visible = data[10] != 0;
-				}
-			}
+			processAobjAction(this, action);
 		} else if (action->type == ACTION_SET_ITEM) {
 			this->player->item = *((int *) action->value->value);
 		} else if (action->type == ACTION_SET_LIGHT) {
-			float *data = action->value->value;
-			Iterator lightIt;
-			foreach (lightIt, this->map->lights->first) {
-				Light *light = lightIt->data;
-				if ((int) data[0] == light->id) {
-					if (data[1] != ACTION_VALUE_DONT_CARE)
-						light->position[X] = data[1];
-					if (data[2] != ACTION_VALUE_DONT_CARE)
-						light->position[Y] = data[2];
-					if (data[3] != ACTION_VALUE_DONT_CARE)
-						light->position[Z] = data[3];
-
-
-					if (data[4] != ACTION_VALUE_DONT_CARE)
-						light->strength = data[4];
-					if (data[5] != ACTION_VALUE_DONT_CARE)
-						light->color[R] = data[5];
-					if (data[6] != ACTION_VALUE_DONT_CARE)
-						light->color[G] = data[6];
-					if (data[7] != ACTION_VALUE_DONT_CARE)
-						light->color[B] = data[7];
-
-					if (data[8] != ACTION_VALUE_DONT_CARE)
-						light->specular = data[8];
-					if (data[9] != ACTION_VALUE_DONT_CARE)
-						light->intensity = data[9];
-
-					if (data[10] != ACTION_VALUE_DONT_CARE)
-						light->visible = data[10] != 0;
-
-					if (data[11] != ACTION_VALUE_DONT_CARE) {
-						Iterator refIt;
-						foreach (refIt, this->referencePoints->first) {
-							if (((ReferencePoint *) refIt->data)->id == (GLint) data[11]) {
-								light->reference = refIt->data;
-								break;
-							}
-						}
-					}
-				}
-			}
+			processLightAction(this, action);
 		} else if (action->type == ACTION_OBJECT_PSX) {
-			float *data = action->value->value;
-			Iterator psxIt;
-			foreach (psxIt, this->map->physics->first) {
-				PhysicsArea *psx = psxIt->data;
-				if (psx->id == (int) data[0]) {
-					if (data[1] != ACTION_VALUE_DONT_CARE)
-						psx->x = data[1];
-					if (data[2] != ACTION_VALUE_DONT_CARE)
-						psx->y = data[2];
-					if (data[3] != ACTION_VALUE_DONT_CARE)
-						psx->enabled = data[3] != 0;
-				}
-			}
+			processObjPhysics(this, action);
 		} else if (action->type == ACTION_WIN) {
-			addTextComponentColor(this->map, "VICTORY", 20001, X_CENTER, Y_CENTER, ALIGN_CENTER,
-					(GLfloat[]) {0.0f, 0.8f, 0.0f}, (GLfloat[]) {0.992156863f, 0.909803922f, 0.529411765f, 1.0f},
-					FS_HIGH_DPI);
-			addTextComponent(this->map, "Score", 20002, X_CENTER, Y_CENTER, ALIGN_LEFT, -1.5f, 0.2f, FS_NORMAL_DPI);
-			addTextComponent(this->map, "Time", 20002, X_CENTER, Y_CENTER, ALIGN_LEFT, -1.5f, -0.3f, FS_NORMAL_DPI);
-			char str[255];
-			sprintf(str, "%d *", this->map->score);
-			addTextComponent(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_RIGHT, 1.5f, 0.2f, FS_NORMAL_DPI);
-
-			time_t deltaT = time(NULL) - this->map->startTime;
-			sprintf(str, "%02d:%02d", ((int) deltaT) / 60, ((int) deltaT) % 60);
-			addTextComponent(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_RIGHT, 1.5f, -0.3f, FS_NORMAL_DPI);
-
-			char key[20];
-			getOptionCaption(this, "menu", key, 0);
-			sprintf(str, "Press '%s' to continue", key);
-			addTextComponentColor(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_CENTER,
-					(GLfloat[]) {0.0f, -0.85f, 0.0f}, (GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_LOW_DPI);
-
-			this->map->allowMovement = GL_FALSE;
-			ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
-			playerObj->visible = GL_FALSE;
-
-			saveHightScore(this, deltaT);
-
+			processVictory(this, action);
 		} else if (action->type == ACTION_LOSE) {
-			addTextComponentColor(this->map, "YOU LOSE", 20001, X_CENTER, Y_CENTER, ALIGN_CENTER,
-					(GLfloat[]) {0.0f, 0.2f, 0.0f}, (GLfloat[]) {1.0f, 0.1, 0.1, 1.0f},
-					FS_HIGH_DPI);
-
-			char str[255], key[20];
-			getOptionCaption(this, "menu", key, 0);
-			sprintf(str, "Press '%s' to continue", key);
-			addTextComponentColor(this->map, str, 20002, X_CENTER, Y_CENTER, ALIGN_CENTER,
-					(GLfloat[]) {0.0f, -0.85f, 0.0f}, (GLfloat[]) {1.0f, 1.0f, 1.0f, 1.0f}, FS_LOW_DPI);
-
-			this->map->allowMovement = GL_FALSE;
-			ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
-			playerObj->visible = GL_FALSE;
+			processLose(this, action);
 		}
 	}
 }
 
-void onLogicIngame(GameInstance *this, GLfloat delta) {
+/**
+ * Animate player
+ *
+ * @see fileformats.md -> ActionType values
+ * @see Action
+ *
+ * @param this Actual GameInstance instance
+ * @param id The not unique id of the action
+ */
+static GLfloat animatePlayer(GameInstance *this, GLfloat deltaMoveX, GLfloat delta,
+		ActiveObjectInstance *playerObj) {
 	static const int PLAYER_ANIMATION[4] = {1, 0, 2, 0};
 	static float PLAYER_ANIMATION_TIMING = 0;
 
-	ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
-
-	float deltaMoveX = 0;
 	if (isActionPerformed(this, &this->options->moveLeft)) {
 		deltaMoveX += -delta * PLAYER_SPEED;
 		this->player->leftSide = GL_TRUE;
@@ -452,160 +625,184 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 		this->camera->destinationRotation[Y] = 0;
 	}
 
-	Iterator it;
-	if (this->map->allowMovement) {
-		if (deltaMoveX != 0) {
-			foreach (it, this->map->tiles->first) {
-				Tile *tile = it->data;
-				if ((tile->type & MOVE_BLOCK_X) != 0 &&
-						((int) tile->y == (int) this->player->position[Y] ||
-							(int) tile->y == (int) (this->player->position[Y] + 1.0f) ||
-							(int) tile->y == (int) (this->player->position[Y] + this->player->height)) &&
-						((tile->x + 1 < this->player->position[X]
-							&& tile->x + 1 >= this->player->position[X] + deltaMoveX) ||
-						(tile->x >= this->player->position[X] + this->player->width
-							&& tile->x < this->player->position[X] + deltaMoveX + this->player->width))) {
+	return deltaMoveX;
+}
 
-					deltaMoveX = 0;
-					break;
-				}
+/**
+ * Move player in X dimension
+ *
+ * @param this Actual GameInstance instance
+ * @param deltaMoveX Delta move in X dimension
+ */
+static GLfloat checkMoveX(GameInstance *this, GLfloat deltaMoveX) {
+	if (deltaMoveX != 0) {
+		Iterator it;
+		foreach (it, this->map->tiles->first) {
+			Tile *tile = it->data;
+			if ((tile->type & MOVE_BLOCK_X) != 0 &&
+					((int) tile->y == (int) this->player->position[Y] ||
+						(int) tile->y == (int) (this->player->position[Y] + 1.0f) ||
+						(int) tile->y == (int) (this->player->position[Y] + this->player->height)) &&
+					((tile->x + 1 < this->player->position[X]
+						&& tile->x + 1 >= this->player->position[X] + deltaMoveX) ||
+					(tile->x >= this->player->position[X] + this->player->width
+						&& tile->x < this->player->position[X] + deltaMoveX + this->player->width))) {
+
+				deltaMoveX = 0;
+				break;
 			}
 		}
-		if (deltaMoveX != 0) {
-			foreach (it, this->map->physics->first) {
-				PhysicsArea *pa = it->data;
-				if (pa->enabled &&
-						((int) pa->y == (int) this->player->position[Y] ||
-							(int) pa->y == (int) (this->player->position[Y] + 1.0f) ||
-							(int) pa->y == (int) (this->player->position[Y] + this->player->height)) &&
-						((pa->x + 1 < this->player->position[X]
-							&& pa->x + 1 >= this->player->position[X] + deltaMoveX) ||
-						(pa->x >= this->player->position[X] + this->player->width
-							&& pa->x < this->player->position[X] + deltaMoveX + this->player->width))) {
+	}
 
-					deltaMoveX = 0;
-					break;
-				}
+	if (deltaMoveX != 0) {
+		Iterator it;
+		foreach (it, this->map->physics->first) {
+			PhysicsArea *pa = it->data;
+			if (pa->enabled &&
+					((int) pa->y == (int) this->player->position[Y] ||
+						(int) pa->y == (int) (this->player->position[Y] + 1.0f) ||
+						(int) pa->y == (int) (this->player->position[Y] + this->player->height)) &&
+					((pa->x + 1 < this->player->position[X]
+						&& pa->x + 1 >= this->player->position[X] + deltaMoveX) ||
+					(pa->x >= this->player->position[X] + this->player->width
+						&& pa->x < this->player->position[X] + deltaMoveX + this->player->width))) {
+
+				deltaMoveX = 0;
+				break;
 			}
 		}
+	}
+
 	this->player->position[X] += deltaMoveX;
-	}
+	return deltaMoveX;
+}
 
-	if (this->player->jump < 2 && this->player->lastJump + 0.3 < glfwGetTime()
-			&& isActionPerformed(this, &this->options->jump)
-			&& !isActionPerformed(this, &this->options->sneek)) {
-		++this->player->jump;
-		this->player->velocity[Y] = 8 + (this->player->jump * 2);
-		this->player->lastJump = glfwGetTime();
-		playerObj->activePart = 0;
-	}
+/**
+ * Move player in Y dimension
+ *
+ * @param this Actual GameInstance instance
+ * @param deltaMoveX Delta move in Y dimension
+ */
+static GLfloat checkMoveY(GameInstance *this, GLfloat deltaMoveY) {
+	if (deltaMoveY != 0) {
+		Iterator it;
+		foreach (it, this->map->tiles->first) {
+			Tile *tile = it->data;
+			if ((tile->type & MOVE_BLOCK_Y) != 0 &&
+					((int) tile->x == (int) (this->player->position[X]) ||
+					(int) tile->x == (int) (this->player->position[X] + this->player->width))) {
 
-	float deltaMoveY = this->player->velocity[Y] * PLAYER_JUMP * delta;
-	this->player->velocity[Y] -= 0.5;
-	if (this->player->velocity[Y] < -15)
-		this->player->velocity[Y] = -15;
-
-	if (this->map->allowMovement) {
-		if (deltaMoveY != 0) {
-			foreach (it, this->map->tiles->first) {
-				Tile *tile = it->data;
-				if ((tile->type & MOVE_BLOCK_Y) != 0 &&
-						((int) tile->x == (int) (this->player->position[X]) ||
-						(int) tile->x == (int) (this->player->position[X] + this->player->width))) {
-
-					if (tile->y + 1 > deltaMoveY + this->player->position[Y]
-							&& tile->y + 1 <= this->player->position[Y]) {
-						this->player->position[Y] = tile->y + 1;
-						this->player->velocity[Y] = -0.00001;
-						deltaMoveY = 0;
-						this->player->jump = 0;
-						this->player->lastJump = 0;
-					} else if (tile->y <= deltaMoveY + this->player->position[Y] + this->player->height
-							&& tile->y > this->player->position[Y] + this->player->height) {
-						this->player->velocity[Y] = -0.00001;
-						deltaMoveY = 0;
-						this->player->jump = 2;
-					}
+				if (tile->y + 1 > deltaMoveY + this->player->position[Y]
+						&& tile->y + 1 <= this->player->position[Y]) {
+					this->player->position[Y] = tile->y + 1;
+					this->player->velocity[Y] = -0.00001;
+					deltaMoveY = 0;
+					this->player->jump = 0;
+					this->player->lastJump = 0;
+				} else if (tile->y <= deltaMoveY + this->player->position[Y] + this->player->height
+						&& tile->y > this->player->position[Y] + this->player->height) {
+					this->player->velocity[Y] = -0.00001;
+					deltaMoveY = 0;
+					this->player->jump = 2;
 				}
 			}
 		}
-		if (deltaMoveY != 0) {
-			foreach (it, this->map->physics->first) {
-				PhysicsArea *pa = it->data;
-				if (pa->enabled &&
-						((int) pa->x == (int) (this->player->position[X]) ||
-						(int) pa->x == (int) (this->player->position[X] + this->player->width))) {
+	}
+	if (deltaMoveY != 0) {
+		Iterator it;
+		foreach (it, this->map->physics->first) {
+			PhysicsArea *pa = it->data;
+			if (pa->enabled &&
+					((int) pa->x == (int) (this->player->position[X]) ||
+					(int) pa->x == (int) (this->player->position[X] + this->player->width))) {
 
-					if (pa->y + 1 > deltaMoveY + this->player->position[Y]
-							&& pa->y + 1 <= this->player->position[Y]) {
-						this->player->position[Y] = pa->y + 1;
-						this->player->velocity[Y] = -0.00001;
-						deltaMoveY = 0;
-						this->player->jump = 0;
-						this->player->lastJump = 0;
-					} else if (pa->y <= deltaMoveY + this->player->position[Y] + this->player->height
-							&& pa->y > this->player->position[Y] + this->player->height) {
-						this->player->velocity[Y] = -0.00001;
-						deltaMoveY = 0;
-						this->player->jump = 2;
-					}
+				if (pa->y + 1 > deltaMoveY + this->player->position[Y]
+						&& pa->y + 1 <= this->player->position[Y]) {
+					this->player->position[Y] = pa->y + 1;
+					this->player->velocity[Y] = -0.00001;
+					deltaMoveY = 0;
+					this->player->jump = 0;
+					this->player->lastJump = 0;
+				} else if (pa->y <= deltaMoveY + this->player->position[Y] + this->player->height
+						&& pa->y > this->player->position[Y] + this->player->height) {
+					this->player->velocity[Y] = -0.00001;
+					deltaMoveY = 0;
+					this->player->jump = 2;
 				}
 			}
 		}
+	}
+
 	this->player->position[Y] += deltaMoveY;
-	}
+	return deltaMoveY;
+}
 
-
-#ifndef DEBUG_MOVEMENT
-	if (this->map->allowMovement) {
-		this->camera->position[X] = this->player->position[X] + 2;
-		this->camera->position[Y] = this->player->position[Y] + 1;
-		this->camera->position[Z] = CAMERA_DISTANCE;
-	} else {
-		this->camera->position[X] = this->player->position[X];
-		this->camera->position[Y] = this->player->position[Y] + 1;
-		this->camera->position[Z] = CAMERA_DISTANCE;
-	}
-#endif
-
-	setPositionArray(playerObj->position, this->player->position);
-
+/**
+ * Perform regions
+ *
+ * @param this Actual GameInstance instance
+ */
+static void performRegions(GameInstance* this) {
+	Iterator it;
 	foreach (it, this->map->regions->first) {
 		Region *region = it->data;
+
+		if (region->maxUse != 0 && isPlayerInRegion(this, region)
+			&& (region->itemReq == -1 || (this->player->item == region->itemReq
+				&& isActionPerformed(this, &this->options->use)))) {
+			printf("R %d %d\n", region->actionId, region->notSneek ? 1 : 0);
+		}
+
 		if (region->maxUse != 0 && isPlayerInRegion(this, region)
 			&& (region->itemReq == -1 || (this->player->item == region->itemReq
 					&& isActionPerformed(this, &this->options->use)))
 			&& (region->notSneek == GL_FALSE || (region->notSneek == GL_TRUE
 					&& !isActionPerformed(this, &this->options->sneek)))) {
-
+			printf("RR %d\n", region->actionId);
 			activateAction(this, region->actionId);
 			if (region->maxUse > 0)
 				--region->maxUse;
 
 		}
 	}
+}
 
-	if (this->map->allowMovement) {
-		foreach (it, this->map->menu->components->first) {
-			Component *comp = it->data;
-			if (comp->id == HEALT_COMPONENT_ID) {
-				char str[6] = "\0";
-				int i;
-				for (i = 0; i < this->map->healt; ++i)
-					strcat(str, "$");
-				strcpy(comp->text->text, str);
 
-				if (this->map->healt <= 0)
-					activateAction(this, ACTION_LOSE_ID);
+/**
+ * Perform ingame GUI
+ *
+ * @param this Actual GameInstance instance
+ */
+static void performGUI(GameInstance* this) {
+	Iterator it;
+	foreach (it, this->map->menu->components->first) {
+		Component *comp = it->data;
+		if (comp->id == HEALT_COMPONENT_ID) {
+			char str[6] = "\0";
+			int i;
+			for (i = 0; i < this->map->healt; ++i)
+				strcat(str, "$");
+			strcpy(comp->text->text, str);
 
-			} else if (comp->id == SCORE_COMPONENT_ID) {
-				char str[14] = "\0";
-				sprintf(str, "%d *", this->map->score);
-				strcpy(comp->text->text, str);
-			}
+			if (this->map->healt <= 0)
+				activateAction(this, ACTION_LOSE_ID);
+
+		} else if (comp->id == SCORE_COMPONENT_ID) {
+			char str[14] = "\0";
+			sprintf(str, "%d *", this->map->score);
+			strcpy(comp->text->text, str);
 		}
 	}
+}
 
+
+/**
+ * Perform reference points
+ *
+ * @param this Actual GameInstance instance
+ */
+static void performReferencePoints(GameInstance* this) {
+	Iterator it;
 	foreach (it, this->referencePoints->first) {
 		ReferencePoint *rp = it->data;
 		if (rp->id == 2) {
@@ -638,7 +835,71 @@ void onLogicIngame(GameInstance *this, GLfloat delta) {
 	}
 }
 
-void onLogicMenu(GameInstance *this, GLfloat delta) {
+/**
+ * Ingame subrenderer method
+ *
+ * Called when: GameInstance->state = INGAME
+ *
+ * @param this Actual GameInstance instance
+ * @param delta Ellapsed time
+ */
+static void onLogicIngame(GameInstance *this, GLfloat delta) {
+	ActiveObjectInstance *playerObj = this->map->objects->activeInstances->first->data;
+
+	GLfloat deltaMoveX = 0;
+	deltaMoveX = animatePlayer(this, deltaMoveX, delta, playerObj);
+
+	if (this->map->allowMovement)
+		deltaMoveX = checkMoveX(this, deltaMoveX);
+
+	if (this->player->jump < 2 && this->player->lastJump + 0.3 < glfwGetTime()
+			&& isActionPerformed(this, &this->options->jump)
+			&& !isActionPerformed(this, &this->options->sneek)) {
+		++this->player->jump;
+		this->player->velocity[Y] = 8 + (this->player->jump * 2);
+		this->player->lastJump = glfwGetTime();
+		playerObj->activePart = 0;
+	}
+
+	float deltaMoveY = this->player->velocity[Y] * PLAYER_JUMP * delta;
+	this->player->velocity[Y] -= 0.5;
+	if (this->player->velocity[Y] < -15)
+		this->player->velocity[Y] = -15;
+
+	if (this->map->allowMovement)
+		deltaMoveY = checkMoveY(this, deltaMoveY);
+
+	#ifndef DEBUG_MOVEMENT
+	if (this->map->allowMovement) {
+		this->camera->position[X] = this->player->position[X] + 2;
+		this->camera->position[Y] = this->player->position[Y] + 1;
+		this->camera->position[Z] = CAMERA_DISTANCE;
+	} else {
+		this->camera->position[X] = this->player->position[X];
+		this->camera->position[Y] = this->player->position[Y] + 1;
+		this->camera->position[Z] = CAMERA_DISTANCE;
+	}
+	#endif
+
+	setPositionArray(playerObj->position, this->player->position);
+
+	performRegions(this);
+
+	if (this->map->allowMovement)
+		performGUI(this);
+
+	performReferencePoints(this);
+}
+
+/**
+ * Menu subrenderer method
+ *
+ * Called when: GameInstance->state = MENU
+ *
+ * @param this Actual GameInstance instance
+ * @param delta Ellapsed time
+ */
+static void onLogicMenu(GameInstance *this, GLfloat delta) {
 	this->camera->position[Z] = this->map->spawn[Z];
 
 	updateCursor(this);
@@ -651,9 +912,13 @@ void onLogicMenu(GameInstance *this, GLfloat delta) {
 		if (comp->onCalc != NULL)
 			comp->onCalc(comp, this);
 	}
-
 }
 
+/**
+ * Ellapsed time getter and calculator
+ *
+ * @returns Ellapsed time (form last call)
+ */
 static GLfloat getDelta(void) {
 	static GLfloat lastFrame = 0;
 	GLfloat time = glfwGetTime();
@@ -662,34 +927,12 @@ static GLfloat getDelta(void) {
 	return delta;
 }
 
-void onLogic(GameInstance *this) {
-	const GLfloat delta = getDelta();
-
-	updateReferencePoint(this, delta);
-
-#ifndef DEBUG_MOVEMENT
-	if (this->camera->destinationRotation[Y] > 0) {
-		this->camera->rotation[Y] = min(this->camera->rotation[Y] + 0.2,
-				this->camera->destinationRotation[Y]);
-	} else if (this->camera->destinationRotation[Y] < 0) {
-		this->camera->rotation[Y] = max(this->camera->rotation[Y] - 0.2,
-				this->camera->destinationRotation[Y]);
-	} else if (this->camera->rotation[Y] > 0) {
-		this->camera->rotation[Y] -= 0.3;
-		if (this->camera->rotation[Y] < 0)
-			this->camera->rotation[Y] = 0;
-	} else if (this->camera->rotation[Y] < 0) {
-		this->camera->rotation[Y] += 0.3;
-		if (this->camera->rotation[Y] > 0)
-			this->camera->rotation[Y] = 0;
-	}
-#endif
-
-	if (this->state == INGAME)
-		onLogicIngame(this, delta);
-	else
-		onLogicMenu(this, delta);
-
+/**
+ * Calculate and finalize the lights
+ *
+ * @param this Actual GameInstance instance
+ */
+static void calcLights(GameInstance *this) {
 	int i = 0;
 	Iterator it;
 	foreach (it, this->map->lights->first) {
@@ -712,5 +955,42 @@ void onLogic(GameInstance *this) {
 		++i;
 	}
 	this->lighting->numLights = i;
+}
 
+/**
+ * The calculator method
+ *
+ * It calls all the required logic functions
+ *
+ * @param this Actual GameInstance instance
+ */
+void onLogic(GameInstance *this) {
+	const GLfloat delta = getDelta();
+
+	updateReferencePoint(this, delta);
+
+	#ifndef DEBUG_MOVEMENT
+	if (this->camera->destinationRotation[Y] > 0) {
+		this->camera->rotation[Y] = min(this->camera->rotation[Y] + 0.2,
+				this->camera->destinationRotation[Y]);
+	} else if (this->camera->destinationRotation[Y] < 0) {
+		this->camera->rotation[Y] = max(this->camera->rotation[Y] - 0.2,
+				this->camera->destinationRotation[Y]);
+	} else if (this->camera->rotation[Y] > 0) {
+		this->camera->rotation[Y] -= 0.3;
+		if (this->camera->rotation[Y] < 0)
+			this->camera->rotation[Y] = 0;
+	} else if (this->camera->rotation[Y] < 0) {
+		this->camera->rotation[Y] += 0.3;
+		if (this->camera->rotation[Y] > 0)
+			this->camera->rotation[Y] = 0;
+	}
+	#endif
+
+	if (this->state == INGAME)
+		onLogicIngame(this, delta);
+	else
+		onLogicMenu(this, delta);
+
+	calcLights(this);
 }

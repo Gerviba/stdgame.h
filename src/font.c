@@ -1,10 +1,29 @@
+/**
+ * @file font.c
+ * @author Gerviba (Szabo Gergely)
+ * @brief Font family loader and renderer
+ *
+ * @par Header:
+ * 		font.h
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
 #include "stdgame.h"
 
-Char* loadChar(char path[], char charId, GLfloat *colors) {
+static Char* loadChar(char path[], char charId, GLfloat *colors);
+static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor);
+
+/**
+ * Loads a char
+ * @param path Char file path
+ * @paran charId Character identifier
+ * @param colors Color bank array
+ * @returs The loaded Char object
+ */
+static Char* loadChar(char path[], char charId, GLfloat *colors) {
 	FILE *file;
 	char buff[255];
 
@@ -54,6 +73,9 @@ Char* loadChar(char path[], char charId, GLfloat *colors) {
 	return c;
 }
 
+/**
+ * Initialize font from `assets/fonts/default.font`
+ */
 void initFont(GameInstance *this) {
 	this->font = new(Font);
 	this->font->chars = newList(Char);
@@ -106,6 +128,12 @@ void initFont(GameInstance *this) {
 }
 
 //TODO: Call
+/**
+ * Free the loaded fonts <br>
+ * Must be called before exit
+ *
+ * @param this Actual GameInstance instance
+ */
 void freeFont(GameInstance *this) {
 	free(this->font->unknown);
 	free(this->font->colors);
@@ -116,6 +144,13 @@ void freeFont(GameInstance *this) {
 	free(this->font);
 }
 
+/**
+ * Get Char type pointer from the default.
+ *
+ * @param font Font family
+ * @param c Character identifier
+ * @returns Char object pointer
+ */
 Char* getChar(Font *font, char c) {
 	Iterator it;
 	for (it = font->chars->first; it != NULL; it = it->next)
@@ -124,7 +159,17 @@ Char* getChar(Font *font, char c) {
 	return font->unknown;
 }
 
-void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor) {
+/**
+ * Render selected char.
+ *
+ * @param this Actual GameInstance instance
+ * @param font Font family
+ * @param c Character pointer
+ * @param x Coordinates (x-dim)
+ * @param z Coordinates (z-dim)
+ * @param defaultColor Default color of the font
+ */
+static void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, GLfloat *defaultColor) {
 	Iterator it;
 	foreach (it, c->parts->first) {
 		CharPart part = *(CharPart *)it->data;
@@ -188,6 +233,19 @@ void renderChar(GameInstance *this, Font *font, Char *c, GLfloat x, GLfloat z, G
 	}
 }
 
+/**
+ * Renders the entered text.
+ *
+ * @param this GameInstance pointer
+ * @param str String to render
+ * @param position Where to render
+ * @param color Dynamic color
+ * @param size Size of the chars
+ *
+ * @note This function can be used in both `onLogic` and `onRender` functions.
+ *
+ * @see renderFontToComponent()
+ */
 void renderFontTo(GameInstance *this, char str[], GLfloat position[3], GLfloat defaultColor[4], FontSize size) {
 	const GLfloat dist = 1.0 / size;
 
@@ -213,6 +271,22 @@ void renderFontTo(GameInstance *this, char str[], GLfloat position[3], GLfloat d
 	}
 }
 
+/**
+ * Renders the entered text and saves the min and the max coordinates into the pass arguments.
+ *
+ * @param this GameInstance pointer
+ * @param str String to render
+ * @param position Where to render
+ * @param color Dynamic color
+ * @param size Size of the chars
+ * @param min Minimum coordinate of the rendered object
+ * @param max Maximum coordinate of the rendered object
+ *
+ * @note This function can be used in both `onLogic` and `onRender` functions.
+ * @warning It sets the value of the `min` and the `max` arrays.
+ *
+ * @see renderFontTo()
+ */
 void renderFontToComponent(GameInstance *this, char str[], GLfloat position[3], GLfloat defaultColor[4],
 		FontSize size, GLfloat min[3], GLfloat max[3]) {
 	const GLfloat dist = 1.0 / size;

@@ -33,7 +33,7 @@
 |S|Static Light|S id x y z strength rrggbb specular intensity reference visible (2) |
 |L|Ligthing|L x y strength1 color1 strength2 color2 time (4) |
 |O|Object Active|O id STATIC/DYNAMIC/ACTIVE filename|
-|I|Object Instance|I O.id STATIC/DYNAMIC/ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference (2) |
+|I|Object Instance|I id O.id STATIC/DYNAMIC/ACTIVE x y z alpha beta gamma SizeX SizeY SizeZ visible reference (2) |
 |C|Coords|C id type x y|
 |M|Message|M x y z rrggbb alpha FontSize message|
 |R|Region|R xMin yMin xMax yMax Action.id maxUse itemRequired noSneek (5) (6) |
@@ -41,7 +41,7 @@
 |B|ObjectComponent|A id x y z relativeX relativeY alignX I(ACTIVE).id action (3) |
 |D|ImageComponent|D id path x y z height width action (3) |
 |N|Action|N id ActionType value (7) |
-|P|PhysicsArea|P id x y|
+|P|PhysicsArea|P id x y enable|
 |E|Entity|E id aobjI.id ligth.id spellSpeed damage hp score floatFi0 hitboxRadius|
 
 - (1) Texture, TextureBlock and Tile lines are only processed in maps and the first loaded menu file.
@@ -57,6 +57,7 @@
   + `SCROLL` true/false min max *(optional, default: false, 0, 0)*
 
 - (3) Component action types:
+
 |Action|Effect|
 |------|------|
 |0|(Nothing)|
@@ -75,6 +76,7 @@
 - (6) Item reuired: item id or -1 for noting
 - (7) Action lose id: -10000
 - RelativeX, RelativeY and Align enums:
+
 |Enum|Name|Value|Description|
 |----|----|-----:|-----------|
 |RelativeX|X_LEFT|-1|Relative to the left horizontal side of the screen|
@@ -88,6 +90,7 @@
 |Align|ALIGN_RIGHT|1|The anchor point will be placed to the right side of the text|
 
 - Reference points:
+
 |Id|Name|
 |:---:|----|
 |0|(Nothing)|
@@ -100,7 +103,8 @@
 |7|Player center|
 |8|Entity floating|
 
-- ActionType values:
+- ActionType values: (-65536 = don't set)
+
 |ActionType|Id|Arguments|
 |:--------:|:---:|---------|
 |TELEPORT|0|x y|

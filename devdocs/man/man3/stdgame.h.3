@@ -1,0 +1,399 @@
+.TH "src/stdgame.h" 3 "Tue Dec 5 2017" "stdgame" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/stdgame.h \- The main header of the project (header)  
+
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <stdio\&.h>\fP
+.br
+\fC#include <string\&.h>\fP
+.br
+\fC#include <gl\&.h>\fP
+.br
+\fC#include <glext\&.h>\fP
+.br
+\fC#include <glfw3\&.h>\fP
+.br
+\fC#include 'SOIL\&.h'\fP
+.br
+\fC#include 'linkedlist\&.h'\fP
+.br
+\fC#include 'font\&.h'\fP
+.br
+\fC#include 'object\&.h'\fP
+.br
+\fC#include 'player\&.h'\fP
+.br
+\fC#include 'components\&.h'\fP
+.br
+\fC#include 'map\&.h'\fP
+.br
+\fC#include 'game\&.h'\fP
+.br
+\fC#include 'events\&.h'\fP
+.br
+
+.SS "Classes"
+
+.in +1c
+.ti -1c
+.RI "union \fBPosition\fP"
+.br
+.RI "3D position type "
+.ti -1c
+.RI "union \fBColor\fP"
+.br
+.RI "RGBA color type\&. "
+.in -1c
+.SS "Macros"
+
+.in +1c
+.ti -1c
+.RI "#define \fBDEBUG_MESSAGES\fP   1"
+.br
+.RI "Debug modes: "
+.ti -1c
+.RI "#define \fBWARNING_MESSAGES\fP   1"
+.br
+.ti -1c
+.RI "#define \fBDEBUG\fP(module,  message, \&.\&.\&.)"
+.br
+.RI "Debug message macro\&. "
+.ti -1c
+.RI "#define \fBERROR\fP(message, \&.\&.\&.)"
+.br
+.RI "Error message\&. "
+.ti -1c
+.RI "#define \fBWARNING\fP(message, \&.\&.\&.)"
+.br
+.RI "Warning message\&. "
+.ti -1c
+.RI "#define \fBX\fP   0"
+.br
+.RI "X constant for coordinate arrays\&. "
+.ti -1c
+.RI "#define \fBY\fP   1"
+.br
+.RI "Y constant for coordinate arrays\&. "
+.ti -1c
+.RI "#define \fBZ\fP   2"
+.br
+.RI "Z constant for coordinate arrays\&. "
+.ti -1c
+.RI "#define \fBR\fP   0"
+.br
+.RI "Red constant for color arrays\&. "
+.ti -1c
+.RI "#define \fBG\fP   1"
+.br
+.RI "Green constant for color arrays\&. "
+.ti -1c
+.RI "#define \fBB\fP   2"
+.br
+.RI "Blue constant for color arrays\&. "
+.ti -1c
+.RI "#define \fBA\fP   3"
+.br
+.RI "Alpha constant for color arrays\&. "
+.ti -1c
+.RI "#define \fBmin\fP(a,  b)   (a < b ? a : b)"
+.br
+.RI "Minimum of numeric type\&. "
+.ti -1c
+.RI "#define \fBmax\fP(a,  b)   (a > b ? a : b)"
+.br
+.RI "Maximum of numeric type\&. "
+.ti -1c
+.RI "#define \fBsig\fP(a)   (a == 0 ? 0 : a > 0 ? 1 : \-1)"
+.br
+.RI "Sign of numeric type\&. "
+.ti -1c
+.RI "#define \fBequals\fP(a,  b)   (strcmp(a, b) == 0)"
+.br
+.RI "String equals\&. "
+.ti -1c
+.RI "#define \fBnew\fP(x)   malloc(sizeof(x))"
+.br
+.RI "Allocate space for new of generic type\&. "
+.ti -1c
+.RI "#define \fBarray3\fP(array,  a,  b,  c)   ({array[0] = a; array[1] = b; array[2] = c;})"
+.br
+.RI "Set 3D array\&. "
+.ti -1c
+.RI "#define \fBarray4\fP(array,  a,  b,  c,  d)   ({array[0] = a; array[1] = b; array[2] = c; array[3] = d;})"
+.br
+.RI "Set 3D array\&. "
+.in -1c
+.SS "Typedefs"
+
+.in +1c
+.ti -1c
+.RI "typedef union \fBPosition\fP \fBPosition\fP"
+.br
+.RI "3D position type "
+.ti -1c
+.RI "typedef union \fBPosition\fP \fBRotation\fP"
+.br
+.ti -1c
+.RI "typedef union \fBPosition\fP \fBVelocity\fP"
+.br
+.ti -1c
+.RI "typedef union \fBPosition\fP \fBScale\fP"
+.br
+.ti -1c
+.RI "typedef union \fBColor\fP \fBColor\fP"
+.br
+.RI "RGBA color type\&. "
+.ti -1c
+.RI "typedef struct \fBPlayer\fP \fBPlayer\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBSpell\fP \fBSpell\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBSpells\fP \fBSpells\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBGenericType\fP \fBGenericType\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBTextComponent\fP \fBTextComponent\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBObjectComponent\fP \fBObjectComponent\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBImageComponent\fP \fBImageComponent\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBComponent\fP \fBComponent\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBCharPart\fP \fBCharPart\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBChar\fP \fBChar\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBFont\fP \fBFont\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBLight\fP \fBLight\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBTexture\fP \fBTexture\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBTextureBlock\fP \fBTextureBlock\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBTile\fP \fBTile\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBRegion\fP \fBRegion\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBAction\fP \fBAction\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBPhysicsArea\fP \fBPhysicsArea\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBEntity\fP \fBEntity\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBMessage\fP \fBMessage\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBMap\fP \fBMap\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBHighScoreValue\fP \fBHighScoreValue\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBMenu\fP \fBMenu\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBStaticObjectPart\fP \fBStaticObjectPart\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBPartColor\fP \fBPartColor\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBStaticObject\fP \fBStaticObject\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBStaticObjectInstance\fP \fBStaticObjectInstance\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBReferencePoint\fP \fBReferencePoint\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBDynamicObject\fP \fBDynamicObject\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBDynamicObjectInstance\fP \fBDynamicObjectInstance\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBActiveObject\fP \fBActiveObject\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBActiveObjectInstance\fP \fBActiveObjectInstance\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBObjectInfo\fP \fBObjectInfo\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBCursor\fP \fBCursor\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBGameInstance\fP \fBGameInstance\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBOptions\fP \fBOptions\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBInputActionWrapper\fP \fBInputActionWrapper\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBShaderInfo\fP \fBShaderInfo\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBCameraInfo\fP \fBCameraInfo\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBLigingInfo\fP \fBLigingInfo\fP"
+.br
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBmain\fP (int argc, char *argv[])"
+.br
+.RI "The main method\&. "
+.ti -1c
+.RI "void \fBgetGameInstance\fP (\fBGameInstance\fP **this)"
+.br
+.RI "\fBGameInstance\fP getter for GLFW event functions\&. "
+.ti -1c
+.RI "void \fBfixViewport\fP (\fBGameInstance\fP *this)"
+.br
+.RI "Fix the viewport size\&. "
+.in -1c
+.SS "Variables"
+
+.in +1c
+.ti -1c
+.RI "static const float \fBPI\fP = 3\&.14159265358979323846f"
+.br
+.RI "PI constant\&. "
+.in -1c
+.SH "Detailed Description"
+.PP 
+The main header of the project (header) 
+
+
+.PP
+\fBAuthor:\fP
+.RS 4
+Gerviba (Szabo Gergely) 
+.RE
+.PP
+\fBDefinition:\fP
+.RS 4
+\fBstdgame\&.c\fP 
+.RE
+.PP
+
+.SH "Macro Definition Documentation"
+.PP 
+.SS "#define DEBUG(module, message,  \&.\&.\&.)"
+\fBValue:\fP
+.PP
+.nf
+{ \
+        printf("[%s] ", module); \
+        printf(message, ##__VA_ARGS__); \
+        printf("\n"); }
+.fi
+.PP
+Debug message macro\&. 
+.PP
+\fBWarning:\fP
+.RS 4
+Requires GCC to process \fC##__VA_ARGS__\fP\&. 
+.RE
+.PP
+
+.SS "#define ERROR(message,  \&.\&.\&.)"
+\fBValue:\fP
+.PP
+.nf
+{ \
+    fprintf(stderr, "[Error] "); \
+    fprintf(stderr, message, ##__VA_ARGS__); \
+    fprintf(stderr, "\n"); }
+.fi
+.PP
+Error message\&. 
+.SS "#define WARNING(message,  \&.\&.\&.)"
+\fBValue:\fP
+.PP
+.nf
+{ \
+        printf("[Warning] "); \
+        printf(message, ##__VA_ARGS__); \
+        printf("\n"); }
+.fi
+.PP
+Warning message\&. 
+.SH "Typedef Documentation"
+.PP 
+.SS "typedef union \fBColor\fP  \fBColor\fP"
+
+.PP
+RGBA color type\&. The \fCcolor\&.rgba\fP returns a 4-dimensional GLfloat array, the \fCcolor\&.r\fP returns the red, the \fCcolor\&.g\fP returns green, the \fCcolor\&.b\fP return the blue and the \fCcolor\&.a\fPreturns the alpha component of the RGBA color\&. 
+.SS "typedef union \fBPosition\fP  \fBPosition\fP"
+
+.PP
+3D position type The \fCposition\&.xyz\fP returns a 3-dimensional GLfloat array, and \fCposition\&.x\fP, \fCposition\&.y\fP and \fCposition\&.z\fP returns a component of the selected dimension\&. 
+.SH "Function Documentation"
+.PP 
+.SS "void fixViewport (\fBGameInstance\fP * this)"
+
+.PP
+Fix the viewport size\&. Sometimes there is a black rectangle at the top the window\&. This function fix it\&.
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.RE
+.PP
+
+.SS "void getGameInstance (\fBGameInstance\fP ** this)"
+
+.PP
+\fBGameInstance\fP getter for GLFW event functions\&. 
+.PP
+\fBWarning:\fP
+.RS 4
+Don't use it is you can\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.RE
+.PP
+
+.SS "int main (int argc, char * argv[])"
+
+.PP
+The main method\&. This is where the story begins\&. 
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for stdgame from the source code\&.

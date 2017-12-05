@@ -1,0 +1,208 @@
+.TH "src/font.c" 3 "Tue Dec 5 2017" "stdgame" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/font.c \- \fBFont\fP family loader and renderer\&.  
+
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <stdio\&.h>\fP
+.br
+\fC#include <stdlib\&.h>\fP
+.br
+\fC#include <ctype\&.h>\fP
+.br
+\fC#include <math\&.h>\fP
+.br
+\fC#include 'stdgame\&.h'\fP
+.br
+
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "static \fBChar\fP * \fBloadChar\fP (char path[], char charId, GLfloat *colors)"
+.br
+.RI "Loads a char\&. "
+.ti -1c
+.RI "static void \fBrenderChar\fP (\fBGameInstance\fP *this, \fBFont\fP *font, \fBChar\fP *c, GLfloat x, GLfloat z, GLfloat *defaultColor)"
+.br
+.RI "Render selected char\&. "
+.ti -1c
+.RI "void \fBinitFont\fP (\fBGameInstance\fP *this)"
+.br
+.RI "Initialize font from \fCassets/fonts/default\&.font\fP "
+.ti -1c
+.RI "void \fBfreeFont\fP (\fBGameInstance\fP *this)"
+.br
+.RI "Free the loaded fonts 
+.br
+ Must be called before exit\&. "
+.ti -1c
+.RI "\fBChar\fP * \fBgetChar\fP (\fBFont\fP *font, char c)"
+.br
+.RI "Get \fBChar\fP type pointer from the default\&. "
+.ti -1c
+.RI "void \fBrenderFontTo\fP (\fBGameInstance\fP *this, char str[], GLfloat position[3], GLfloat defaultColor[4], \fBFontSize\fP size)"
+.br
+.RI "Renders the entered text\&. "
+.ti -1c
+.RI "void \fBrenderFontToComponent\fP (\fBGameInstance\fP *this, char str[], GLfloat position[3], GLfloat defaultColor[4], \fBFontSize\fP size, GLfloat \fBmin\fP[3], GLfloat \fBmax\fP[3])"
+.br
+.RI "Renders the entered text and saves the min and the max coordinates into the pass arguments\&. "
+.in -1c
+.SH "Detailed Description"
+.PP 
+\fBFont\fP family loader and renderer\&. 
+
+
+.PP
+\fBAuthor:\fP
+.RS 4
+Gerviba (Szabo Gergely) 
+.RE
+.PP
+\fBHeader:\fP
+.RS 4
+\fBfont\&.h\fP 
+.RE
+.PP
+
+.SH "Function Documentation"
+.PP 
+.SS "void freeFont (\fBGameInstance\fP * this)"
+
+.PP
+Free the loaded fonts 
+.br
+ Must be called before exit\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.RE
+.PP
+
+.SS "\fBChar\fP* getChar (\fBFont\fP * font, char c)"
+
+.PP
+Get \fBChar\fP type pointer from the default\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIfont\fP \fBFont\fP family 
+.br
+\fIc\fP Character identifier 
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+\fBChar\fP object pointer 
+.RE
+.PP
+
+.SS "static \fBChar\fP * loadChar (char path[], char charId, GLfloat * colors)\fC [static]\fP"
+
+.PP
+Loads a char\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpath\fP \fBChar\fP file path  charId Character identifier 
+.br
+\fIcolors\fP \fBColor\fP bank array  The loaded \fBChar\fP object 
+.RE
+.PP
+
+.SS "static void renderChar (\fBGameInstance\fP * this, \fBFont\fP * font, \fBChar\fP * c, GLfloat x, GLfloat z, GLfloat * defaultColor)\fC [static]\fP"
+
+.PP
+Render selected char\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fIfont\fP \fBFont\fP family 
+.br
+\fIc\fP Character pointer 
+.br
+\fIx\fP Coordinates (x-dim) 
+.br
+\fIz\fP Coordinates (z-dim) 
+.br
+\fIdefaultColor\fP Default color of the font 
+.RE
+.PP
+
+.SS "void renderFontTo (\fBGameInstance\fP * this, char str[], GLfloat position[3], GLfloat defaultColor[4], \fBFontSize\fP size)"
+
+.PP
+Renders the entered text\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP \fBGameInstance\fP pointer 
+.br
+\fIstr\fP String to render 
+.br
+\fIposition\fP Where to render 
+.br
+\fIcolor\fP Dynamic color 
+.br
+\fIsize\fP Size of the chars
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used in both \fConLogic\fP and \fConRender\fP functions\&.
+.RE
+.PP
+\fBSee also:\fP
+.RS 4
+\fBrenderFontToComponent()\fP 
+.RE
+.PP
+
+.SS "void renderFontToComponent (\fBGameInstance\fP * this, char str[], GLfloat position[3], GLfloat defaultColor[4], \fBFontSize\fP size, GLfloat min[3], GLfloat max[3])"
+
+.PP
+Renders the entered text and saves the min and the max coordinates into the pass arguments\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP \fBGameInstance\fP pointer 
+.br
+\fIstr\fP String to render 
+.br
+\fIposition\fP Where to render 
+.br
+\fIcolor\fP Dynamic color 
+.br
+\fIsize\fP Size of the chars 
+.br
+\fImin\fP Minimum coordinate of the rendered object 
+.br
+\fImax\fP Maximum coordinate of the rendered object
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used in both \fConLogic\fP and \fConRender\fP functions\&. 
+.RE
+.PP
+\fBWarning:\fP
+.RS 4
+It sets the value of the \fCmin\fP and the \fCmax\fP arrays\&.
+.RE
+.PP
+\fBSee also:\fP
+.RS 4
+\fBrenderFontTo()\fP 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for stdgame from the source code\&.

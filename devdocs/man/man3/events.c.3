@@ -1,0 +1,157 @@
+.TH "src/events.c" 3 "Tue Dec 5 2017" "stdgame" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/events.c \- Event handler methods\&.  
+
+.SH SYNOPSIS
+.br
+.PP
+\fC#include 'stdgame\&.h'\fP
+.br
+
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "void \fBonErrorEvent\fP (int error, const char *description)"
+.br
+.RI "GLFW Error Event\&. "
+.ti -1c
+.RI "void \fBonClickEvent\fP (GLFWwindow *window, int button, int action, int mods)"
+.br
+.RI "GLFW Mouse click event\&. "
+.ti -1c
+.RI "void \fBonScrollEvent\fP (GLFWwindow *window, double xOffset, double yOffset)"
+.br
+.RI "GLFW Mouse wheel scroll event\&. "
+.ti -1c
+.RI "void \fBonCharModEvent\fP (GLFWwindow *window, unsigned int key, int mods)"
+.br
+.RI "GLFW Keyboard mods down event\&. "
+.ti -1c
+.RI "void \fBonKeyEvent\fP (GLFWwindow *window, int key, int scancode, int action, int mods)"
+.br
+.RI "GLFW Key down event\&. "
+.in -1c
+.SH "Detailed Description"
+.PP 
+Event handler methods\&. 
+
+
+.PP
+\fBAuthor:\fP
+.RS 4
+Gerviba (Szabo Gergely) 
+.RE
+.PP
+\fBHeader:\fP
+.RS 4
+\fBevents\&.h\fP 
+.RE
+.PP
+
+.SH "Function Documentation"
+.PP 
+.SS "void onCharModEvent (GLFWwindow * window, unsigned int key, int mods)"
+
+.PP
+GLFW Keyboard mods down event\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIwindow\fP The active window 
+.br
+\fIkey\fP Key code 
+.br
+\fImods\fP Modifiers 
+.RE
+.PP
+
+.SS "void onClickEvent (GLFWwindow * window, int button, int action, int mods)"
+
+.PP
+GLFW Mouse click event\&. 
+.PP
+\fBWarning:\fP
+.RS 4
+Don't call this directly\&. GLFW will manage it\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIwindow\fP The active (clicked) window 
+.br
+\fIbutton\fP Mouse button identifier 
+.br
+\fIaction\fP \fBAction\fP id 
+.br
+\fImods\fP Modifiers 
+.RE
+.PP
+
+.SS "void onErrorEvent (int error, const char * description)"
+
+.PP
+GLFW Error Event\&. 
+.PP
+\fBWarning:\fP
+.RS 4
+Don't call this directly\&. GLFW will manage it\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIerror\fP Error code 
+.br
+\fIdescription\fP The detailed description of the error 
+.RE
+.PP
+
+.SS "void onKeyEvent (GLFWwindow * window, int key, int scancode, int action, int mods)"
+
+.PP
+GLFW Key down event\&. 
+.PP
+\fBWarning:\fP
+.RS 4
+Don't call this directly\&. GLFW will manage it\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIwindow\fP The active window 
+.br
+\fIkey\fP Key code 
+.br
+\fIscancode\fP Scan code 
+.br
+\fIaction\fP \fBAction\fP 
+.br
+\fImods\fP Modifiers 
+.RE
+.PP
+
+.SS "void onScrollEvent (GLFWwindow * window, double xOffset, double yOffset)"
+
+.PP
+GLFW Mouse wheel scroll event\&. 
+.PP
+\fBWarning:\fP
+.RS 4
+Don't call this directly\&. GLFW will manage it\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIwindow\fP The active window 
+.br
+\fIxOffset\fP Wheel x-dim offset 
+.br
+\fIyOffset\fP Wheel y-dim offset 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for stdgame from the source code\&.

@@ -1,0 +1,87 @@
+.TH "md_docs_helpforevaluation" 3 "Tue Dec 5 2017" "stdgame" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+md_docs_helpforevaluation \- Help for evaluation [HUN] 
+
+.SS "Kb\&. 500 soros C program\&.\&.\&."
+.PP
+Ellenőrzés: 
+.PP
+.nf
+$ make countlines
+
+.fi
+.PP
+.PP
+.SS "\&.\&.\&., amely a C nyelv lehetőségeit kihasználja: strukturált felépítés, több modulra bontás,"
+.PP
+.IP "\(bu" 2
+src/ *
+.IP "\(bu" 2
+Kedvenc structjaim:
+.IP "  \(bu" 4
+\fBComponent\fP
+.IP "  \(bu" 4
+\fBGameInstance\fP
+.IP "  \(bu" 4
+\fBMap\fP
+.IP "  \(bu" 4
+\fBActiveObject\fP
+.PP
+
+.IP "\(bu" 2
+Structok száma: 44
+.IP "\(bu" 2
+Enumok száma: 9
+.IP "\(bu" 2
+Forrásfájlok száma: 22 (11 \&.c és 11 \&.h)
+.PP
+.PP
+.SS "\&.\&.\&. dinamikus memóriakezelés,"
+.PP
+.IP "\(bu" 2
+Általános célú láncolt lista: src/ \fBlinkedlist\&.c\fP (Futás alatt 100 fölötti fej példánnyal rendelkezik, pályától függően)
+.IP "\(bu" 2
+Több mint 95 kölönböző helyen van malloc
+.PP
+.PP
+.SS "\&.\&.\&. fájlkezelés\&."
+.PP
+.IP "\(bu" 2
+src/
+.IP "  \(bu" 4
+\fBshader\&.c\fP (text)
+.IP "  \(bu" 4
+\fBmap\&.c\fP (text)
+.IP "  \(bu" 4
+\fBobject\&.c\fP (text)
+.IP "  \(bu" 4
+\fBfont\&.c\fP (text)
+.IP "  \(bu" 4
+\fBmenu\&.c\fP (binary)
+.PP
+
+.PP
+.PP
+.SS "A program mellé el kell készüljön a programozói és a felhasználói dokumentáció\&."
+.PP
+Generlás: 
+.PP
+.nf
+$ make gendocs
+
+.fi
+.PP
+.PP
+.IP "\(bu" 2
+Html dokumentáció: \fCdevdocs/html/index\&.php\fP
+.IP "\(bu" 2
+Manual dokuumentáció: \fCdevdocs/man/\fP
+.PP
+.PP
+.SS "A feladatválasztás jóvá lett hagyva"
+.PP
+.SS "Bemutatás megtörtént:"
+.PP
+Dec 1-én 10:15 óra után 

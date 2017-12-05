@@ -1,0 +1,77 @@
+.TH "Component" 3 "Tue Dec 5 2017" "stdgame" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Component \- The component base\&.  
+
+.SH SYNOPSIS
+.br
+.PP
+.PP
+\fC#include <components\&.h>\fP
+.SS "Public Attributes"
+
+.in +1c
+.ti -1c
+.RI "GLuint \fBid\fP"
+.br
+.ti -1c
+.RI "\fBGenericType\fP * \fBvalue\fP"
+.br
+.ti -1c
+.RI "GLfloat \fBposition\fP [3]"
+.br
+.ti -1c
+.RI "\fBRelativeX\fP \fBrelativeX\fP"
+.br
+.ti -1c
+.RI "\fBRelativeY\fP \fBrelativeY\fP"
+.br
+.ti -1c
+.RI "\fBComponentType\fP \fBtype\fP"
+.br
+.ti -1c
+.RI "union {"
+.br
+.ti -1c
+.RI "   \fBTextComponent\fP * \fBtext\fP"
+.br
+.ti -1c
+.RI "   \fBObjectComponent\fP * \fBobject\fP"
+.br
+.ti -1c
+.RI "   \fBImageComponent\fP * \fBimage\fP"
+.br
+.ti -1c
+.RI "}; "
+.br
+.ti -1c
+.RI "void(* \fBonRender\fP )(struct \fBComponent\fP *, \fBGameInstance\fP *)"
+.br
+.ti -1c
+.RI "void(* \fBonCalc\fP )(struct \fBComponent\fP *, \fBGameInstance\fP *)"
+.br
+.ti -1c
+.RI "void(* \fBonClick\fP )(struct \fBComponent\fP *, \fBGameInstance\fP *)"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+The component base\&. 
+
+Components are located by the actual camera position\&.
+.PP
+\fBSee also:\fP
+.RS 4
+\fBTextComponent\fP 
+.PP
+\fBObjectComponent\fP 
+.PP
+\fBImageComponent\fP 
+.RE
+.PP
+
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for stdgame from the source code\&.

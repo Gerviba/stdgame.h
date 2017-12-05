@@ -848,7 +848,7 @@ static void updateSpells(GameInstance* this) {
 			if (aobj->id == -1) {
 				aobj->visible = GL_TRUE;
 				aobj->position[X] = this->player->position[X] - 1.0f;
-				aobj->position[Y] = this->player->position[Y];
+				aobj->position[Y] = this->player->position[Y] + 0.2;
 				aobj->rotation[Y] = this->player->leftSide ? 180 : 0;
 				break;
 			}
@@ -859,7 +859,7 @@ static void updateSpells(GameInstance* this) {
 			if (light->id == 6) {
 				light->visible = GL_TRUE;
 				light->position[X] = this->player->position[X] + (this->player->leftSide ? -1.0f : 1.0f);
-				light->position[Y] = this->player->position[Y] + 0.3;
+				light->position[Y] = this->player->position[Y] + 0.5;
 				break;
 			}
 		}

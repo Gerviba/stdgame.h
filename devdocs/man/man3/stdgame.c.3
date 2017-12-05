@@ -1,0 +1,232 @@
+.TH "src/stdgame.c" 3 "Tue Dec 5 2017" "stdgame" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/stdgame.c \- The main header of the project\&.  
+
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <stdio\&.h>\fP
+.br
+\fC#include <stdlib\&.h>\fP
+.br
+\fC#include <math\&.h>\fP
+.br
+\fC#include <ctype\&.h>\fP
+.br
+\fC#include 'stdgame\&.h'\fP
+.br
+
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "static void \fBinitGLFW\fP ()"
+.br
+.ti -1c
+.RI "static void \fBcreateWindow\fP (\fBGameInstance\fP *this, const GLFWvidmode *mode)"
+.br
+.RI "Create GLFW window\&. "
+.ti -1c
+.RI "static void \fBsetupOpenGL\fP (\fBGameInstance\fP *this, double width, double height)"
+.br
+.RI "Setup OpenGL\&. "
+.ti -1c
+.RI "static void \fBsetupWindowSize\fP (const GLFWvidmode *mode, \fBGameInstance\fP *this)"
+.br
+.RI "Setup GLFW window size\&. "
+.ti -1c
+.RI "static void \fBsetPerspective\fP (\fBGameInstance\fP *this, float fov, float aspect, float near, float far)"
+.br
+.RI "Setup the perspective, projection matrix\&. "
+.ti -1c
+.RI "static void \fBprintVersionInfo\fP (void)"
+.br
+.RI "Prints OpenGL and GLFW version numbers\&. "
+.ti -1c
+.RI "static void \fBinitCursor\fP (\fBGameInstance\fP *this)"
+.br
+.RI "Initialize the cursor\&. "
+.ti -1c
+.RI "static void \fBdoGameLoop\fP (\fBGameInstance\fP *this)"
+.br
+.RI "Game loop method\&. "
+.ti -1c
+.RI "static void \fBfreeGameInstance\fP (\fBGameInstance\fP *this)"
+.br
+.RI "Free all the memory allocated values from \fBGameInstance\fP and then the \fBGameInstance\fP itself\&. "
+.ti -1c
+.RI "int \fBmain\fP (int argc, char *argv[])"
+.br
+.RI "The main method\&. "
+.ti -1c
+.RI "static void \fBinitGLFW\fP (\fBGameInstance\fP *this)"
+.br
+.RI "Initialize GLFW\&. "
+.ti -1c
+.RI "void \fBfixViewport\fP (\fBGameInstance\fP *this)"
+.br
+.RI "Fix the viewport size\&. "
+.ti -1c
+.RI "void \fBgetGameInstance\fP (\fBGameInstance\fP **this)"
+.br
+.RI "\fBGameInstance\fP getter for GLFW event functions\&. "
+.in -1c
+.SH "Detailed Description"
+.PP 
+The main header of the project\&. 
+
+
+.PP
+\fBAuthor:\fP
+.RS 4
+Gerviba (Szabo Gergely) 
+.RE
+.PP
+\fBHeader:\fP
+.RS 4
+\fBstdgame\&.h\fP 
+.RE
+.PP
+
+.SH "Function Documentation"
+.PP 
+.SS "static void createWindow (\fBGameInstance\fP * this, const GLFWvidmode * mode)\fC [static]\fP"
+
+.PP
+Create GLFW window\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImode\fP GLFW video mode 
+.RE
+.PP
+
+.SS "static void doGameLoop (\fBGameInstance\fP * this)\fC [static]\fP"
+
+.PP
+Game loop method\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.RE
+.PP
+
+.SS "void fixViewport (\fBGameInstance\fP * this)"
+
+.PP
+Fix the viewport size\&. Sometimes there is a black rectangle at the top the window\&. This function fix it\&.
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.RE
+.PP
+
+.SS "static void freeGameInstance (\fBGameInstance\fP * this)\fC [static]\fP"
+
+.PP
+Free all the memory allocated values from \fBGameInstance\fP and then the \fBGameInstance\fP itself\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.RE
+.PP
+
+.SS "void getGameInstance (\fBGameInstance\fP ** this)"
+
+.PP
+\fBGameInstance\fP getter for GLFW event functions\&. 
+.PP
+\fBWarning:\fP
+.RS 4
+Don't use it is you can\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.RE
+.PP
+
+.SS "static void initCursor (\fBGameInstance\fP * this)\fC [static]\fP"
+
+.PP
+Initialize the cursor\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.RE
+.PP
+
+.SS "static void initGLFW (\fBGameInstance\fP * this)\fC [static]\fP"
+
+.PP
+Initialize GLFW\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.RE
+.PP
+
+.SS "int main (int argc, char * argv[])"
+
+.PP
+The main method\&. This is where the story begins\&. 
+.SS "static void setPerspective (\fBGameInstance\fP * this, float fov, float aspect, float near, float far)\fC [static]\fP"
+
+.PP
+Setup the perspective, projection matrix\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fIfov\fP Field of view 
+.br
+\fIaspect\fP Aspect ratio 
+.br
+\fInear\fP Near value 
+.br
+\fIfar\fP Far value 
+.RE
+.PP
+
+.SS "static void setupOpenGL (\fBGameInstance\fP * this, double width, double height)\fC [static]\fP"
+
+.PP
+Setup OpenGL\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fIwidth\fP Width of the window 
+.br
+\fIheight\fP Height of the window 
+.RE
+.PP
+
+.SS "static void setupWindowSize (const GLFWvidmode * mode, \fBGameInstance\fP * this)\fC [static]\fP"
+
+.PP
+Setup GLFW window size\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImode\fP GLFW video mode 
+.br
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for stdgame from the source code\&.

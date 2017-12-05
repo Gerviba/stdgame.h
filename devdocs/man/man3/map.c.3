@@ -1,0 +1,646 @@
+.TH "src/map.c" 3 "Tue Dec 5 2017" "stdgame" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/map.c \- \fBMap\fP and menu loader and utilities\&.  
+
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <stdio\&.h>\fP
+.br
+\fC#include <string\&.h>\fP
+.br
+\fC#include <stdlib\&.h>\fP
+.br
+\fC#include <ctype\&.h>\fP
+.br
+\fC#include 'stdgame\&.h'\fP
+.br
+
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "static void \fBinitMapDefaults\fP (\fBMap\fP *map)"
+.br
+.RI "Initialize the default values of the map\&. "
+.ti -1c
+.RI "static void \fBinitLists\fP (\fBMap\fP *map)"
+.br
+.RI "Initialize linked lists\&. "
+.ti -1c
+.RI "static void \fBinitObjects\fP (\fBMap\fP *map)"
+.br
+.RI "Initialize objects storage\&. "
+.ti -1c
+.RI "static void \fBinitMenu\fP (\fBMap\fP *map)"
+.br
+.RI "Initialize menu\&. "
+.ti -1c
+.RI "static void \fBprocessMeta\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "Meta loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessTexture\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "\fBTexture\fP loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessTextureBlock\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "\fBTextureBlock\fP loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessTile\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "\fBTile\fP loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessStaticLight\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "\fBLight\fP loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessObject\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "Object loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessObjectInstance\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "ObjectInstance loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessTextComponent\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "\fBTextComponent\fP loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessObjectComponent\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "\fBObjectComponent\fP loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessAction\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "\fBAction\fP loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessRegion\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "\fBRegion\fP loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessMessage\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "\fBMessage\fP loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessEntity\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "\fBEntity\fP loader processor\&. "
+.ti -1c
+.RI "static void \fBprocessPhysics\fP (\fBGameInstance\fP *this, \fBMap\fP *map, char buff[255])"
+.br
+.RI "\fBPhysicsArea\fP loader processor\&. "
+.ti -1c
+.RI "void \fBloadTexture\fP (GLuint *textureId, char path[])"
+.br
+.RI "Loads a texture\&. "
+.ti -1c
+.RI "void \fBaddTextComponent\fP (\fBMap\fP *map, char text[100], int id, \fBRelativeX\fP relX, \fBRelativeY\fP relY, \fBAlign\fP align, GLfloat x, GLfloat y, \fBFontSize\fP size)"
+.br
+.RI "Adds a \fBTextComponent\fP\&. "
+.ti -1c
+.RI "void \fBaddTextComponentColor\fP (\fBMap\fP *map, char text[100], int id, \fBRelativeX\fP relX, \fBRelativeY\fP relY, \fBAlign\fP align, GLfloat pos[3], GLfloat color[4], \fBFontSize\fP size)"
+.br
+.RI "Adds a \fBTextComponent\fP\&. "
+.ti -1c
+.RI "void \fBgetKeyName\fP (\fBGameInstance\fP *this, char *str, int key)"
+.br
+.RI "Copy a key name into the str value\&. "
+.ti -1c
+.RI "void \fBgetOptionCaption\fP (\fBGameInstance\fP *this, char *name, char *str, int id)"
+.br
+.RI "Find and copy a key name into the str value by option name and index\&. "
+.ti -1c
+.RI "\fBMap\fP * \fBloadMap\fP (\fBGameInstance\fP *this, char path[])"
+.br
+.RI "Loads a map or menu\&. "
+.ti -1c
+.RI "void \fBfreeMap\fP (\fBMap\fP *map)"
+.br
+.RI "Free the map\&. "
+.ti -1c
+.RI "void \fBupdateHightScore\fP (\fBGameInstance\fP *this, time_t deltaT)"
+.br
+.RI "Update highscores if necessary\&. "
+.in -1c
+.SS "Variables"
+
+.in +1c
+.ti -1c
+.RI "static void(*)(\fBComponent\fP *, \fBGameInstance\fP *) \fBgetAction\fP (int id)"
+.br
+.RI "\fBAction\fP method getter\&. "
+.in -1c
+.SH "Detailed Description"
+.PP 
+\fBMap\fP and menu loader and utilities\&. 
+
+
+.PP
+\fBAuthor:\fP
+.RS 4
+Gerviba (Szabo Gergely) 
+.RE
+.PP
+\fBHeader:\fP
+.RS 4
+\fBmap\&.h\fP 
+.RE
+.PP
+
+.SH "Function Documentation"
+.PP 
+.SS "void addTextComponent (\fBMap\fP * map, char text[100], int id, \fBRelativeX\fP relX, \fBRelativeY\fP relY, \fBAlign\fP align, GLfloat x, GLfloat y, \fBFontSize\fP size)"
+
+.PP
+Adds a \fBTextComponent\fP\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImap\fP Current map 
+.br
+\fItext\fP Caption 
+.br
+\fIid\fP Identifier 
+.br
+\fIrelX\fP Relative X point 
+.br
+\fIrelY\fP Relative Y point 
+.br
+\fIalign\fP Alignment 
+.br
+\fIx\fP X coordinate 
+.br
+\fIy\fP Y coordinate 
+.br
+\fIsize\fP Size of the font 
+.RE
+.PP
+
+.SS "void addTextComponentColor (\fBMap\fP * map, char text[100], int id, \fBRelativeX\fP relX, \fBRelativeY\fP relY, \fBAlign\fP align, GLfloat pos[3], GLfloat color[4], \fBFontSize\fP size)"
+
+.PP
+Adds a \fBTextComponent\fP\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImap\fP Current map 
+.br
+\fItext\fP Caption 
+.br
+\fIid\fP Identifier 
+.br
+\fIrelX\fP Relative X point 
+.br
+\fIrelY\fP Relative Y point 
+.br
+\fIalign\fP Alignment 
+.br
+\fIpos\fP Coordinates (3D) 
+.br
+\fIcolor\fP \fBFont\fP default color (RGBA) 
+.br
+\fIsize\fP Size of the font 
+.RE
+.PP
+
+.SS "void freeMap (\fBMap\fP * map)"
+
+.PP
+Free the map\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImap\fP \fBMap\fP to free 
+.RE
+.PP
+
+.SS "void getKeyName (\fBGameInstance\fP * this, char * str, int key)"
+
+.PP
+Copy a key name into the str value\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fIstr\fP This is where the name will be copied (The longest will be: 9 + '\\0') 
+.br
+\fIkey\fP Key id 
+.RE
+.PP
+
+.SS "void getOptionCaption (\fBGameInstance\fP * this, char * name, char * str, int id)"
+
+.PP
+Find and copy a key name into the str value by option name and index\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fIname\fP Option name 
+.br
+\fIstr\fP This is where the name will be copied (The longest will be: 9 + '\\0') 
+.br
+\fIid\fP Index of the key (0-2) 
+.RE
+.PP
+
+.SS "static void initLists (\fBMap\fP * map)\fC [static]\fP"
+
+.PP
+Initialize linked lists\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImap\fP The map 
+.RE
+.PP
+
+.SS "static void initMapDefaults (\fBMap\fP * map)\fC [static]\fP"
+
+.PP
+Initialize the default values of the map\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImap\fP The map 
+.RE
+.PP
+
+.SS "static void initMenu (\fBMap\fP * map)\fC [static]\fP"
+
+.PP
+Initialize menu\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImap\fP The map 
+.RE
+.PP
+
+.SS "static void initObjects (\fBMap\fP * map)\fC [static]\fP"
+
+.PP
+Initialize objects storage\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImap\fP The map 
+.RE
+.PP
+
+.SS "\fBMap\fP* loadMap (\fBGameInstance\fP * this, char path[])"
+
+.PP
+Loads a map or menu\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fIpath\fP \fBMap\fP or menu file path 
+.RE
+.PP
+
+.SS "void loadTexture (GLuint * textureId, char path[])"
+
+.PP
+Loads a texture\&. 
+.PP
+\fBNote:\fP
+.RS 4
+It uses SOIL2
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fItextureId\fP The texture id pointer 
+.br
+\fIpath\fP \fBTexture\fP file path 
+.RE
+.PP
+
+.SS "static void processAction (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+\fBAction\fP loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processEntity (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+\fBEntity\fP loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processMessage (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+\fBMessage\fP loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processMeta (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+Meta loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processObject (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+Object loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processObjectComponent (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+\fBObjectComponent\fP loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processObjectInstance (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+ObjectInstance loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processPhysics (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+\fBPhysicsArea\fP loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processRegion (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+\fBRegion\fP loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processStaticLight (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+\fBLight\fP loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processTextComponent (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+\fBTextComponent\fP loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processTexture (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+\fBTexture\fP loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processTextureBlock (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+\fBTextureBlock\fP loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "static void processTile (\fBGameInstance\fP * this, \fBMap\fP * map, char buff[255])\fC [static]\fP"
+
+.PP
+\fBTile\fP loader processor\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBMap\fP and \fBMenu\fP table
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fImap\fP The loading map 
+.br
+\fIbuff\fP The current line 
+.RE
+.PP
+
+.SS "void updateHightScore (\fBGameInstance\fP * this, time_t deltaT)"
+
+.PP
+Update highscores if necessary\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIthis\fP Actual \fBGameInstance\fP instance 
+.br
+\fIdeltaT\fP Completed time 
+.RE
+.PP
+
+.SH "Variable Documentation"
+.PP 
+.SS "void(*)(\fBComponent\fP*, \fBGameInstance\fP*) getAction(int id)\fC [static]\fP"
+
+.PP
+\fBAction\fP method getter\&. 
+.PP
+\fBSee also:\fP
+.RS 4
+fileformats\&.md -> \fBComponent\fP action types 
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+The selected function pointer 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for stdgame from the source code\&.

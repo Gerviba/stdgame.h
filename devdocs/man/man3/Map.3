@@ -1,0 +1,85 @@
+.TH "Map" 3 "Tue Dec 5 2017" "stdgame" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Map \- The game map or menu\&.  
+
+.SH SYNOPSIS
+.br
+.PP
+.PP
+\fC#include <map\&.h>\fP
+.SS "Public Attributes"
+
+.in +1c
+.ti -1c
+.RI "char \fBname\fP [64]"
+.br
+.ti -1c
+.RI "char \fBauthor\fP [64]"
+.br
+.ti -1c
+.RI "char \fBdescription\fP [242]"
+.br
+.ti -1c
+.RI "float \fBambient\fP [3]"
+.br
+.ti -1c
+.RI "float \fBspawn\fP [3]"
+.br
+.ti -1c
+.RI "\fBLinkedList\fP * \fBtiles\fP"
+.br
+.ti -1c
+.RI "\fBLinkedList\fP * \fBlights\fP"
+.br
+.ti -1c
+.RI "\fBLinkedList\fP * \fBtextures\fP"
+.br
+.ti -1c
+.RI "\fBLinkedList\fP * \fBtextureBlocks\fP"
+.br
+.ti -1c
+.RI "\fBLinkedList\fP * \fBactions\fP"
+.br
+.ti -1c
+.RI "\fBLinkedList\fP * \fBregions\fP"
+.br
+.ti -1c
+.RI "\fBLinkedList\fP * \fBmessages\fP"
+.br
+.ti -1c
+.RI "\fBLinkedList\fP * \fBphysics\fP"
+.br
+.ti -1c
+.RI "\fBLinkedList\fP * \fBentities\fP"
+.br
+.ti -1c
+.RI "\fBObjectInfo\fP * \fBobjects\fP"
+.br
+.ti -1c
+.RI "\fBMenu\fP * \fBmenu\fP"
+.br
+.ti -1c
+.RI "\fBSpells\fP * \fBspells\fP"
+.br
+.ti -1c
+.RI "int \fBscore\fP"
+.br
+.ti -1c
+.RI "float \fBhealt\fP"
+.br
+.ti -1c
+.RI "GLboolean \fBallowMovement\fP"
+.br
+.ti -1c
+.RI "time_t \fBstartTime\fP"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+The game map or menu\&. 
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for stdgame from the source code\&.

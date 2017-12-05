@@ -1,5 +1,7 @@
 # stdgame.h
 
+![stdgame](https://raw.githubusercontent.com/Gerviba/stdgame.h/master/stdgame.png)
+
 > This project is my Prog1 homework project. <br>
 > Github url: https://github.com/Gerviba/stdgame.h
 

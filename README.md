@@ -8,7 +8,10 @@
 ### Specs
 - C and OpenGL based multiplatform platformer game
 - GNU/GPL 3.0 license
-- Required: glfw3+, SOIL2, OpenGL1.5+
+- Required: 
+glfw3+ (https://www.glfw.org/download), 
+SOIL2 (https://github.com/SpartanJ/SOIL2), 
+OpenGL1.5+ ()
 
 ### Releases
 
